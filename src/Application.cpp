@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "Engine.h"
 
+
 namespace Gino
 {
 	Application::Application(Settings& settings) :
@@ -19,6 +20,7 @@ namespace Gino
 
 		m_engine = std::make_unique<Engine>(engineSettings);
 	
+
 
 		/*
 		
@@ -38,17 +40,28 @@ namespace Gino
 
 		*/
 
+	
+    }
+
+    Application::~Application()
+    {
+
+
+    }
+
+	void Application::Run()
+	{
 		// Loop
-        while (m_appIsAlive)
-        {
+		while (m_appIsAlive)
+		{
 			m_mainWindow->PumpMessages();
 
 			m_engine->SimulateAndRender();
 			/*
-			
+
 
 			REMINDER ============== CTRL + F and look for "NOTE" to read your notes!!
-			
+
 			Engine->SimulateAndRender();
 
 			Typical functionality we need inside our Engine
@@ -87,7 +100,7 @@ namespace Gino
 					-..(Future).. WaterRenderer (will probably employ Tesselation)
 
 					(this is made up, it could very well be integrated as an instanced ver. of Mesh Renderer)
-					-..(Future).. TreeRenderer (special instanced with regards to Terrain data) 
+					-..(Future).. TreeRenderer (special instanced with regards to Terrain data)
 
 					-..(Future).. ParticleRenderer (will probably employ Compute Shader and other stages for geometry generation perhaps)
 
@@ -113,7 +126,7 @@ namespace Gino
 
 					--> If we want to implement CPU side frustum culling, we want to do it outside of MasterRenderer.
 					--> We can then employ a RenderAndFlush method and only submit models to the MasterRenderer that are visible
-					
+
 					- SetSkybox(skyboxData)						[1]
 
 					(Below is a suggestion for Light data interface >> Strongly typed structs)
@@ -133,16 +146,35 @@ namespace Gino
 					- Functions to change settings for the various submodules
 					..
 					..
-			
+
 			*/
-        }
-    }
+		}
+	}
 
-    Application::~Application()
-    {
+	bool Application::IsAlive() const
+	{
+		return m_appIsAlive;
+	}
 
+	void Application::ParseConsoleInput(std::string input)
+	{
+		// Convert input to lowercase
+		std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c) { return std::tolower(c); });
 
-    }
+		std::cout << "Command: '" << input << "'\n";
+		{
+			if (input == "q" || input == "quit")
+			{
+				KillApp();
+			}
+			else
+			{
+				std::cout << "'" << input << "' is an invalid command!\n";
+			}
+		}
+		
+		std::cout << std::endl;
+	}
 
 	void Application::InitWindow(Settings& settings)
 	{
@@ -155,6 +187,13 @@ namespace Gino
 			m_mainWindow->SetFullscreen(true);
 	}
 
+	void Application::KillApp()
+	{
+		// Can be killed from console or app
+		std::lock_guard<std::mutex> guard(m_appKillMutex);
+		m_appIsAlive = false;
+	}
+
 	LRESULT Application::MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
 		switch (uMsg)
@@ -162,7 +201,7 @@ namespace Gino
 		// Universal quit message
 		case WM_CLOSE:
 		{
-			m_appIsAlive = false;
+			KillApp();
 			break;
 		}
 
@@ -196,7 +235,7 @@ namespace Gino
 			// Same goes for mouse (raw input)
 			if (wParam == VK_ESCAPE)
 			{
-				m_appIsAlive = false;
+				KillApp();
 				break;
 			}
 			break;

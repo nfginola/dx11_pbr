@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Graphics/CentralRenderer.h"
 
-
 namespace Gino
 {
 	// temporary
@@ -19,7 +18,8 @@ namespace Gino
 		
 		// We probably want a DXBinder to avoid unneccessary API calls.
 		// We simply check for equivalence for all things we bind, simply mirroring the API state on the CPU!
-		// We use this Binder to bind every API call
+		// We use this Binder to bind every API call along with helper functions that we see fit!
+		
 
 		// Lets not mind duplicate shader creations for now 
 		// - Shader Group: 
@@ -40,7 +40,7 @@ namespace Gino
 		HRCHECK(dev->CreateVertexShader(vsBin.data(), vsBin.size(), nullptr, m_vs.GetAddressOf()));
 		HRCHECK(dev->CreatePixelShader(psBin.data(), psBin.size(), nullptr, m_ps.GetAddressOf()));
 		
-		// D3D11_APPEND_ALIGNED_ELEMENT pads for us!
+		// D3D11_APPEND_ALIGNED_ELEMENT includes packing (padding) for us!
 		D3D11_INPUT_ELEMENT_DESC inputDescs[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -64,8 +64,6 @@ namespace Gino
 		vbDat.pSysMem = triVerts;
 		vbDat.SysMemPitch = vbDesc.ByteWidth;
 		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, m_vb.GetAddressOf()));
-
-		
 	}
 
 	CentralRenderer::~CentralRenderer()
@@ -109,11 +107,9 @@ namespace Gino
 		vp.TopLeftY = 0;
 		vp.MinDepth = 0.f;
 		vp.MaxDepth = 1.f;
-
 		// Match the backbuffer dimension
 		vp.Width = 1920;
 		vp.Height = 1080;
-		
 		D3D11_VIEWPORT viewports[] = { vp };
 		ctx->RSSetViewports(_countof(viewports), viewports);
 

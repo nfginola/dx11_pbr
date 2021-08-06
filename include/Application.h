@@ -1,5 +1,6 @@
 #pragma once
 #include "Window.h"
+#include <mutex>
 
 //class Engine;
 namespace Gino
@@ -17,21 +18,26 @@ namespace Gino
 			int windowHeight = 1080;
 			bool fullscreenOnStart = false;
 
-
 		};
 
 	public:
 		Application(Settings& settings);
 		~Application();
 
+		void Run();
+		bool IsAlive() const;
+		void ParseConsoleInput(std::string input);
+
 		Application() = delete;
 
 	private:
 		void InitWindow(Settings& settings);
+		void KillApp();
 
 		// Handle window procedures
 		LRESULT MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	private:
+		std::mutex m_appKillMutex;
 		bool m_appIsAlive;
 
 		std::unique_ptr<Window> m_mainWindow;

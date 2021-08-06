@@ -8,9 +8,15 @@ namespace Gino
 	Engine::Engine(Settings& settings)
 	{
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
+
+		// DXState state
+		/*
+			this should PRIMARILY be used inside CentralRenderer and other Render modules
+			state->Set(...)
+			state->FinalizeBinds();		--> All API calls in one go
+		*/
+
 		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get());
-
-
 
 	}
 
