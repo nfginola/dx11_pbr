@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <DirectXMath.h>
 #include <dxgi.h>
 #include <d3dcompiler.h>
 #include <assert.h>
@@ -17,6 +18,9 @@ using FactoryPtr = ComPtr<IDXGIFactory>;
 // Common resources
 using Tex2DPtr = ComPtr<ID3D11Texture2D>;
 using BufferPtr = ComPtr<ID3D11Buffer>;
+using BlendStatePtr = ComPtr<ID3D11BlendState>;
+using DepthStencilStatePtr = ComPtr<ID3D11DepthStencilState>;
+using InputLayoutPtr = ComPtr<ID3D11InputLayout>;
 
 // Views
 using SrvPtr = ComPtr<ID3D11ShaderResourceView>;
@@ -25,15 +29,25 @@ using UavPtr = ComPtr<ID3D11UnorderedAccessView>;
 using DsvPtr = ComPtr<ID3D11DepthStencilView>;
 using AdapterPtr = ComPtr<IDXGIAdapter>;
 
+// Shaders
+using VsPtr = ComPtr<ID3D11VertexShader>;
+using HsPtr = ComPtr<ID3D11HullShader>;
+using DsPtr = ComPtr<ID3D11DomainShader>;
+using GsPtr = ComPtr<ID3D11GeometryShader>;
+using PsPtr = ComPtr<ID3D11PixelShader>;
+using CsPtr = ComPtr<ID3D11ComputeShader>;
+
 namespace Gino
 {
-	static bool HRCHECK(HRESULT hr);
+	bool HRCHECK(HRESULT hr);
 
 	class DXDevice
 	{
 	public:
 		DXDevice(HWND hwnd, int bbWidth, int bbHeight);
 		~DXDevice();
+
+		//void ResizeSwapchain(int newWidth, int newHeight);
 
 		DevicePtr GetDevice();
 		DeviceContextPtr GetContext();

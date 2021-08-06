@@ -3,15 +3,16 @@
 
 namespace Gino
 {
-	class DXDevice;
 	class Input;
+	class DXDevice;
+	class CentralRenderer;
 
 	class Engine
 	{
 	public:
 		struct Settings
 		{
-			// Window to hook to
+			// Render window
 			HWND hwnd;
 
 			// Renderer settings
@@ -29,9 +30,16 @@ namespace Gino
 
 		//Input* GetInput();
 
-
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;
+		std::unique_ptr<CentralRenderer> m_centralRenderer;
+
+		// -- Maybe we can wrap them in an AssetContext in the future (where we can load/unload multiple context depending on e.g Scene)
+		// Loaded Mesh Data (Vertex Buffer)
+		// Loaded Meshes (References into a VB (offsets and the like))
+		// Loaded Textures (Texture2D)
+		
+
 		//std::unique_ptr<Input> m_input;
 		/*
 		Input

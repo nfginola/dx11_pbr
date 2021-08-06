@@ -146,13 +146,9 @@ namespace Gino
 
 	void Application::InitWindow(Settings& settings)
 	{
-		/*
-			Later down the road, we may want to extend the application to have a secondary window with a "SecondaryWindowProc" where we can draw our ImGUI widgets
-		*/
-
 		// Init window
 		auto mainWindowProc = [this](HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> LRESULT { return this->MainWindowProc(hwnd, uMsg, wParam, lParam); };
-		m_mainWindow = std::make_unique<Window>(settings.hInstance, mainWindowProc, 2464, 1386);
+		m_mainWindow = std::make_unique<Window>(settings.hInstance, mainWindowProc, settings.windowWidth, settings.windowHeight);
 
 		// Set fullscreen on start if specified
 		if (!m_mainWindow->IsFullscreen() && settings.fullscreenOnStart)

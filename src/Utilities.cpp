@@ -2,6 +2,7 @@
 #include "Utilities.h"
 
 #include <Windows.h>
+#include <fstream>
 
 namespace Gino::Utils
 {
@@ -20,6 +21,22 @@ namespace Gino::Utils
 		std::wstring wstrTo(sizeNeeded, 0);
 		MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], sizeNeeded);
 		return wstrTo;
+	}
+
+	std::vector<uint8_t> ReadFile(const std::string& filePath)
+	{
+		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
+		if (!file.is_open())
+			assert(false);
+
+		size_t fileSize = static_cast<size_t>(file.tellg());
+		std::vector<uint8_t> buffer(fileSize);
+
+		file.seekg(0); 
+		file.read((char*)buffer.data(), fileSize);    
+
+		file.close();
+		return buffer;
 	}
 
 }

@@ -104,11 +104,13 @@ namespace Gino
 		RECT desired_rect{};
 		desired_rect.right = m_clientWidth;
 		desired_rect.bottom = m_clientHeight;
-		assert(AdjustWindowRectEx(&desired_rect, m_winStyle, false, m_winExStyle));
+		bool res = AdjustWindowRectEx(&desired_rect, m_winStyle, false, m_winExStyle);
+		assert(res);
 
 		LONG window_width = desired_rect.right - desired_rect.left;
 		LONG window_height = desired_rect.bottom - desired_rect.top;
-		assert(SetWindowPos(m_hwnd, HWND_TOP, prevX, prevY, window_width, window_height, SWP_NOREPOSITION));
+		res = SetWindowPos(m_hwnd, HWND_TOP, prevX, prevY, window_width, window_height, SWP_NOREPOSITION);
+		assert(res);
 	}
 
 	void Window::SetFullscreen(bool fullscreenState)

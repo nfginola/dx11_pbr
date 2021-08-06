@@ -5,7 +5,9 @@
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 int main()
 {
-    // We may want to read from a text file for our settings in the future
+    // We use GetModuleHandle to get hInstance while still using Console subsystem with normal main entry!
+
+    // Considering reading from a file for settings in the future
     Gino::Application::Settings settings
     {
         .hInstance = GetModuleHandle(nullptr),
@@ -16,6 +18,5 @@ int main()
     };
 
     Gino::Application app(settings);
-
     return 0;
 }

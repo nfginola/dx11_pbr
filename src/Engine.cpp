@@ -1,14 +1,16 @@
 #include "pch.h"
 #include "Engine.h"
-#include "DXDevice.h"
+#include "Graphics/DXDevice.h"
+#include "Graphics/CentralRenderer.h"
 
 namespace Gino
 {
 	Engine::Engine(Settings& settings)
 	{
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
-		
-		
+		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get());
+
+
 
 	}
 
@@ -19,13 +21,20 @@ namespace Gino
 
 	void Engine::SimulateAndRender()
 	{
-		const float clearColor[4] = { 0.529f, 0.808f, 0.922f, 1.f };
-		m_dxDev->GetContext()->ClearRenderTargetView(m_dxDev->GetBackbufferView().Get(), clearColor);
 
+		/*
+		
+		culler->cull(scene)
+		
+		for each non-culled geometry in scene:
+			cr->SubmitOpaqueModel(mesh, material);
+			cr->SubmitTransparentModel(mesh, material);
+		
+		*/
 
-
-		m_dxDev->GetSwapChain()->Present(0, 0);
+		m_centralRenderer->Render();
 	}
+
 	//Input* Engine::GetInput()
 	//{
 	//	return m_input.get();

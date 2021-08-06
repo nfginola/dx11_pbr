@@ -1,38 +1,40 @@
 #include "pch.h"
-#include "DXDevice.h"
+#include "Graphics/DXDevice.h"
 
 namespace Gino
 {
-	ID3D11InfoQueue* g_infoQueue;
+	// Lets us print some debug messages sent to the queue
+	// Currently responsible for printing WARNING debug messages to cout
+	ComPtr<ID3D11InfoQueue> g_infoQueue;
 	bool HRCHECK(HRESULT hr)
 	{
 		bool passed = SUCCEEDED(hr);
 
-		if (!passed)
+		// We have set a BREAK on CORRUPTION and ERRORS which are the major validators, no need to print out anything
+		// If we do print out anything to the console, it'll be the warnings :)
+		if (!passed && g_infoQueue != nullptr)
 		{
 			// https://stackoverflow.com/questions/53579283/directx-11-debug-layer-capture-error-strings
 			HRESULT hr = g_infoQueue->PushEmptyStorageFilter();
 			assert(hr == S_OK);
 
-			UINT64 message_count = g_infoQueue->GetNumStoredMessages();
-
-			for (UINT64 i = 0; i < message_count; i++) {
+			UINT64 msgCount = g_infoQueue->GetNumStoredMessages();
+			for (UINT64 i = 0; i < msgCount; i++) {
 
 				// Enumerate
-				SIZE_T message_size = 0;
-				g_infoQueue->GetMessage(i, nullptr, &message_size); //get the size of the message
-
-				D3D11_MESSAGE* message = (D3D11_MESSAGE*)malloc(message_size); //allocate enough space
-				hr = g_infoQueue->GetMessage(i, message, &message_size); //get the actual message
+				SIZE_T msgSize = 0;
+				g_infoQueue->GetMessage(i, nullptr, &msgSize); 
+				
+				// Fill
+				D3D11_MESSAGE* message = (D3D11_MESSAGE*)malloc(msgSize); 
+				hr = g_infoQueue->GetMessage(i, message, &msgSize);
 				assert(hr == S_OK);
 				
 				// Log
 				std::cout << message->pDescription << '\n';
-				//printf("Directx11: %.*s", message->DescriptionByteLength, message->pDescription);
 
 				free(message);
 			}
-
 			g_infoQueue->ClearStoredMessages();
 		}
 
@@ -54,7 +56,8 @@ namespace Gino
 
 	DXDevice::~DXDevice()
 	{
-		g_infoQueue->Release();
+		g_infoQueue.Reset();
+		m_debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
 	}
 
 	DevicePtr DXDevice::GetDevice()
@@ -107,12 +110,10 @@ namespace Gino
 	void DXDevice::GetDebug()
 	{
 		HRCHECK(m_device->QueryInterface(__uuidof(ID3D11Debug), (void**)m_debug.GetAddressOf()));
-		ComPtr<ID3D11InfoQueue> infoQueue;
-		HRCHECK(m_debug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)infoQueue.GetAddressOf()));
-		g_infoQueue = infoQueue.Get();
-		infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
-		infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
-		infoQueue->SetMuteDebugOutput(false);
+		HRCHECK(m_debug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)g_infoQueue.GetAddressOf()));
+		g_infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+		g_infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+		g_infoQueue->SetMuteDebugOutput(false);
 	}
 
 	void DXDevice::GetAvailableDisplayModes()
@@ -153,7 +154,7 @@ namespace Gino
 		m_swapChainDesc.BufferUsage = DXGI_USAGE_BACK_BUFFER | DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		m_swapChainDesc.BufferCount = 2;		// One front and one back buffer
 
-		m_swapChainDesc.OutputWindow = nullptr;
+		m_swapChainDesc.OutputWindow = hwnd;
 		m_swapChainDesc.Windowed = true;
 		m_swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		// Allow switch mode through IDXGISwapChain::ResizeTarget (e.g Windowed to Fullscreen)
@@ -177,10 +178,13 @@ namespace Gino
 		// then apply the gamma curve as you write the pixel into your render target"
 		// --> SRGB on SRV read automatically makes sure to de-gamma it before use
 		// --> SRGB on RTV write automatically makes sure to gamma it before writing
-		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;		// Automatically gamma correct result to our non-SRBG backbuffer
-		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		HRCHECK(m_device->CreateRenderTargetView(m_bbTex.Get(), &rtvDesc, m_bbView.GetAddressOf()));
+		//D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		//rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;		// Automatically gamma correct result to our non-SRBG backbuffer
+		//rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		//HRCHECK(m_device->CreateRenderTargetView(m_bbTex.Get(), &rtvDesc, m_bbView.GetAddressOf()));
+
+		// We will use default UNORM non-SRGB specified by Texture format (We gamma correct manually)
+		HRCHECK(m_device->CreateRenderTargetView(m_bbTex.Get(), nullptr, m_bbView.GetAddressOf()));	
 	}
 }
 
