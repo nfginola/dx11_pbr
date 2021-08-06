@@ -13,6 +13,7 @@ namespace Gino
 		bool IsAlive() const;
 		void SetFullscreen(bool fullscreenState);
 		bool IsFullscreen() const;
+		HWND GetHWND() const;
 		
 	private:
 		void RegisterWindow();

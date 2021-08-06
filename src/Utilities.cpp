@@ -21,4 +21,5 @@ namespace Gino::Utils
 		MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], sizeNeeded);
 		return wstrTo;
 	}
+
 }

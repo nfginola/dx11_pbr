@@ -160,6 +160,11 @@ namespace Gino
 		return m_isFullscreen;
 	}
 
+	HWND Window::GetHWND() const
+	{
+		return m_hwnd;
+	}
+
 	std::string Window::GetNextWindowID()
 	{
 		static int id = 0;

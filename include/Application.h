@@ -4,6 +4,8 @@
 //class Engine;
 namespace Gino
 {
+	class Engine;
+
 	class Application
 	{
 	public:
@@ -15,11 +17,7 @@ namespace Gino
 			int windowHeight = 1080;
 			bool fullscreenOnStart = false;
 
-			// Renderer settings
-			bool vsync = true;
-			// Pixel resolution
-			int resolutionWidth = 1920;
-			int resolutionHeight = 1080;
+
 		};
 
 	public:
@@ -37,7 +35,8 @@ namespace Gino
 		bool m_appIsAlive;
 
 		std::unique_ptr<Window> m_mainWindow;
-		//std::unique_ptr<Engine> m_engine;
+		std::unique_ptr<Engine> m_engine;
+
 
 	};
 }

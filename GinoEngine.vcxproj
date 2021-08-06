@@ -167,6 +167,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\DXDevice.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -178,11 +180,13 @@
     <ClCompile Include="src\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\DXDevice.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Utilities.h" />
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\Input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,9 +12,7 @@ int main()
 
         // 16:9 aspect ratio
         .windowWidth = 2464,
-        .windowHeight = 1386,
-        .resolutionWidth = 1920,
-        .resolutionHeight = 1080
+        .windowHeight = 1386
     };
 
     Gino::Application app(settings);

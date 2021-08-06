@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Application.h"
+#include "Engine.h"
 
 namespace Gino
 {
@@ -7,6 +8,17 @@ namespace Gino
 		m_appIsAlive(true)
     {
 		InitWindow(settings);
+
+		Engine::Settings engineSettings
+		{
+			.hwnd = m_mainWindow->GetHWND(),
+			.vsync = false,
+			.resolutionWidth = 1920,
+			.resolutionHeight = 1080
+		};
+
+		m_engine = std::make_unique<Engine>(engineSettings);
+	
 
 		/*
 		
@@ -31,6 +43,7 @@ namespace Gino
         {
 			m_mainWindow->PumpMessages();
 
+			m_engine->SimulateAndRender();
 			/*
 			
 
