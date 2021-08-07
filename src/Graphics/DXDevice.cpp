@@ -57,35 +57,52 @@ namespace Gino
 	DXDevice::~DXDevice()
 	{
 		g_infoQueue.Reset();
-		m_debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
+
+		// Some things will still be alive.. notably members of this class since their ref count is decremented at some point during this destructor..
+		//m_debug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL);
 	}
 
-	DevicePtr DXDevice::GetDevice()
+	//DevicePtr DXDevice::GetDevice()
+	//{
+	//	return m_device;
+	//}
+
+	//DeviceContextPtr DXDevice::GetContext()
+	//{
+	//	return m_context;
+	//}
+
+	const Device1Ptr& DXDevice::GetDevice()
 	{
-		return m_device;
+		return m_device1;
 	}
 
-	DeviceContextPtr DXDevice::GetContext()
+	const DeviceContext1Ptr& DXDevice::GetContext()
 	{
-		return m_context;
+		return m_context1;
 	}
 
-	SwapChainPtr DXDevice::GetSwapChain()
+	const SwapChainPtr& DXDevice::GetSwapChain()
 	{
 		return m_swapChain;
 	}
 
-	RtvPtr DXDevice::GetBackbufferView()
+	const RtvPtr& DXDevice::GetBackbufferView()
 	{
 		return m_bbView;
 	}
 
+	const DXGI_SWAP_CHAIN_DESC& DXDevice::GetSwapChainDesc()
+	{
+		return m_swapChainDesc;
+	}
+
 	void DXDevice::CreateDeviceAndContext()
 	{
-		std::array<D3D_FEATURE_LEVEL, 1> featureLevels{ D3D_FEATURE_LEVEL_11_0 };
-		UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_DEBUG;
+		std::array<D3D_FEATURE_LEVEL, 2> featureLevels{ D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_11_1 };		// 11.1
+		UINT flags = D3D11_CREATE_DEVICE_DEBUG/*| D3D11_CREATE_DEVICE_SINGLETHREADED*/;		// We may have async resource creation
 
-		HRCHECK(
+		HRCHECK(	
 			D3D11CreateDevice(
 				NULL,
 				D3D_DRIVER_TYPE_HARDWARE,
@@ -104,7 +121,11 @@ namespace Gino
 		ComPtr<IDXGIDevice> dxgiDev;
 		HRCHECK(m_device->QueryInterface(__uuidof(IDXGIDevice), (void**)dxgiDev.GetAddressOf()));
 		HRCHECK(dxgiDev->GetParent(__uuidof(IDXGIAdapter), (void**)m_adapter.GetAddressOf()));
-		m_adapter->GetParent(__uuidof(IDXGIFactory), (void**)m_factory.GetAddressOf());
+		HRCHECK(m_adapter->GetParent(__uuidof(IDXGIFactory), (void**)m_factory.GetAddressOf()));
+
+		// Get 11.1 Device and Context
+		HRCHECK(m_device->QueryInterface(__uuidof(ID3D11Device1), (void**)m_device1.GetAddressOf()));
+		m_device1->GetImmediateContext1(m_context1.GetAddressOf());
 	}
 
 	void DXDevice::GetDebug()
@@ -159,7 +180,7 @@ namespace Gino
 		m_swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		// Allow switch mode through IDXGISwapChain::ResizeTarget (e.g Windowed to Fullscreen)
 		//m_scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-		// We handle exclusive fullscreen manually :)
+		// No we dont allow Mode Switch: We handle exclusive fullscreen manually :)
 		m_swapChainDesc.Flags = 0;
 
 		HRCHECK(m_factory->CreateSwapChain(m_device.Get(), &m_swapChainDesc, m_swapChain.GetAddressOf()));

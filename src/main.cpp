@@ -3,12 +3,13 @@
 
 #include <thread>
 
-void DoWork(Gino::Application& app)
+void RunConsole(Gino::Application& app)
 {
     std::string input;
     while (app.IsAlive() && std::cin >> input)
     {
-        app.ParseConsoleInput(input);
+        if (app.IsAlive())
+            app.ParseConsoleInput(input);
     }
 }
 
@@ -16,6 +17,14 @@ void DoWork(Gino::Application& app)
 int main()
 {
     // We use GetModuleHandle to get hInstance while still using Console subsystem and with normal main entry!
+    /*
+    
+    If we want to change to Window Subsystem, then its easy.
+    - Turn off the threading code here (Dont call into ParseConsoleInput
+    - Set WINAPI entry point
+    - Voila, no console.
+    
+    */
 
     // Considering reading from a file for settings in the future
     Gino::Application::Settings settings
@@ -31,11 +40,11 @@ int main()
     {
         Gino::Application app(settings);
 
-        consoleThread = std::thread(DoWork, std::ref(app));
+        consoleThread = std::thread(RunConsole, std::ref(app));
         app.Run();
     }
 
-    std::cout << "GINOAPP: Please type any key to exit\n";
+    std::cout << "Gino App: Type any key to exit\n";
     consoleThread.join();
 
     return 0;

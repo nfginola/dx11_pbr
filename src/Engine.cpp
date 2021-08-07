@@ -30,6 +30,8 @@ namespace Gino
 
 		/*
 		
+		UpdateObjects(dt)
+
 		culler->cull(scene)
 		
 		for each non-culled geometry in scene:

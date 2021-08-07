@@ -1,5 +1,6 @@
 #pragma once
 #include "DXDevice.h"
+#include "ShaderGroup.h"
 
 namespace Gino
 {
@@ -16,6 +17,8 @@ namespace Gino
 
 		VsPtr m_vs;
 		PsPtr m_ps;
+		ShaderGroup m_shaderGroup;
+
 		InputLayoutPtr m_inputLayout;
 		BufferPtr m_vb;
 

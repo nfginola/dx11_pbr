@@ -16,12 +16,25 @@ namespace Gino
 	{
 		auto dev = dxDev->GetDevice();
 		
+
+
+		/*
+		
+		ShaderGroup
+			.addStage(stage, bytecode)
+			.build(dev)
+		
+		
+		*/
+
+
 		// We probably want a DXBinder to avoid unneccessary API calls.
 		// We simply check for equivalence for all things we bind, simply mirroring the API state on the CPU!
 		// We use this Binder to bind every API call along with helper functions that we see fit!
 		
 
 		// Lets not mind duplicate shader creations for now 
+		// When we validate shaders, we will be doing them in a Pack and we will probably hash somehow
 		// - Shader Group: 
 		// Create Vertex Shader
 		// Create Pixel Shader
@@ -39,6 +52,14 @@ namespace Gino
 
 		HRCHECK(dev->CreateVertexShader(vsBin.data(), vsBin.size(), nullptr, m_vs.GetAddressOf()));
 		HRCHECK(dev->CreatePixelShader(psBin.data(), psBin.size(), nullptr, m_ps.GetAddressOf()));
+
+		m_shaderGroup
+			.AddStage(ShaderStage::Vertex, Utils::ReadFile("compiled_shaders/tri_vs.cso"))
+			.AddStage(ShaderStage::Pixel, Utils::ReadFile("compiled_shaders/tri_ps.cso"))
+			.AddInputElementDesc({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 })
+			.AddInputElementDesc({ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 })
+			.AddInputElementDesc({ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 })
+			.Build(dev);
 		
 		// D3D11_APPEND_ALIGNED_ELEMENT includes packing (padding) for us!
 		D3D11_INPUT_ELEMENT_DESC inputDescs[] =
@@ -64,6 +85,12 @@ namespace Gino
 		vbDat.pSysMem = triVerts;
 		vbDat.SysMemPitch = vbDesc.ByteWidth;
 		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, m_vb.GetAddressOf()));
+
+		// Test for resource cleanup warning signals
+		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
+		//ID3D11Buffer* tmpBuf;
+		//HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, &tmpBuf));
+
 	}
 
 	CentralRenderer::~CentralRenderer()
@@ -86,30 +113,29 @@ namespace Gino
 		postProcessPass->run(resolveFramebuffer, finalRenderTarget);
 		
 		*/
-
+		
 		auto ctx = m_dxDev->GetContext();
-
 		const float clearColor[4] = { 0.529f, 0.808f, 0.922f, 1.f };
 		ctx->ClearRenderTargetView(m_dxDev->GetBackbufferView().Get(), clearColor);
 
-		ctx->IASetInputLayout(m_inputLayout.Get());
+		//ctx->VSSetShader(m_vs.Get(), nullptr, 0);
+		//ctx->PSSetShader(m_ps.Get(), nullptr, 0);
+		m_shaderGroup.Bind(ctx);
+
+		//ctx->IASetInputLayout(m_inputLayout.Get());
 		ID3D11Buffer* vbs[] = { m_vb.Get() };
 		UINT vbStrides[] = { sizeof(Vertex) };
 		UINT vbOffsets[] = { 0 };
 		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		
-		ctx->VSSetShader(m_vs.Get(), nullptr, 0);
-		ctx->PSSetShader(m_ps.Get(), nullptr, 0);
 
 		D3D11_VIEWPORT vp{};
-		vp.TopLeftX = 0;
-		vp.TopLeftY = 0;
+		vp.TopLeftX = vp.TopLeftY = 0;
 		vp.MinDepth = 0.f;
 		vp.MaxDepth = 1.f;
 		// Match the backbuffer dimension
-		vp.Width = 1920;
-		vp.Height = 1080;
+		vp.Width = static_cast<float>(m_dxDev->GetSwapChainDesc().BufferDesc.Width);
+		vp.Height = static_cast<float>(m_dxDev->GetSwapChainDesc().BufferDesc.Height);
 		D3D11_VIEWPORT viewports[] = { vp };
 		ctx->RSSetViewports(_countof(viewports), viewports);
 

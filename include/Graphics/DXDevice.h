@@ -1,6 +1,6 @@
 #pragma once
 
-#include <d3d11.h>
+#include <d3d11_1.h>
 #include <DirectXMath.h>
 #include <dxgi.h>
 #include <d3dcompiler.h>
@@ -12,6 +12,8 @@ using Microsoft::WRL::ComPtr;
 using SwapChainPtr = ComPtr<IDXGISwapChain>;
 using DevicePtr = ComPtr<ID3D11Device>;
 using DeviceContextPtr = ComPtr<ID3D11DeviceContext>;
+using Device1Ptr = ComPtr<ID3D11Device1>;					// 11_1
+using DeviceContext1Ptr = ComPtr<ID3D11DeviceContext1>;		// 11_1
 using DebugPtr = ComPtr<ID3D11Debug>;
 using FactoryPtr = ComPtr<IDXGIFactory>;
 
@@ -47,12 +49,17 @@ namespace Gino
 		DXDevice(HWND hwnd, int bbWidth, int bbHeight);
 		~DXDevice();
 
-		//void ResizeSwapchain(int newWidth, int newHeight);
+		//void RecreateSwapchain(int newWidth, int newHeight);
 
-		DevicePtr GetDevice();
-		DeviceContextPtr GetContext();
-		SwapChainPtr GetSwapChain();
-		RtvPtr GetBackbufferView();
+		//DevicePtr GetDevice();
+		//DeviceContextPtr GetContext();
+
+		const Device1Ptr& GetDevice();
+		const DeviceContext1Ptr& GetContext();
+
+		const SwapChainPtr& GetSwapChain();
+		const RtvPtr& GetBackbufferView();
+		const DXGI_SWAP_CHAIN_DESC& GetSwapChainDesc();
 
 	private:
 		void CreateDeviceAndContext();
@@ -64,6 +71,8 @@ namespace Gino
 	private:
 		DevicePtr m_device;
 		DeviceContextPtr m_context;
+		Device1Ptr m_device1;			// 11_1
+		DeviceContext1Ptr m_context1;	// 11_1
 		AdapterPtr m_adapter;
 		FactoryPtr m_factory;
 		DebugPtr m_debug;

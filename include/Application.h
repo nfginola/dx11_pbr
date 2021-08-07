@@ -1,8 +1,9 @@
 #pragma once
 #include "Window.h"
 #include <mutex>
+#include <unordered_map>
+#include <functional>
 
-//class Engine;
 namespace Gino
 {
 	class Engine;
@@ -32,6 +33,7 @@ namespace Gino
 
 	private:
 		void InitWindow(Settings& settings);
+		void InitConsoleCommands();
 		void KillApp();
 
 		// Handle window procedures
@@ -42,6 +44,8 @@ namespace Gino
 
 		std::unique_ptr<Window> m_mainWindow;
 		std::unique_ptr<Engine> m_engine;
+
+		std::unordered_map<std::string, std::function<void()>> m_consoleCommands;
 
 
 	};

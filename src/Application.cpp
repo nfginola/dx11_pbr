@@ -2,26 +2,25 @@
 #include "Application.h"
 #include "Engine.h"
 
-
 namespace Gino
 {
 	Application::Application(Settings& settings) :
 		m_appIsAlive(true)
     {
 		InitWindow(settings);
+		InitConsoleCommands();
 
+		// Other settings such as Shadow Map resolution, and other misc. will go through here
 		Engine::Settings engineSettings
 		{
 			.hwnd = m_mainWindow->GetHWND(),
 			.vsync = false,
-			.resolutionWidth = 1920,
-			.resolutionHeight = 1080
+			.resolutionWidth = 2560,
+			.resolutionHeight = 1440
 		};
 
 		m_engine = std::make_unique<Engine>(engineSettings);
 	
-
-
 		/*
 		
 		std::make_unique<Engine>(settings.engine);
@@ -161,16 +160,22 @@ namespace Gino
 		// Convert input to lowercase
 		std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c) { return std::tolower(c); });
 
-		std::cout << "Command: '" << input << "'\n";
+		// Alternatively, we can do this without needing locks for individual action
+		// We can instead simply push a function to a ParsedCommand Queue
+		// which the main Application thread can take care of at any time within the frame (e.g begin or end)
+		// The only lock needed will be on popping the queue and pushing to the queue.
+		// This means we would need to make a SharedQueue structure which lets us push and pop in a thread-safe manner
+		// If we do want some function to happen asynchronously (e.g Model Loading), then we can dispatch threads for that and handle that specifically
+		auto it = std::find_if(m_consoleCommands.begin(), m_consoleCommands.end(), [&input](const auto& command) { return command.first == input; });
+		if (it != m_consoleCommands.end())
 		{
-			if (input == "q" || input == "quit")
-			{
-				KillApp();
-			}
-			else
-			{
-				std::cout << "'" << input << "' is an invalid command!\n";
-			}
+			std::cout << "Command: '" << input << "' success!\n";
+			auto& action = ((*it).second);
+			action();
+		}
+		else
+		{
+			std::cout << "Command: '" << input << "' is an invalid command!\n";		
 		}
 		
 		std::cout << std::endl;
@@ -185,6 +190,16 @@ namespace Gino
 		// Set fullscreen on start if specified
 		if (!m_mainWindow->IsFullscreen() && settings.fullscreenOnStart)
 			m_mainWindow->SetFullscreen(true);
+	}
+
+	void Application::InitConsoleCommands()
+	{
+		// Init functions
+		auto appKillCommand = [this]() { KillApp(); };
+
+		// Assign functions
+		m_consoleCommands.insert({ "q", appKillCommand });
+		m_consoleCommands.insert({ "quit", appKillCommand });
 	}
 
 	void Application::KillApp()
@@ -214,6 +229,12 @@ namespace Gino
 			// We want to hook this to ImGui viewport later
 			//if (m_resizeCallback)
 			//	m_resizeCallback(LOWORD(lParam), HIWORD(lParam));
+			break;
+		}
+
+		case WM_EXITSIZEMOVE:
+		{
+			//std::cout << "Should resize\n";
 			break;
 		}
 
