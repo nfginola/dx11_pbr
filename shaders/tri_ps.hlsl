@@ -8,8 +8,12 @@ struct PS_IN
 Texture2D mainTex : register(t0);
 SamplerState mainSampler : register(s0);
 
+static const float GAMMA = 2.2f;
+
 float4 PSMain(PS_IN input) : SV_TARGET
 {
-    return float4(mainTex.Sample(mainSampler, input.uv).xyz, 1.f);
-	return float4(input.uv, 0.0f, 1.0f);
+    float3 color = mainTex.Sample(mainSampler, input.uv);
+		
+    return float4(pow(color, float3(1.f / GAMMA, 1.f / GAMMA, 1.f / GAMMA)), 1.f);
+	//return float4(input.uv, 0.0f, 1.0f);
 }

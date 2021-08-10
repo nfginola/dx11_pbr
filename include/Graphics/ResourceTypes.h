@@ -24,7 +24,7 @@ namespace Gino
 	struct Framebuffer
 	{
 	public:
-		Framebuffer() = default;
+		Framebuffer();
 		~Framebuffer();
 		
 		void Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv = nullptr);
@@ -86,6 +86,13 @@ namespace Gino
 	struct Buffer
 	{
 		BufferPtr buffer;
+
+		/*
+		Stride,
+		Offset,
+		etc. (Put in when we need it: We will need it for Mesh loading)
+		
+		*/
 	
 		Buffer() = default;
 		~Buffer() = default;
@@ -112,7 +119,6 @@ namespace Gino
 		~ConstantBuffer();
 
 		void Initialize(const DevicePtr& dev, const std::vector<T>& initData, bool dynamic, bool cpuUpdatable);
-
 		void Upload(const DeviceContextPtr& ctx);
 	};
 	

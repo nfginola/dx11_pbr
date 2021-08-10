@@ -114,7 +114,15 @@ namespace Gino
 		// Test for resource cleanup warning signals
 		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
 		//ID3D11Buffer* tmpBuf;
-		//HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, &tmpBuf));
+		//D3D11_BUFFER_DESC vbDesc
+		//{
+		//	.ByteWidth = 32,
+		//	.Usage = D3D11_USAGE_DYNAMIC,
+		//	.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+		//	.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
+		//};
+
+		//HRCHECK(dev->CreateBuffer(&vbDesc, NULL, &tmpBuf));
 
 	}
 

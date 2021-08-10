@@ -127,6 +127,13 @@ namespace Gino
         }
     }
 
+    Framebuffer::Framebuffer() :
+        m_renderTargets({}),
+        m_activeRenderTargets(0),
+        m_depthStencilView(nullptr)
+    {
+    }
+
     Framebuffer::~Framebuffer()
     {
         //for (uint32_t i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
