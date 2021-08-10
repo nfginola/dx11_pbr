@@ -4,6 +4,9 @@
 #include <Windows.h>
 #include <fstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 namespace Gino::Utils
 {
 	std::string WstrToStr(std::wstring wstr)
@@ -23,7 +26,7 @@ namespace Gino::Utils
 		return wstrTo;
 	}
 
-	std::vector<uint8_t> ReadFile(const std::string& filePath)
+	std::vector<uint8_t> ReadFile(const std::filesystem::path& filePath)
 	{
 		std::ifstream file(filePath, std::ios::ate | std::ios::binary);
 		if (!file.is_open())
@@ -37,6 +40,40 @@ namespace Gino::Utils
 
 		file.close();
 		return buffer;
+	}
+
+	ImageData ReadImageFile(const std::filesystem::path& filePath)
+	{
+		int texWidth, texHeight, texChannels;
+		texWidth = texHeight = texChannels = 0;
+
+		stbi_uc* pixels = stbi_load(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+		if (!pixels)
+		{
+			assert(false);		// failed to load image
+		}
+		size_t imageSize = texWidth * texHeight * sizeof(uint32_t);
+
+		// We ignore giving amount of channels as output since we are forcing RGBA (4 channel, 32 bit always)
+		return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	}
+
+	ImageData::ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight) :
+		pixels(pixels),
+		imageSize(imageSize),
+		texWidth(texWidth),
+		texHeight(texHeight)
+	{
+
+	}
+
+	ImageData::~ImageData()
+	{
+		std::cout << "ImageData destroyed\n";
+		if (pixels)
+		{
+			stbi_image_free(pixels);
+		}
 	}
 
 }

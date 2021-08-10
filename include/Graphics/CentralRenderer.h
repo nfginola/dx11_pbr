@@ -17,11 +17,14 @@ namespace Gino
 		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;
 
-		BufferPtr m_vb;
-		BufferPtr m_ib;
-
 		Buffer m_vb2;
 		Buffer m_ib2;
+
+		Tex2DPtr m_tex;
+		SrvPtr m_texView;
+		SamplerStatePtr m_mainSampler;
+
+		Framebuffer m_finalFramebuffer;
 
 		RasterizerState1Ptr m_rs;
 

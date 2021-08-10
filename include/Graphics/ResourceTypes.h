@@ -14,13 +14,34 @@ namespace Gino
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GetElementDescriptors();
 	};
 
+	struct DepthStencilClearDesc
+	{
+		UINT clearFlags;		// D3D11_CLEAR_FLAG 
+		FLOAT depth;
+		UINT8 stencil;
+	};
+
 	struct Framebuffer
 	{
-		std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> renderTargets;
-		DsvPtr depthStencilView;
+	public:
+		Framebuffer() = default;
+		~Framebuffer();
+		
+		void Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv = nullptr);
+
+		void Clear(const DeviceContextPtr& ctx, const std::array<FLOAT[4], D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> clearValues, const DepthStencilClearDesc& dsClearDesc = {});
+		void Bind(const DeviceContextPtr& ctx);
+		
+		// In case of OMSetRenderTargetsAndUnorderedAccessViews
+		const std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> GetRenderTargets() const;
+		const DsvPtr& GetDepthStencilView() const;
+
+	private:
+		std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> m_renderTargets;
+		uint32_t m_activeRenderTargets;
+		DsvPtr m_depthStencilView;
 	};
 	
-	// Below are descriptor helpers for Buffer creation to make initialization easier
 	struct VertexBufferDescRaw
 	{
 		const void* data;
@@ -165,6 +186,17 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, buffer.GetAddressOf()));
 	}
+
+	// We will continue on this as soon as we have textures up and running
+	//struct Texture
+	//{
+	//	
+
+
+	//};
+
+
+
 
 }
 

@@ -87,7 +87,7 @@ namespace Gino
 		return m_swapChain;
 	}
 
-	const RtvPtr& DXDevice::GetBackbufferView() const
+	const RtvPtr& DXDevice::GetBackbufferTarget() const
 	{
 		return m_bbView;
 	}
@@ -191,8 +191,8 @@ namespace Gino
 		
 		// Setup viewport 
 		m_bbViewport.TopLeftX = m_bbViewport.TopLeftY = 0;
-		m_bbViewport.Width = bbWidth;
-		m_bbViewport.Height = bbHeight;
+		m_bbViewport.Width = static_cast<float>(bbWidth);
+		m_bbViewport.Height = static_cast<float>(bbHeight);
 		m_bbViewport.MinDepth = 0.f;
 		m_bbViewport.MaxDepth = 1.f;
 	}

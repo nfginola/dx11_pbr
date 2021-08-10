@@ -70,7 +70,7 @@ namespace Gino
 			if (mod.stage == ShaderStage::Vertex)
 			{
 				assert(!m_inputDescs.empty());
-				dev->CreateInputLayout(m_inputDescs.data(), m_inputDescs.size(), mod.code.data(), mod.code.size(), m_inputLayout.GetAddressOf());
+				dev->CreateInputLayout(m_inputDescs.data(), (uint32_t)m_inputDescs.size(), mod.code.data(), mod.code.size(), m_inputLayout.GetAddressOf());
 			}
 		}
 	}

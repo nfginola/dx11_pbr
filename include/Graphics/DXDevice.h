@@ -18,9 +18,11 @@ using DebugPtr = ComPtr<ID3D11Debug>;
 using FactoryPtr = ComPtr<IDXGIFactory>;
 
 // Common resources
+using GPUResourcePtr = ComPtr<ID3D11Resource>;
 using Tex2DPtr = ComPtr<ID3D11Texture2D>;
 using BufferPtr = ComPtr<ID3D11Buffer>;
 using BlendStatePtr = ComPtr<ID3D11BlendState>;
+using SamplerStatePtr = ComPtr<ID3D11SamplerState>;
 using DepthStencilStatePtr = ComPtr<ID3D11DepthStencilState>;
 using InputLayoutPtr = ComPtr<ID3D11InputLayout>;
 using RasterizerStatePtr = ComPtr<ID3D11RasterizerState>;
@@ -60,7 +62,7 @@ namespace Gino
 		const DeviceContext1Ptr& GetContext() const;
 
 		const SwapChainPtr& GetSwapChain() const;
-		const RtvPtr& GetBackbufferView() const;
+		const RtvPtr& GetBackbufferTarget() const;
 		const D3D11_VIEWPORT& GetBackbufferViewport() const;
 		const DXGI_SWAP_CHAIN_DESC& GetSwapChainDesc() const;
 
