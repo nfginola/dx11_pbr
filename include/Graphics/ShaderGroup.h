@@ -29,13 +29,15 @@ namespace Gino
 		~ShaderGroup();
 
 		ShaderGroup& AddStage(ShaderStage stage, const std::vector<uint8_t>& code);
-		ShaderGroup& AddInputElementDesc(const D3D11_INPUT_ELEMENT_DESC& desc);
-		void Build(const DevicePtr& dev);
-		void Bind(const DeviceContextPtr& ctx);
+		ShaderGroup& AddInputDescs(const std::vector<D3D11_INPUT_ELEMENT_DESC> descs);
+		ShaderGroup& AddInputDesc(const D3D11_INPUT_ELEMENT_DESC& desc);
+		void Build(DevicePtr dev);
+		void Bind(DeviceContextPtr ctx);
+
 	private:
 		VsPtr m_vs;
 		InputLayoutPtr m_inputLayout;
-		std::vector<D3D11_INPUT_ELEMENT_DESC> m_inputElementDescs;
+		std::vector<D3D11_INPUT_ELEMENT_DESC> m_inputDescs;
 
 		HsPtr m_hs;
 		DsPtr m_ds;

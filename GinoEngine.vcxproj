@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\Graphics\ResourceTypes.cpp" />
     <ClCompile Include="src\Graphics\ShaderGroup.cpp" />
     <ClCompile Include="src\Graphics\CentralRenderer.cpp" />
     <ClCompile Include="src\Graphics\DXDevice.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="include\Graphics\ShaderGroup.h" />
+    <ClInclude Include="src\Graphics\ResourceTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GinoEngine.rc" />

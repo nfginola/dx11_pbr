@@ -23,6 +23,8 @@ using BufferPtr = ComPtr<ID3D11Buffer>;
 using BlendStatePtr = ComPtr<ID3D11BlendState>;
 using DepthStencilStatePtr = ComPtr<ID3D11DepthStencilState>;
 using InputLayoutPtr = ComPtr<ID3D11InputLayout>;
+using RasterizerStatePtr = ComPtr<ID3D11RasterizerState>;
+using RasterizerState1Ptr = ComPtr<ID3D11RasterizerState1>;
 
 // Views
 using SrvPtr = ComPtr<ID3D11ShaderResourceView>;
@@ -54,12 +56,13 @@ namespace Gino
 		//DevicePtr GetDevice();
 		//DeviceContextPtr GetContext();
 
-		const Device1Ptr& GetDevice();
-		const DeviceContext1Ptr& GetContext();
+		const Device1Ptr& GetDevice() const;
+		const DeviceContext1Ptr& GetContext() const;
 
-		const SwapChainPtr& GetSwapChain();
-		const RtvPtr& GetBackbufferView();
-		const DXGI_SWAP_CHAIN_DESC& GetSwapChainDesc();
+		const SwapChainPtr& GetSwapChain() const;
+		const RtvPtr& GetBackbufferView() const;
+		const D3D11_VIEWPORT& GetBackbufferViewport() const;
+		const DXGI_SWAP_CHAIN_DESC& GetSwapChainDesc() const;
 
 	private:
 		void CreateDeviceAndContext();
@@ -81,6 +84,7 @@ namespace Gino
 		DXGI_SWAP_CHAIN_DESC m_swapChainDesc;
 		Tex2DPtr m_bbTex;
 		RtvPtr m_bbView;
+		D3D11_VIEWPORT m_bbViewport;
 
 		std::vector<DXGI_MODE_DESC> m_availableDisplayModes;
 

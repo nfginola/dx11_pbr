@@ -72,27 +72,32 @@ namespace Gino
 	//	return m_context;
 	//}
 
-	const Device1Ptr& DXDevice::GetDevice()
+	const Device1Ptr& DXDevice::GetDevice() const
 	{
 		return m_device1;
 	}
 
-	const DeviceContext1Ptr& DXDevice::GetContext()
+	const DeviceContext1Ptr& DXDevice::GetContext() const
 	{
 		return m_context1;
 	}
 
-	const SwapChainPtr& DXDevice::GetSwapChain()
+	const SwapChainPtr& DXDevice::GetSwapChain() const
 	{
 		return m_swapChain;
 	}
 
-	const RtvPtr& DXDevice::GetBackbufferView()
+	const RtvPtr& DXDevice::GetBackbufferView() const
 	{
 		return m_bbView;
 	}
 
-	const DXGI_SWAP_CHAIN_DESC& DXDevice::GetSwapChainDesc()
+	const D3D11_VIEWPORT& DXDevice::GetBackbufferViewport() const
+	{
+		return m_bbViewport;
+	}
+
+	const DXGI_SWAP_CHAIN_DESC& DXDevice::GetSwapChainDesc() const
 	{
 		return m_swapChainDesc;
 	}
@@ -156,7 +161,6 @@ namespace Gino
 
 	void DXDevice::CreateSwapchain(HWND hwnd, int bbWidth, int bbHeight)
 	{
-		// =============== Create Swapchain
 		DXGI_MODE_DESC bestMode = m_availableDisplayModes.back();
 
 		m_swapChainDesc.BufferDesc.Width = bbWidth;
@@ -184,6 +188,13 @@ namespace Gino
 		m_swapChainDesc.Flags = 0;
 
 		HRCHECK(m_factory->CreateSwapChain(m_device.Get(), &m_swapChainDesc, m_swapChain.GetAddressOf()));
+		
+		// Setup viewport 
+		m_bbViewport.TopLeftX = m_bbViewport.TopLeftY = 0;
+		m_bbViewport.Width = bbWidth;
+		m_bbViewport.Height = bbHeight;
+		m_bbViewport.MinDepth = 0.f;
+		m_bbViewport.MaxDepth = 1.f;
 	}
 
 	void DXDevice::CreateBackbufferRenderTarget()

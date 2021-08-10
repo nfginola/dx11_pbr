@@ -46,36 +46,40 @@ namespace Gino
 		m_modules.push_back(mod);
 		return *this;
 	}
-
-	ShaderGroup& ShaderGroup::AddInputElementDesc(const D3D11_INPUT_ELEMENT_DESC& desc)
+	ShaderGroup& ShaderGroup::AddInputDescs(const std::vector<D3D11_INPUT_ELEMENT_DESC> descs)
 	{
-		m_inputElementDescs.push_back(desc);
+		for (const auto& desc : descs)
+		{
+			m_inputDescs.push_back(desc);
+		}
 		return *this;
 	}
 
-	void ShaderGroup::Build(const DevicePtr& dev)
+	ShaderGroup& ShaderGroup::AddInputDesc(const D3D11_INPUT_ELEMENT_DESC& desc)
+	{
+		m_inputDescs.push_back(desc);
+		return *this;
+	}
+
+	void ShaderGroup::Build(DevicePtr dev)
 	{
 		for (const auto& mod : m_modules)
 		{
 			mod.createFunc(dev, mod.code);
+
 			if (mod.stage == ShaderStage::Vertex)
 			{
-				if (m_inputElementDescs.empty())
-				{
-					std::cout << "ShaderGroup: Empty input element descriptions!\n";
-					assert(false);
-				}
-				dev->CreateInputLayout(m_inputElementDescs.data(), m_inputElementDescs.size(), mod.code.data(), mod.code.size(), m_inputLayout.GetAddressOf());
+				assert(!m_inputDescs.empty());
+				dev->CreateInputLayout(m_inputDescs.data(), m_inputDescs.size(), mod.code.data(), mod.code.size(), m_inputLayout.GetAddressOf());
 			}
 		}
 	}
-
-	void ShaderGroup::Bind(const DeviceContextPtr& ctx)
+	void ShaderGroup::Bind(DeviceContextPtr ctx)
 	{
 		if (m_vs)
 		{
-			ctx->VSSetShader(m_vs.Get(), nullptr, 0);
 			ctx->IASetInputLayout(m_inputLayout.Get());
+			ctx->VSSetShader(m_vs.Get(), nullptr, 0);
 		}
 		if (m_hs)
 		{

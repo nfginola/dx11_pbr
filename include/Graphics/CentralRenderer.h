@@ -1,6 +1,7 @@
 #pragma once
 #include "DXDevice.h"
 #include "ShaderGroup.h"
+#include "ResourceTypes.h"
 
 namespace Gino
 {
@@ -14,13 +15,15 @@ namespace Gino
 
 	private:
 		DXDevice* m_dxDev;
-
-		VsPtr m_vs;
-		PsPtr m_ps;
 		ShaderGroup m_shaderGroup;
 
-		InputLayoutPtr m_inputLayout;
 		BufferPtr m_vb;
+		BufferPtr m_ib;
+
+		Buffer m_vb2;
+		Buffer m_ib2;
+
+		RasterizerState1Ptr m_rs;
 
 		/*
 		// Dynamic allocations tho....

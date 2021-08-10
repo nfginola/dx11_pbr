@@ -14,77 +14,50 @@ namespace Gino
 	CentralRenderer::CentralRenderer(DXDevice* dxDev) :
 		m_dxDev(dxDev)
 	{
+		/*
+
+			We should make one Buffer class, which can take in multiple different descriptors of our choice instead of having multiple classes.
+			We simply follow the spirit of D3D11 when it comes to strongly typed vs non-strongly typed (in this case, there is only a ID3D11Buffer for all types of buffer)
+
+			struct ConstantBufferDesc
+			struct RWBufferDesc
+			struct UAVDesc
+			etc..
+
+			Although we should probably employ a single Texture class in line with Vulkan style (take in 1D, 2D, 3D descriptors) ??
+			We may have to read a bit more about the functionalities provided to textures.. (whether they differ between 1D, 2D and 3D)	
+
+		*/
 		auto dev = dxDev->GetDevice();
-		
-
-
-		/*
-		
-		ShaderGroup
-			.addStage(stage, bytecode)
-			.build(dev)
-		
-		
-		*/
-
-
-		// We probably want a DXBinder to avoid unneccessary API calls.
-		// We simply check for equivalence for all things we bind, simply mirroring the API state on the CPU!
-		// We use this Binder to bind every API call along with helper functions that we see fit!
-		
-
-		// Lets not mind duplicate shader creations for now 
-		// When we validate shaders, we will be doing them in a Pack and we will probably hash somehow
-		// - Shader Group: 
-		// Create Vertex Shader
-		// Create Pixel Shader
-		// Create Input Layout		-- Validates with Vertex Shader bytecode (has to have VS compiled binary data)
-		// Create Input Topology	// set with context
-
-		/*
-			Create a normal triangle CW (D3D standard) with Position, UV and Normal with VB/IB
-		*/
-		// Create and Populate VB/IB
-		// Create and set Rasterizer State (CW front-face)
-
-		auto vsBin = Utils::ReadFile("compiled_shaders/tri_vs.cso");
-		auto psBin = Utils::ReadFile("compiled_shaders/tri_ps.cso");
-
-		HRCHECK(dev->CreateVertexShader(vsBin.data(), vsBin.size(), nullptr, m_vs.GetAddressOf()));
-		HRCHECK(dev->CreatePixelShader(psBin.data(), psBin.size(), nullptr, m_ps.GetAddressOf()));
 
 		m_shaderGroup
 			.AddStage(ShaderStage::Vertex, Utils::ReadFile("compiled_shaders/tri_vs.cso"))
 			.AddStage(ShaderStage::Pixel, Utils::ReadFile("compiled_shaders/tri_ps.cso"))
-			.AddInputElementDesc({ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 })
-			.AddInputElementDesc({ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 })
-			.AddInputElementDesc({ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 })
+			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 			.Build(dev);
-		
-		// D3D11_APPEND_ALIGNED_ELEMENT includes packing (padding) for us!
-		D3D11_INPUT_ELEMENT_DESC inputDescs[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
-		HRCHECK(dev->CreateInputLayout(inputDescs, _countof(inputDescs), vsBin.data(), vsBin.size(), m_inputLayout.GetAddressOf()));
 
-		Vertex triVerts[] =
+		// make vb and ib
+		std::vector<Vertex_POS_UV_NORMAL> triVerts
 		{
 			{ { 0.f, 0.5f, 0.f }, { 1.f, 0.f }, { 0.f, 0.f, -1.f} },
 			{ { 0.5f, -0.5f, 0.f }, { 0.f, 1.f }, { 0.f, 0.f, -1.f} },
 			{ { -0.5f, -0.5f, 0.f }, { 1.f, 1.f }, { 0.f, 0.f, -1.f} }
 		};
+		std::vector<uint32_t> indices{ 0, 1, 2 };
 
-		D3D11_BUFFER_DESC vbDesc{};
-		vbDesc.ByteWidth = sizeof(triVerts);
-		vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		D3D11_SUBRESOURCE_DATA vbDat{};
-		vbDat.pSysMem = triVerts;
-		vbDat.SysMemPitch = vbDesc.ByteWidth;
-		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, m_vb.GetAddressOf()));
+		m_vb2.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
+		m_ib2.Initialize(dev, IndexBufferDesc{ .data = indices });
+
+
+
+
+		D3D11_RASTERIZER_DESC1 rsD
+		{
+			.FillMode = D3D11_FILL_SOLID,
+			.CullMode = D3D11_CULL_BACK
+		};
+		HRCHECK(dev->CreateRasterizerState1(&rsD, m_rs.GetAddressOf()));
+
 
 		// Test for resource cleanup warning signals
 		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
@@ -118,31 +91,24 @@ namespace Gino
 		const float clearColor[4] = { 0.529f, 0.808f, 0.922f, 1.f };
 		ctx->ClearRenderTargetView(m_dxDev->GetBackbufferView().Get(), clearColor);
 
-		//ctx->VSSetShader(m_vs.Get(), nullptr, 0);
-		//ctx->PSSetShader(m_ps.Get(), nullptr, 0);
 		m_shaderGroup.Bind(ctx);
 
-		//ctx->IASetInputLayout(m_inputLayout.Get());
-		ID3D11Buffer* vbs[] = { m_vb.Get() };
-		UINT vbStrides[] = { sizeof(Vertex) };
+		ID3D11Buffer* vbs[] = { m_vb2.buffer.Get() };
+		UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
 		UINT vbOffsets[] = { 0 };
 		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
+		ctx->IASetIndexBuffer(m_ib2.buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		D3D11_VIEWPORT vp{};
-		vp.TopLeftX = vp.TopLeftY = 0;
-		vp.MinDepth = 0.f;
-		vp.MaxDepth = 1.f;
-		// Match the backbuffer dimension
-		vp.Width = static_cast<float>(m_dxDev->GetSwapChainDesc().BufferDesc.Width);
-		vp.Height = static_cast<float>(m_dxDev->GetSwapChainDesc().BufferDesc.Height);
-		D3D11_VIEWPORT viewports[] = { vp };
+		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
 		ctx->RSSetViewports(_countof(viewports), viewports);
+		ctx->RSSetState(m_rs.Get());
 
 		ID3D11RenderTargetView* rtvs[] = { m_dxDev->GetBackbufferView().Get() };
 		ctx->OMSetRenderTargets(_countof(rtvs), rtvs, nullptr);
 
-		ctx->Draw(3, 0);
+		//ctx->Draw(3, 0);
+		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
 		m_dxDev->GetSwapChain()->Present(0, 0);
 	}
