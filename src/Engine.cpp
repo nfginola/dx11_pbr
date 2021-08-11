@@ -43,6 +43,18 @@ namespace Gino
 		m_centralRenderer->Render();
 	}
 
+	const std::function<void(HWND, UINT, WPARAM, LPARAM)>& Engine::GetImGuiHook() const
+	{
+		if (m_centralRenderer && m_centralRenderer->GetImGui())
+		{
+			return m_centralRenderer->GetImGui()->GetWin32Hook();
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
 	//Input* Engine::GetInput()
 	//{
 	//	return m_input.get();

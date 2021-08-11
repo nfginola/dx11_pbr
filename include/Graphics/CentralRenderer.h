@@ -3,6 +3,9 @@
 #include "ShaderGroup.h"
 #include "ResourceTypes.h"
 
+// Sub-renderers
+#include "ImGuiRenderer.h"
+
 namespace Gino
 {
 	class CentralRenderer
@@ -13,7 +16,11 @@ namespace Gino
 
 		void Render();
 
+		ImGuiRenderer* GetImGui() const;
+
 	private:
+		std::unique_ptr<ImGuiRenderer> m_imGui;
+
 		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;
 

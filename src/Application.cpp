@@ -15,8 +15,9 @@ namespace Gino
 		{
 			.hwnd = m_mainWindow->GetHWND(),
 			.vsync = false,
-			.resolutionWidth = 2560,
-			.resolutionHeight = 1440
+			
+			.resolutionWidth = settings.windowWidth,
+			.resolutionHeight = settings.windowHeight
 		};
 
 		m_engine = std::make_unique<Engine>(engineSettings);
@@ -211,6 +212,16 @@ namespace Gino
 
 	LRESULT Application::MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
+		if (m_appIsAlive && m_engine)
+		{
+			auto imGuiFunc = m_engine->GetImGuiHook();
+			if (imGuiFunc)
+			{
+				imGuiFunc(hwnd, uMsg, wParam, lParam);
+			}
+		}
+
+
 		switch (uMsg)
 		{
 		// Universal quit message

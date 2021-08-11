@@ -73,8 +73,8 @@ namespace Gino
 			classID.c_str(),				// Class name (identifier)
 			title.c_str(),					// Window title 
 			m_winStyle,						// Window style 
-			65,								// Window x-pos
-			10,								// Window y-pos 
+			0,//65,								// Window x-pos
+			0,//10,								// Window y-pos 
 
 			// This will be resized to our desired client dimensions later
 			CW_USEDEFAULT,					// Default width

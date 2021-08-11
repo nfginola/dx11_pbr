@@ -42,7 +42,8 @@ namespace Gino
 		return passed;
 	}
 
-	DXDevice::DXDevice(HWND hwnd, int bbWidth, int bbHeight)
+	DXDevice::DXDevice(HWND hwnd, int bbWidth, int bbHeight) :
+		m_hwnd(hwnd)
 	{
 		CreateDeviceAndContext();
 		GetDebug();
@@ -71,6 +72,11 @@ namespace Gino
 	//{
 	//	return m_context;
 	//}
+
+	HWND DXDevice::GetHWND() const
+	{
+		return m_hwnd;
+	}
 
 	const Device1Ptr& DXDevice::GetDevice() const
 	{

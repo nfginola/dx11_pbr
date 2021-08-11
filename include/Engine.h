@@ -28,7 +28,10 @@ namespace Gino
 
 		void SimulateAndRender();
 
+			
 		//Input* GetInput();
+
+		const std::function<void(HWND, UINT, WPARAM, LPARAM)>& GetImGuiHook() const;
 
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;

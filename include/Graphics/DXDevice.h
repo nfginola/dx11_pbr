@@ -60,6 +60,7 @@ namespace Gino
 		//DevicePtr GetDevice();
 		//DeviceContextPtr GetContext();
 
+		HWND GetHWND() const;
 		const Device1Ptr& GetDevice() const;
 		const DeviceContext1Ptr& GetContext() const;
 
@@ -76,6 +77,7 @@ namespace Gino
 		void CreateBackbufferRenderTarget();
 
 	private:
+		HWND m_hwnd;
 		DevicePtr m_device;
 		DeviceContextPtr m_context;
 		Device1Ptr m_device1;			// 11_1

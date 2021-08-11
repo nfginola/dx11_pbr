@@ -1,10 +1,13 @@
 #include "pch.h"
 #include "Graphics/CentralRenderer.h"
 
+
+
 namespace Gino
 {
 	CentralRenderer::CentralRenderer(DXDevice* dxDev) :
-		m_dxDev(dxDev)
+		m_dxDev(dxDev),
+		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice().Get(), dxDev->GetContext().Get()))
 	{
 		/*
 		
@@ -100,7 +103,6 @@ namespace Gino
 
 	CentralRenderer::~CentralRenderer()
 	{
-
 	}
 
 	void CentralRenderer::Render()
@@ -118,6 +120,9 @@ namespace Gino
 		postProcessPass->run(resolveFramebuffer, finalRenderTarget);
 		
 		*/
+
+
+		m_imGui->BeginFrame();
 		
 		auto ctx = m_dxDev->GetContext();
 
@@ -145,7 +150,23 @@ namespace Gino
 
 		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
+		
+		m_imGui->EndFrame();
+
 		m_dxDev->GetSwapChain()->Present(0, 0);
 	}
+
+	ImGuiRenderer* CentralRenderer::GetImGui() const
+	{
+		if (m_imGui)
+		{
+			return m_imGui.get();
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
 }
 
