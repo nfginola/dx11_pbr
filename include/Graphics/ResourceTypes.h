@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <variant>
 #include "DXDevice.h"
 #include "ShaderGroup.h"
 
@@ -32,7 +33,9 @@ namespace Gino
 		void Clear(const DeviceContextPtr& ctx, const std::array<FLOAT[4], D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> clearValues, const DepthStencilClearDesc& dsClearDesc = {});
 		void Bind(const DeviceContextPtr& ctx);
 		
-		// In case of OMSetRenderTargetsAndUnorderedAccessViews
+		// For OMSetRenderTargetsAndUnorderedAccessViews usage
+		// Otherwise we can have another Bind function for the Framebuffer which instead takes in UAVs
+		// e.g --> BindWithUAVs(ctx, UAVs)
 		const std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> GetRenderTargets() const;
 		const DsvPtr& GetDepthStencilView() const;
 
@@ -193,13 +196,35 @@ namespace Gino
 		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, buffer.GetAddressOf()));
 	}
 
-	// We will continue on this as soon as we have textures up and running
-	//struct Texture
-	//{
-	//	
+	// Subject to change (adding 1D/3D)
+	struct Texture
+	{
+	public:
+		ID3D11Texture2D* GetTexture() const;		// We will use getter in case of future changes (adding 1D/3D textures)
+
+		void Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, Utils::ImageData* imageData = nullptr);
+		ID3D11ShaderResourceView* GetSRV() const;
+		ID3D11RenderTargetView* GetRTV() const;
+		ID3D11DepthStencilView* GetDSV() const;
+		ID3D11UnorderedAccessView* GetUAV() const;
+
+		void InitializeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::filesystem::path& filePath, bool srgb = true, bool genMipMaps = true);
+
+	private:
+		void CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc);
+
+	private:
+		Tex2DPtr m_texture;	
+		
+		SrvPtr m_srv;
+		RtvPtr m_rtv;
+		DsvPtr m_dsv;
+		UavPtr m_uav;
+
+		
 
 
-	//};
+	};
 
 
 

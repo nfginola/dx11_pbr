@@ -28,7 +28,7 @@ namespace Gino
 		ShaderGroup();
 		~ShaderGroup();
 
-		ShaderGroup& AddStage(ShaderStage stage, const std::vector<uint8_t>& code);
+		ShaderGroup& AddStage(ShaderStage stage, const std::filesystem::path& filePath);
 		ShaderGroup& AddInputDescs(const std::vector<D3D11_INPUT_ELEMENT_DESC> descs);
 		ShaderGroup& AddInputDesc(const D3D11_INPUT_ELEMENT_DESC& desc);
 		void Build(DevicePtr dev);

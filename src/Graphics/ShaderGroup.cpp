@@ -11,8 +11,10 @@ namespace Gino
 	{
 	}
 
-	ShaderGroup& ShaderGroup::AddStage(ShaderStage stage, const std::vector<uint8_t>& code)
+	ShaderGroup& ShaderGroup::AddStage(ShaderStage stage, const std::filesystem::path& filePath)
 	{
+		auto code = Utils::ReadFile(filePath);
+
 		ShaderModule mod
 		{
 			.stage = stage,

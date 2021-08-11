@@ -19,7 +19,9 @@ using FactoryPtr = ComPtr<IDXGIFactory>;
 
 // Common resources
 using GPUResourcePtr = ComPtr<ID3D11Resource>;
+using Tex1DPtr = ComPtr<ID3D11Texture1D>;
 using Tex2DPtr = ComPtr<ID3D11Texture2D>;
+using Tex3DPtr = ComPtr<ID3D11Texture3D>;
 using BufferPtr = ComPtr<ID3D11Buffer>;
 using BlendStatePtr = ComPtr<ID3D11BlendState>;
 using SamplerStatePtr = ComPtr<ID3D11SamplerState>;

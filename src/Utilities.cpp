@@ -55,6 +55,7 @@ namespace Gino::Utils
 		size_t imageSize = texWidth * texHeight * sizeof(uint32_t);
 
 		// We ignore giving amount of channels as output since we are forcing RGBA (4 channel, 32 bit always)
+		// Pixels will be auto cleaned up on ImageData destructor 
 		return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	}
 

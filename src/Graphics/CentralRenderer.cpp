@@ -28,10 +28,12 @@ namespace Gino
 
 		*/
 		auto dev = dxDev->GetDevice();
+		auto ctx = dxDev->GetContext();
 
+		// make shaders
 		m_shaderGroup
-			.AddStage(ShaderStage::Vertex, Utils::ReadFile("compiled_shaders/tri_vs.cso"))
-			.AddStage(ShaderStage::Pixel, Utils::ReadFile("compiled_shaders/tri_ps.cso"))
+			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
+			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 			.Build(dev);
 
@@ -44,54 +46,24 @@ namespace Gino
 		};
 		std::vector<uint32_t> indices{ 0, 1, 2 };
 
-		m_vb2.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
-		m_ib2.Initialize(dev, IndexBufferDesc{ .data = indices });
+		m_vb.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
+		m_ib.Initialize(dev, IndexBufferDesc{ .data = indices });
 
+		// make framebuffer
 		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
 
+		// make texture
+		m_mainTex.InitializeFromFile(dev, ctx, "../assets/scenery.jpg");
+
+		// make rasterizer state
 		D3D11_RASTERIZER_DESC1 rsD
 		{
 			.FillMode = D3D11_FILL_SOLID,
 			.CullMode = D3D11_CULL_BACK
 		};
 		HRCHECK(dev->CreateRasterizerState1(&rsD, m_rs.GetAddressOf()));
-
-
-		// Create texture and view
-		auto imageDat = Utils::ReadImageFile("../assets/scenery.jpg");
-		DXGI_SAMPLE_DESC sampDesc { .Count = 1, .Quality = 0 };		// no multisamples
-		D3D11_TEXTURE2D_DESC texDesc
-		{
-			.Width = imageDat.texWidth,
-			.Height = imageDat.texHeight,
-			.MipLevels = 1,		// no mips for now
-			.ArraySize = 1,
-			.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,		// assume SRGB 
-			.SampleDesc = sampDesc,
-			.Usage = D3D11_USAGE_IMMUTABLE,
-			.BindFlags = D3D11_BIND_SHADER_RESOURCE
-		};
-		D3D11_SUBRESOURCE_DATA imgRes
-		{
-			.pSysMem = imageDat.pixels,
-			.SysMemPitch = imageDat.texWidth * sizeof(uint32_t)
-		};
-		HRCHECK(dev->CreateTexture2D(&texDesc, &imgRes, m_tex.GetAddressOf()));
-
-		D3D11_TEX2D_SRV tex2DSrvDesc
-		{
-			.MostDetailedMip = 0,
-			.MipLevels = 1
-		};
-		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc
-		{
-			// The info for these two can be received from the actual descriptor of the Texture!
-			.Format = texDesc.Format,
-			.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
-			.Texture2D = tex2DSrvDesc
-		};
-		HRCHECK(dev->CreateShaderResourceView(m_tex.Get(), &srvDesc, m_texView.GetAddressOf()));
-		
+	
+		// make sampler
 		D3D11_SAMPLER_DESC samplerDesc
 		{
 			.Filter = D3D11_FILTER_ANISOTROPIC,
@@ -100,10 +72,10 @@ namespace Gino
 			.AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
 			.MipLODBias = 0.f,
 			.MaxAnisotropy = 8,								// We have to check max anisotropy available, but lets set to 8
-			.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL,		// Not used.. what do we do with the information on whether it has passed??
+			.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL,		// Not used.. what do we do with the information on whether it has passed?? // Read more
 			.BorderColor = { 0.f, 0.f, 0.f, 1.f },
-			.MinLOD = 0,
-			.MaxLOD = 0
+			.MinLOD = 0.f,
+			.MaxLOD = D3D11_FLOAT32_MAX
 		};
 		HRCHECK(dev->CreateSamplerState(&samplerDesc, m_mainSampler.GetAddressOf()));
 
@@ -151,19 +123,19 @@ namespace Gino
 
 		m_shaderGroup.Bind(ctx);
 
-		ID3D11Buffer* vbs[] = { m_vb2.buffer.Get() };
+		ID3D11Buffer* vbs[] = { m_vb.buffer.Get() };
 		UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
 		UINT vbOffsets[] = { 0 };
 		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
-		ctx->IASetIndexBuffer(m_ib2.buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		ctx->IASetIndexBuffer(m_ib.buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 
 		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
 		ctx->RSSetViewports(_countof(viewports), viewports);
 		ctx->RSSetState(m_rs.Get());
 
-		ID3D11ShaderResourceView* srvs[] = { m_texView.Get() };
+		//ID3D11ShaderResourceView* srvs[] = { m_texView.Get() };
+		ID3D11ShaderResourceView* srvs[] = { m_mainTex.GetSRV() };
 		ctx->PSSetShaderResources(0, 1, srvs);
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
