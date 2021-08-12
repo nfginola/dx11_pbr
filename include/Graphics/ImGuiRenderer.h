@@ -1,8 +1,10 @@
 #pragma once
 #include "DXDevice.h"
+#include "Graphics/ResourceTypes.h"
 
 namespace Gino
 {
+
 	class ImGuiRenderer
 	{
 	public:
@@ -10,7 +12,7 @@ namespace Gino
 		~ImGuiRenderer();
 		
 		void BeginFrame();
-		void EndFrame();
+		void EndFrame(const DeviceContextPtr& ctx, const Framebuffer& target);
 
 		const std::function<void(HWND, UINT, WPARAM, LPARAM)>& GetWin32Hook() const;
 

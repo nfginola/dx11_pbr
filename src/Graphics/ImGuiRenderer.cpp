@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Graphics/ImGuiRenderer.h"
+#include "Graphics/ResourceTypes.h"
 
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -27,6 +28,7 @@ namespace Gino
 			{
 				return true;
 			}
+			return false;
 		};
 	}
 
@@ -47,9 +49,12 @@ namespace Gino
 		ImGui::ShowDemoWindow(&showDemoWindow);
 	}
 
-	void ImGuiRenderer::EndFrame()
+	void ImGuiRenderer::EndFrame(const DeviceContextPtr& ctx, const Framebuffer& target)
 	{
+		auto io = ImGui::GetIO();
 		ImGui::Render();
+		
+		ctx->OMSetRenderTargets(1, target.GetRenderTargets().data(), nullptr);
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 	

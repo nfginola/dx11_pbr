@@ -2,6 +2,7 @@
 #include "Engine.h"
 #include "Graphics/DXDevice.h"
 #include "Graphics/CentralRenderer.h"
+#include "AssimpLoader.h"
 
 namespace Gino
 {
@@ -43,7 +44,7 @@ namespace Gino
 		m_centralRenderer->Render();
 	}
 
-	const std::function<void(HWND, UINT, WPARAM, LPARAM)>& Engine::GetImGuiHook() const
+	std::function<void(HWND, UINT, WPARAM, LPARAM)> Engine::GetImGuiHook() const
 	{
 		if (m_centralRenderer && m_centralRenderer->GetImGui())
 		{
@@ -51,7 +52,7 @@ namespace Gino
 		}
 		else
 		{
-			return nullptr;
+			return[](HWND, UINT, WPARAM, LPARAM) {};
 		}
 	}
 

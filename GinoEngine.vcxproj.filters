@@ -72,6 +72,9 @@
     <ClCompile Include="src\Graphics\ImGuiRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\AssimpLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Window.h">
@@ -110,7 +113,7 @@
     <ClInclude Include="include\Graphics\ShaderGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\ResourceTypes.h">
+    <ClInclude Include="include\ResourceTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vendor\imgui-master\imgui_internal.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Graphics\ImGuiRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssimpLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

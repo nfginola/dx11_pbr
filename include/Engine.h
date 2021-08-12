@@ -6,6 +6,7 @@ namespace Gino
 	class Input;
 	class DXDevice;
 	class CentralRenderer;
+	class AssimpLoader;
 
 	class Engine
 	{
@@ -18,8 +19,8 @@ namespace Gino
 			// Renderer settings
 			bool vsync = true;
 			// Pixel resolution
-			int resolutionWidth = 1920;
-			int resolutionHeight = 1080;
+			int resolutionWidth = 2560;
+			int resolutionHeight = 1440;
 		};
 
 	public:
@@ -31,7 +32,7 @@ namespace Gino
 			
 		//Input* GetInput();
 
-		const std::function<void(HWND, UINT, WPARAM, LPARAM)>& GetImGuiHook() const;
+		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
 
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;

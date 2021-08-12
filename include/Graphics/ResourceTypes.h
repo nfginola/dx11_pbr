@@ -228,6 +228,88 @@ namespace Gino
 
 
 
+	// ====================== Higher level abstractions
+
+	enum class MaterialType
+	{
+		PHONG,
+		PBR
+	};
+
+	struct PhongMaterialData
+	{
+		Texture* m_diffuse;
+		Texture* m_specular;
+		Texture* m_opacity;
+		Texture* m_normal;
+
+		// Other misc. data (e.g colors) can be stored here too
+	};
+
+	struct PBRMaterialData
+	{
+		Texture* m_albedo;
+		Texture* m_normal;
+		Texture* m_metallic;
+		Texture* m_roughness;
+		Texture* m_ao;
+
+		// Other misc. data can be stored here too
+	};
+
+	// We use variant to simplify the data pipeline for our application needs
+	// Idea is: Branch the rendering by material type --> If type is PBR, go to PBR renderer, etc.
+	struct Material
+	{
+	public:
+		void Initialize(const PhongMaterialData& data);
+		void Initialize(const PBRMaterialData& data);
+
+		template <typename T>
+		const T& GetProperties() const;
+
+		MaterialType GetType() const;
+	private:
+		MaterialType m_type;
+		std::variant<PhongMaterialData, PBRMaterialData> m_data;
+		// ShaderGroup and other Pipeline resources? Maybe not?
+
+	};
+
+	// Represents offsets into a Mesh (VB/IB) that represents a specific mesh part of a model for drawing
+	struct MeshPart
+	{
+		uint32_t indicesFirstIndex;		// First index in IB
+		uint32_t numIndices;			// Vertex count to draw
+		uint32_t vertexOffset;			// First index in VB
+
+		Material* material;				// Shading information for this part
+	};
+
+	// A collection of meshes that represents a coherent geometric model
+	struct Mesh
+	{
+		Buffer vb;
+		Buffer ib;
+		std::vector<MeshPart> submeshes;
+	};
+
+	template<typename T>
+	inline const T& Material::GetProperties() const
+	{
+		try
+		{
+			return std::get<T>(m_data);
+		}
+		catch (std::bad_variant_access const& ex)
+		{
+			std::cout << ex.what() << " || Gino::Material : GetProperties() is called with an invalid type!\n";
+			assert(false);
+
+			// Should never reach here: Here to get rid of the warnings.. 
+			return std::get<T>(m_data);
+		}
+	}
 
 }
 

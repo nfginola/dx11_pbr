@@ -372,4 +372,21 @@ namespace Gino
 
     }
 
+    void Material::Initialize(const PhongMaterialData& data)
+    {
+        m_type = MaterialType::PHONG;
+        m_data = data;
+    }
+
+    void Material::Initialize(const PBRMaterialData& data)
+    {
+        m_type = MaterialType::PBR;
+        m_data = data;
+    }
+
+    MaterialType Material::GetType() const
+    {
+        return m_type;
+    }
+
 }

@@ -40,7 +40,7 @@ namespace Gino
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 			.Build(dev);
 
-		// make vb and ib
+		// make vb (CW) and ib
 		std::vector<Vertex_POS_UV_NORMAL> triVerts
 		{
 			{ { 0.f, 0.5f, 0.f }, { 0.5f, 0.f }, { 0.f, 0.f, -1.f} },
@@ -82,6 +82,18 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateSamplerState(&samplerDesc, m_mainSampler.GetAddressOf()));
 
+		
+
+		//// Try material
+		//PhongMaterialData hey{};
+		//hey.m_diffuse = &m_mainTex;
+
+		//Material mat;
+		//mat.Initialize(hey);
+
+		//auto& myData = mat.GetProperties<PhongMaterialData>();
+		//
+		//std::cout << "stop!\n";
 
 
 
@@ -151,7 +163,7 @@ namespace Gino
 		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
 		
-		m_imGui->EndFrame();
+		m_imGui->EndFrame(ctx, m_finalFramebuffer);
 
 		m_dxDev->GetSwapChain()->Present(0, 0);
 	}
