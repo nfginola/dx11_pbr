@@ -17,6 +17,12 @@ namespace Gino
 		void Render();
 
 	private:
+		struct TestMipData
+		{
+			float mipLevel;
+		};
+
+	private:
 		bool m_vsync;
 
 		ImGuiRenderer* m_imGui;
@@ -27,6 +33,8 @@ namespace Gino
 		Buffer m_vb;
 		Buffer m_ib;
 		Texture m_mainTex;
+
+		ConstantBuffer<TestMipData> m_cb;
 
 		SamplerStatePtr m_mainSampler;
 

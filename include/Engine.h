@@ -18,7 +18,7 @@ namespace Gino
 			HWND hwnd;
 
 			// Renderer settings
-			bool vsync = true;
+			bool vsync = false;
 			// Pixel resolution
 			int resolutionWidth = 2560;
 			int resolutionHeight = 1440;

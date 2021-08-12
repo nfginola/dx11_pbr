@@ -14,7 +14,7 @@ namespace Gino
 		Engine::Settings engineSettings
 		{
 			.hwnd = m_mainWindow->GetHWND(),
-			.vsync = false,
+			.vsync = true,
 			
 			.resolutionWidth = settings.windowWidth,
 			.resolutionHeight = settings.windowHeight

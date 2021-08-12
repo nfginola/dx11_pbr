@@ -36,7 +36,7 @@ int main()
         // 16:9 aspect ratio
         .windowWidth = 2560,
         .windowHeight = 1440,
-        .fullscreenOnStart = true
+        .fullscreenOnStart = true,
     };
     
     std::thread consoleThread;

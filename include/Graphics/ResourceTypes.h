@@ -121,12 +121,13 @@ namespace Gino
 		ConstantBuffer();
 		~ConstantBuffer();
 
-		void Initialize(const DevicePtr& dev, const std::vector<T>& initData, bool dynamic, bool cpuUpdatable);
+		void Initialize(const DevicePtr& dev, const std::vector<T>& initData = {}, bool dynamic = true, bool cpuUpdatable = true);
 		void Upload(const DeviceContextPtr& ctx);
 	};
 	
 	template<typename T>
-	inline ConstantBuffer<T>::ConstantBuffer()
+	inline ConstantBuffer<T>::ConstantBuffer() :
+		data({})
 	{
 	}
 
@@ -165,18 +166,25 @@ namespace Gino
 			assert(false);
 		}
 
-		D3D11_SUBRESOURCE_DATA data{};
-		data.pSysMem = initData.data();
-		HRCHECK(dev->CreateBuffer(&desc, &data, buffer.GetAddressOf()));
+		if (initData.empty())
+		{
+			HRCHECK(dev->CreateBuffer(&desc, nullptr, buffer.GetAddressOf()));
+		}
+		else
+		{
+			D3D11_SUBRESOURCE_DATA data{};
+			data.pSysMem = initData.data();
+			HRCHECK(dev->CreateBuffer(&desc, &data, buffer.GetAddressOf()));
+		}
 	}
 
 	template<typename T>
 	inline void ConstantBuffer<T>::Upload(const DeviceContextPtr& ctx)
 	{
-		D3D11_MAPPED_SUBRESOURCE* subres;
-		ctx->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &subres);
-		std::memcpy(subres, &data, sizeof(T));
-		ctx->Unmap(buffer);
+		D3D11_MAPPED_SUBRESOURCE subres;
+		ctx->Map(buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &subres);
+		std::memcpy(subres.pData, &data, sizeof(T));
+		ctx->Unmap(buffer.Get(), 0);
 	}
 
 	template<typename T>
@@ -257,8 +265,11 @@ namespace Gino
 		// Other misc. data can be stored here too
 	};
 
-	// We use variant to simplify the data pipeline for our application needs
-	// Idea is: Branch the rendering by material type --> If type is PBR, go to PBR renderer, etc.
+	// We use variant to make it simple. No complex material schemes.
+	// Idea here is that we can easily modify and extend this should we want other material types 
+	// - We add another initialize that takes in another Data type
+	// - Add another ENUM
+	// - Existing materials undisturbed!
 	struct Material
 	{
 	public:
@@ -277,13 +288,14 @@ namespace Gino
 	};
 
 	// Represents offsets into a Mesh (VB/IB) that represents a specific mesh part of a model for drawing
+	// This is essentially a "render unit" (Draw call + Pipeline states)
 	struct MeshPart
 	{
 		uint32_t indicesFirstIndex;		// First index in IB
 		uint32_t numIndices;			// Vertex count to draw
 		uint32_t vertexOffset;			// First index in VB
 
-		Material* material;				// Shading information for this part
+		Material* material;				// Shading information
 	};
 
 	// A collection of meshes that represents a coherent geometric model

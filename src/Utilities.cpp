@@ -70,7 +70,6 @@ namespace Gino::Utils
 
 	ImageData::~ImageData()
 	{
-		std::cout << "ImageData destroyed\n";
 		if (pixels)
 		{
 			stbi_image_free(pixels);

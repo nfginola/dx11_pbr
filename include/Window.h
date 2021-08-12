@@ -6,7 +6,7 @@ namespace Gino
 	class Window
 	{
 	public:
-		Window(HINSTANCE hInstance, std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> winProc, int clientWidth = 1600, int clientHeight = 900, const std::string& title = "NagiEngine");
+		Window(HINSTANCE hInstance, std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> winProc, int clientWidth = 1600, int clientHeight = 900, const std::string& title = "GinoEngine");
 		~Window();
 		
 		void PumpMessages() const;

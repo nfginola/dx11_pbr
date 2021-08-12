@@ -98,6 +98,10 @@ namespace Gino
 
 
 
+		// Try cb
+		m_cb.Initialize(dev);
+
+
 
 		// Test for resource cleanup warning signals
 		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
@@ -118,6 +122,7 @@ namespace Gino
 	{
 	}
 
+	static float timeElapsed = 0.f;
 	void CentralRenderer::Render()
 	{
 		/*
@@ -134,10 +139,22 @@ namespace Gino
 		
 		*/
 
+		timeElapsed += 0.002f;
+
 
 		m_imGui->BeginFrame();
 		
 		auto ctx = m_dxDev->GetContext();
+
+
+		// Test update using constant buffer
+		float mipLevel = cosf(timeElapsed) * 5.f + 5.f;
+		std::cout << "mip: " << mipLevel << "\n";
+		m_cb.data.mipLevel = mipLevel;
+		m_cb.Upload(ctx);
+		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
+
+
 
 		m_shaderGroup.Bind(ctx);
 
