@@ -30,9 +30,10 @@ namespace Gino
 		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;
 
-		Buffer m_vb;
-		Buffer m_ib;
 		Texture m_mainTex;
+
+		Material m_testMat;
+		Model m_testModel;
 
 		ConstantBuffer<TestMipData> m_cb;
 

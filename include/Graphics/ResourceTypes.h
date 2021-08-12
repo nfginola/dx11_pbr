@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <variant>
+#include <utility>
 #include "DXDevice.h"
 #include "ShaderGroup.h"
 
@@ -110,7 +111,7 @@ namespace Gino
 		void Initialize(const DevicePtr& dev, RWBufferDesc desc);
 		void Initialize(const DevicePtr& dev, ByteAddressBufferDesc desc);
 		void Initialize(const DevicePtr& dev, IndirectArgsBufferDesc desc);
-	};
+	}; 
 
 	template <typename T>
 	struct ConstantBuffer
@@ -246,21 +247,21 @@ namespace Gino
 
 	struct PhongMaterialData
 	{
-		Texture* m_diffuse;
-		Texture* m_specular;
-		Texture* m_opacity;
-		Texture* m_normal;
+		Texture* m_diffuse = nullptr;
+		Texture* m_specular = nullptr;
+		Texture* m_opacity = nullptr;
+		Texture* m_normal = nullptr;
 
 		// Other misc. data (e.g colors) can be stored here too
 	};
 
 	struct PBRMaterialData
 	{
-		Texture* m_albedo;
-		Texture* m_normal;
-		Texture* m_metallic;
-		Texture* m_roughness;
-		Texture* m_ao;
+		Texture* m_albedo = nullptr;
+		Texture* m_normal = nullptr;
+		Texture* m_metallic = nullptr;
+		Texture* m_roughness = nullptr;
+		Texture* m_ao = nullptr;
 
 		// Other misc. data can be stored here too
 	};
@@ -273,6 +274,9 @@ namespace Gino
 	struct Material
 	{
 	public:
+		Material() = default;
+		~Material() = default;
+
 		void Initialize(const PhongMaterialData& data);
 		void Initialize(const PBRMaterialData& data);
 
@@ -287,23 +291,41 @@ namespace Gino
 
 	};
 
-	// Represents offsets into a Mesh (VB/IB) that represents a specific mesh part of a model for drawing
+	// Represents offsets into a common VB/IB that represents a specific submesh of a model for drawing
 	// This is essentially a "render unit" (Draw call + Pipeline states)
-	struct MeshPart
-	{
-		uint32_t indicesFirstIndex;		// First index in IB
-		uint32_t numIndices;			// Vertex count to draw
-		uint32_t vertexOffset;			// First index in VB
-
-		Material* material;				// Shading information
-	};
-
-	// A collection of meshes that represents a coherent geometric model
 	struct Mesh
 	{
-		Buffer vb;
-		Buffer ib;
-		std::vector<MeshPart> submeshes;
+		uint32_t numIndices;			// Vertex count to draw
+		uint32_t indicesFirstIndex;		// First index in IB
+		uint32_t vertexOffset;			// First index in VB
+	};
+
+	// A collection of meshes and material that represents a coherent geometric model
+	struct Model
+	{
+	public:
+		Model() = default;
+		~Model() = default;
+
+		void Initialize(const Buffer& vb, const Buffer& ib, const std::vector<std::pair<Mesh, Material*>>& meshesAndMaterials);
+
+		// Mesh have an implicit but weak relation to materials.
+		// Here we ensure that we are working with them in pairs but still keeping them separate.
+		const std::vector<Mesh>& GetMeshes() const;
+		const std::vector<Material*>& GetMaterials() const;
+
+		ID3D11Buffer* GetVB() const;
+		ID3D11Buffer* GetIB() const;
+
+	private:
+		void AddMesh(const Mesh& mesh, Material* material);
+
+	private:
+		Buffer m_vb;
+		Buffer m_ib;
+
+		std::vector<Mesh> m_meshes;
+		std::vector<Material*> m_materials;
 	};
 
 	template<typename T>
@@ -322,6 +344,7 @@ namespace Gino
 			return std::get<T>(m_data);
 		}
 	}
+
 
 }
 

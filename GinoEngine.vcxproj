@@ -215,7 +215,6 @@
   <ItemGroup>
     <ClInclude Include="include\AssimpLoader.h" />
     <ClInclude Include="include\Graphics\ImGuiRenderer.h" />
-    <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\Graphics\CentralRenderer.h" />
     <ClInclude Include="include\Graphics\DXDevice.h" />
     <ClInclude Include="include\Engine.h" />
@@ -227,7 +226,6 @@
     <ClInclude Include="include\Input.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="include\Graphics\ShaderGroup.h" />
-    <ClInclude Include="include\ResourceTypes.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_dx11.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_win32.h" />
     <ClInclude Include="vendor\imgui-master\imconfig.h" />

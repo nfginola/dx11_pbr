@@ -49,9 +49,21 @@ namespace Gino
 			{ { -0.5f, -0.5f, 0.f }, { 0.f, 1.f }, { 0.f, 0.f, -1.f} }
 		};
 		std::vector<uint32_t> indices{ 0, 1, 2 };
+		
+		Buffer vb, ib;
+		vb.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
+		ib.Initialize(dev, IndexBufferDesc{ .data = indices });
 
-		m_vb.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
-		m_ib.Initialize(dev, IndexBufferDesc{ .data = indices });
+		// make test model
+		Mesh myMesh
+		{
+			.numIndices = 3,
+			.indicesFirstIndex = 0,
+			.vertexOffset = 0
+		};
+
+		m_testMat.Initialize(PhongMaterialData{ .m_diffuse = &m_mainTex });
+		m_testModel.Initialize(vb, ib, { { myMesh, &m_testMat } });
 
 		// make framebuffer
 		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
@@ -83,18 +95,10 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateSamplerState(&samplerDesc, m_mainSampler.GetAddressOf()));
 
-		
 
-		//// Try material
-		//PhongMaterialData hey{};
-		//hey.m_diffuse = &m_mainTex;
 
-		//Material mat;
-		//mat.Initialize(hey);
 
-		//auto& myData = mat.GetProperties<PhongMaterialData>();
-		//
-		//std::cout << "stop!\n";
+
 
 
 
@@ -158,11 +162,11 @@ namespace Gino
 
 		m_shaderGroup.Bind(ctx);
 
-		ID3D11Buffer* vbs[] = { m_vb.buffer.Get() };
+		ID3D11Buffer* vbs[] = { m_testModel.GetVB() };
 		UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
 		UINT vbOffsets[] = { 0 };
 		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
-		ctx->IASetIndexBuffer(m_ib.buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		ctx->IASetIndexBuffer(m_testModel.GetIB(), DXGI_FORMAT_R32_UINT, 0);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
