@@ -7,24 +7,32 @@ namespace Gino
 	AssimpLoader::AssimpLoader(const std::filesystem::path& filePath)
 	{
 		Assimp::Importer importer;
-
-
 		const aiScene* scene = importer.ReadFile(
 			filePath.relative_path().string().c_str(),
 			aiProcess_Triangulate |
-			aiProcess_FlipUVs |			// Vulkan screen space is 0,0 on top left
+
+			// For Direct3D
+			aiProcess_MakeLeftHanded |
+			aiProcess_FlipUVs |					// (0, 0) is top left
+			aiProcess_FlipWindingOrder |		// D3D front face is CW
+
 			aiProcess_GenSmoothNormals |
 			aiProcess_CalcTangentSpace
 		);
 
 		if (scene == nullptr)
-			throw std::runtime_error(std::string("Assimp: File not found! : ") + filePath.filename().string());
+		{
+			std::cout << "Gino::AssimpLoader : File not found!\n";
+			assert(false);
+		}
 
 		// Pre-allocate memory for resources
 		unsigned int totalVertexCount = 0;
 		unsigned int totalSubsetCount = 0;
 		for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
+		{
 			totalVertexCount += scene->mMeshes[i]->mNumVertices;
+		}
 
 		m_vertices.reserve(totalVertexCount);
 		m_indices.reserve(totalVertexCount);

@@ -41,6 +41,12 @@ namespace Gino
 		*/
 
 	
+
+		// Set fullscreen on start if specified
+		if (!m_mainWindow->IsFullscreen() && settings.fullscreenOnStart)
+		{
+			m_mainWindow->SetFullscreen(true);
+		}
     }
 
     Application::~Application()
@@ -187,10 +193,6 @@ namespace Gino
 		// Init window
 		auto mainWindowProc = [this](HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) -> LRESULT { return this->MainWindowProc(hwnd, uMsg, wParam, lParam); };
 		m_mainWindow = std::make_unique<Window>(settings.hInstance, mainWindowProc, settings.windowWidth, settings.windowHeight);
-
-		// Set fullscreen on start if specified
-		if (!m_mainWindow->IsFullscreen() && settings.fullscreenOnStart)
-			m_mainWindow->SetFullscreen(true);
 	}
 
 	void Application::InitConsoleCommands()
