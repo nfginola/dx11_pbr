@@ -17,7 +17,8 @@ namespace Gino
 			state->FinalizeBinds();		--> All API calls in one go
 		*/
 
-		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get());
+		m_imGuiRenderer = std::make_unique<ImGuiRenderer>(settings.hwnd, m_dxDev->GetDevice().Get(), m_dxDev->GetContext());
+		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), m_imGuiRenderer.get(), settings.vsync);
 
 	}
 
@@ -46,9 +47,9 @@ namespace Gino
 
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> Engine::GetImGuiHook() const
 	{
-		if (m_centralRenderer && m_centralRenderer->GetImGui())
+		if (m_centralRenderer && m_imGuiRenderer)
 		{
-			return m_centralRenderer->GetImGui()->GetWin32Hook();
+			return m_imGuiRenderer->GetWin32Hook();
 		}
 		else
 		{

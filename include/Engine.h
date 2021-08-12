@@ -6,6 +6,7 @@ namespace Gino
 	class Input;
 	class DXDevice;
 	class CentralRenderer;
+	class ImGuiRenderer;
 	class AssimpLoader;
 
 	class Engine
@@ -37,6 +38,7 @@ namespace Gino
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;
 		std::unique_ptr<CentralRenderer> m_centralRenderer;
+		std::unique_ptr<ImGuiRenderer> m_imGuiRenderer;
 
 		// -- Maybe we can wrap them in an AssetContext in the future (where we can load/unload multiple context depending on e.g Scene)
 		// Loaded Mesh Data (Vertex Buffer)

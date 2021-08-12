@@ -1,14 +1,15 @@
 #include "pch.h"
 #include "Graphics/CentralRenderer.h"
 
-
-
 namespace Gino
 {
-	CentralRenderer::CentralRenderer(DXDevice* dxDev) :
+	CentralRenderer::CentralRenderer(DXDevice* dxDev, ImGuiRenderer* imGui, bool vsync) :
+		m_vsync(vsync),
 		m_dxDev(dxDev),
-		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice().Get(), dxDev->GetContext().Get()))
+		m_imGui(imGui)
 	{
+		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
+ 
 		/*
 		
 		For automatically avoiding rebinding already bound resources:
@@ -56,7 +57,7 @@ namespace Gino
 		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
 
 		// make texture
-		m_mainTex.InitializeFromFile(dev, ctx, "../assets/scenery.jpg");
+		m_mainTex.InitializeFromFile(dev, ctx, "../assets/random_textures/scenery.jpg");
 
 		// make rasterizer state
 		D3D11_RASTERIZER_DESC1 rsD
@@ -147,37 +148,27 @@ namespace Gino
 		ctx->IASetIndexBuffer(m_ib.buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
-		ctx->RSSetViewports(_countof(viewports), viewports);
-		ctx->RSSetState(m_rs.Get());
 
-		//ID3D11ShaderResourceView* srvs[] = { m_texView.Get() };
+		// set shader resources
 		ID3D11ShaderResourceView* srvs[] = { m_mainTex.GetSRV() };
 		ctx->PSSetShaderResources(0, 1, srvs);
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
 
+		// set rasterizer state
+		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
+		ctx->RSSetViewports(_countof(viewports), viewports);
+		ctx->RSSetState(m_rs.Get());
+
+		// set OM state
 		m_finalFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
 		m_finalFramebuffer.Bind(ctx);
 
 		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
 
-		
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
 
-		m_dxDev->GetSwapChain()->Present(0, 0);
-	}
-
-	ImGuiRenderer* CentralRenderer::GetImGui() const
-	{
-		if (m_imGui)
-		{
-			return m_imGui.get();
-		}
-		else
-		{
-			return nullptr;
-		}
+		m_dxDev->GetSwapChain()->Present(m_vsync ? 1 : 0, 0);
 	}
 
 }

@@ -11,15 +11,15 @@ namespace Gino
 	class CentralRenderer
 	{
 	public:
-		CentralRenderer(DXDevice* dxDev);
+		CentralRenderer(DXDevice* dxDev, ImGuiRenderer* imGui, bool vsync);
 		~CentralRenderer();
 
 		void Render();
 
-		ImGuiRenderer* GetImGui() const;
-
 	private:
-		std::unique_ptr<ImGuiRenderer> m_imGui;
+		bool m_vsync;
+
+		ImGuiRenderer* m_imGui;
 
 		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;

@@ -9,7 +9,9 @@ void RunConsole(Gino::Application& app)
     while (app.IsAlive() && std::cin >> input)
     {
         if (app.IsAlive())
+        {
             app.ParseConsoleInput(input);
+        }
     }
 }
 
@@ -45,7 +47,7 @@ int main()
         app.Run();
     }
 
-    std::cout << "Gino App: Type any key to exit\n";
+    std::cout << "Gino App: Type anything to exit\n";
     consoleThread.join();
 
     return 0;
