@@ -8,6 +8,7 @@ namespace Gino
 	class CentralRenderer;
 	class ImGuiRenderer;
 	class AssimpLoader;
+	class FPCamera;
 	struct Texture;
 	struct Model;
 	struct Material;
@@ -51,6 +52,8 @@ namespace Gino
 		std::unique_ptr<CentralRenderer> m_centralRenderer;
 
 		std::unique_ptr<Input> m_input;
+		
+		std::unique_ptr<FPCamera> m_fpCam;
 
 		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
 

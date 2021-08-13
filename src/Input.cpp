@@ -71,7 +71,7 @@ namespace Gino
 		SetMouseMode(mode);
 	}
 	
-	void Input::ChangeMouseMode(MouseMode mode)
+	void Input::SetMouseMode(MouseMode mode)
 	{
 		switch (mode)
 		{
@@ -84,6 +84,19 @@ namespace Gino
 		default:
 			assert(false);
 		}
+	}
+
+	void Input::ToggleMouseMode()
+	{
+		if (m_currMouseMode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
+		{
+			SetMouseMode(MouseMode::REL);
+		}
+		else
+		{
+			SetMouseMode(MouseMode::ABS);
+		}
+
 	}
 
 	bool Input::LMBIsPressed() const
@@ -160,6 +173,10 @@ namespace Gino
 		if (mode == DirectX::Mouse::Mode::MODE_RELATIVE)
 		{
 			m_mouse->SetVisible(false);
+		}
+		else if (mode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
+		{
+			m_mouse->SetVisible(true);
 		}
 	}
 	void Input::RestorePreviousMouseMode()

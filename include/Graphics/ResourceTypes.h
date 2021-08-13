@@ -243,7 +243,7 @@ namespace Gino
 
 	enum class MaterialType
 	{
-		PHONG,
+		Phong,
 		PBR
 	};
 
@@ -287,7 +287,7 @@ namespace Gino
 
 		MaterialType GetType() const;
 	private:
-		MaterialType m_type = MaterialType::PHONG;
+		MaterialType m_type = MaterialType::Phong;
 		std::variant<PhongMaterialData, PBRMaterialData> m_data;
 		// ShaderGroup and other Pipeline resources? Maybe not?
 

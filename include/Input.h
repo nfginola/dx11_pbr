@@ -29,7 +29,8 @@ namespace Gino
 		void Update();	// Called every frame
 
 		// Mouse
-		void ChangeMouseMode(MouseMode mode);
+		void SetMouseMode(MouseMode mode);
+		void ToggleMouseMode();
 
 		bool LMBIsPressed() const;
 		bool LMBIsReleased() const;

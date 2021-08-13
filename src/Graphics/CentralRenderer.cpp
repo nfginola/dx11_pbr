@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Graphics/CentralRenderer.h"
+#include "FPCamera.h"
 
 namespace Gino
 {
@@ -105,6 +106,11 @@ namespace Gino
 	{
 	}
 
+	void CentralRenderer::SetMainCamera(FPCamera* cam)
+	{
+		m_mainCamera = cam;
+	}
+	
 	static float timeElapsed = 0.f;
 	void CentralRenderer::Render(Model* model)
 	{
@@ -138,15 +144,18 @@ namespace Gino
 		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
 
 		// MVP
-		m_mvpCB.data.model =
-			DirectX::SimpleMath::Matrix::CreateScale(0.07f);
+		//m_mvpCB.data.model =
+		//	DirectX::SimpleMath::Matrix::CreateScale(0.07f);
 
-		m_mvpCB.data.view =
-			DirectX::XMMatrixLookAtLH({ 0.f, 2.f, 0.f }, { -4.f, 10.f - mipLevel, 0.f }, { 0.f, 1.f, 0.f });
+		//m_mvpCB.data.view =
+		//	DirectX::XMMatrixLookAtLH({ 0.f, 2.f, 0.f }, { -4.f, 10.f - mipLevel, 0.f }, { 0.f, 1.f, 0.f });
 
-		m_mvpCB.data.projection =
-			DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(80.f), 16.f / 9.f, 0.1f, 1000.f);
+		//m_mvpCB.data.projection =
+		//	DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(80.f), 16.f / 9.f, 0.1f, 1000.f);
 
+		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);
+		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
+		m_mvpCB.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_mvpCB.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_mvpCB.buffer.GetAddressOf());
 

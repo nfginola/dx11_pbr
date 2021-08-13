@@ -5,6 +5,7 @@
 #include "Graphics/CentralRenderer.h"
 #include "AssimpLoader.h"
 #include "Input.h"
+#include "FPCamera.h"
 
 namespace Gino
 {
@@ -14,6 +15,10 @@ namespace Gino
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
 		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
 		
+		m_fpCam = std::make_unique<FPCamera>(16.f / 9.f, 80.f);
+
+		m_centralRenderer->SetMainCamera(m_fpCam.get());
+
 		// DXState state
 		/*
 			this should PRIMARILY be used inside CentralRenderer and other Render modules
@@ -36,16 +41,45 @@ namespace Gino
 	{
 		m_input->Update();
 
+		// Try camera
+		if (m_input->KeyIsDown(Keys::W))
+			m_fpCam->Move(MoveDirection::Forward);
+		if (m_input->KeyIsDown(Keys::A))
+			m_fpCam->Move(MoveDirection::Left);
+		if (m_input->KeyIsDown(Keys::S))
+			m_fpCam->Move(MoveDirection::Backward);
+		if (m_input->KeyIsDown(Keys::D))
+			m_fpCam->Move(MoveDirection::Right);
+		if (m_input->KeyIsDown(Keys::Space))
+			m_fpCam->Move(MoveDirection::Up);
+		if (m_input->KeyIsDown(Keys::LeftShift))
+			m_fpCam->Move(MoveDirection::Down);
 
-		if (m_input->KeyIsPressed(Keys::A))
-			std::cout << "A pressed\n";
-		if (m_input->KeyIsReleased(Keys::A))
-			std::cout << "A released\n";
+		m_fpCam->Update(0.016f);
 
-		if (m_input->KeyIsDown(Keys::T))
-			std::cout << "T down!\n";
 
-	
+
+		if (m_input->RMBIsDown())
+		{
+			m_input->SetMouseMode(Input::MouseMode::REL);
+		}
+		else
+		{
+			m_input->SetMouseMode(Input::MouseMode::ABS);
+		}
+
+		if (m_input->KeyIsPressed(Keys::T))
+		{
+			m_input->ToggleMouseMode();
+			std::cout << "Mouse mode toggled\n";
+		}
+
+		if (m_input->MMBIsDown())
+		{
+			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
+			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
+
+		}
 
 		/*
 		

@@ -386,7 +386,7 @@ namespace Gino
 
     void Material::Initialize(const PhongMaterialData& data)
     {
-        m_type = MaterialType::PHONG;
+        m_type = MaterialType::Phong;
         m_data = data;
     }
 

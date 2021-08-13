@@ -8,12 +8,15 @@
 
 namespace Gino
 {
+	class FPCamera;
+
 	class CentralRenderer
 	{
 	public:
 		CentralRenderer(DXDevice* dxDev, bool vsync);
 		~CentralRenderer();
 
+		void SetMainCamera(FPCamera* cam);
 		void Render(Model* model);
 
 		/*
@@ -44,6 +47,7 @@ namespace Gino
 	private:
 		DXDevice* m_dxDev;
 		std::unique_ptr<ImGuiRenderer> m_imGui;
+		FPCamera* m_mainCamera;
 
 		Texture m_backbuffer;
 

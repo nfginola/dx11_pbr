@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FPCamera.cpp" />
     <ClCompile Include="src\AssimpLoader.cpp" />
     <ClCompile Include="src\Graphics\ImGuiRenderer.cpp" />
     <ClCompile Include="src\Graphics\ResourceTypes.cpp" />
@@ -213,6 +214,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\FPCamera.h" />
     <ClInclude Include="include\AssimpLoader.h" />
     <ClInclude Include="include\Graphics\ImGuiRenderer.h" />
     <ClInclude Include="include\Graphics\CentralRenderer.h" />
