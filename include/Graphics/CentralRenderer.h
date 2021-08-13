@@ -45,6 +45,8 @@ namespace Gino
 		DXDevice* m_dxDev;
 		std::unique_ptr<ImGuiRenderer> m_imGui;
 
+		Texture m_backbuffer;
+
 		bool m_vsync;
 
 		ShaderGroup m_shaderGroup;

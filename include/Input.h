@@ -7,14 +7,16 @@
 
 namespace Gino
 {
+	using Keys = DirectX::Keyboard::Keys;
+
 	// Handles keyboard and mouse, not following SRP on purpose to make it simple
 	class Input
 	{
 	public:
 		enum class MouseMode
 		{
-			ABS,
-			REL
+			ABS,	// Absolute mode
+			REL		// Relative mode
 		};
 
 	public:
@@ -46,6 +48,9 @@ namespace Gino
 		const std::pair<int, int>& GetMouseDelta() const;
 
 		// Keyboard
+		bool KeyIsPressed(Keys key) const;
+		bool KeyIsReleased(Keys key) const;
+		bool KeyIsDown(Keys key) const;
 
 	private:
 		void InitMouse(DirectX::Mouse::Mode mode);
@@ -66,7 +71,8 @@ namespace Gino
 		std::pair<int, int> m_mouseDelta;
 
 		// Keyboard helper
-		
+		DirectX::Keyboard::State m_keyboardState;
+		DirectX::Keyboard::KeyboardStateTracker m_keyboardTracker;
 
 	};
 }

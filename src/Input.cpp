@@ -33,31 +33,8 @@ namespace Gino
 		m_mouseState = m_mouse->GetState();
 		m_mouseTracker.Update(m_mouseState);
 
-		{
-		//	//m_mouse->SetMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
-
-		//	if (m_mouseTracker.leftButton == DirectX::Mouse::ButtonStateTracker::ButtonState::PRESSED)
-		//		std::cout << "LMB pressed\n";
-
-		//	//if (m_mouseTracker.leftButton == DirectX::Mouse::ButtonStateTracker::ButtonState::RELEASED)
-		//	//	std::cout << "LMB released\n";
-
-		//	// Test functionality
-		///*	if (mouseState.leftButton)
-		//		std::cout << "LMB down\n";*/
-
-		//	if (m_mouseState.rightButton)
-		//		std::cout << "RMB down\n";
-
-		//	if (m_mouseTracker.middleButton == DirectX::Mouse::ButtonStateTracker::ButtonState::PRESSED)
-		//	{
-		//		std::cout << "x: " << m_mouseState.x;
-		//		std::cout << "y: " << m_mouseState.y;
-		//		std::cout << "scroll wheel value: " << m_mouseState.scrollWheelValue << std::endl;
-		//		std::cout << std::endl;
-		//	}
-		}
-
+		m_keyboardState = m_keyboard->GetState();
+		m_keyboardTracker.Update(m_keyboardState);
 
 		// Get data and make sure to restore mouse state
 		SetMouseMode(m_currMouseMode);
@@ -75,12 +52,25 @@ namespace Gino
 		}
 		RestorePreviousMouseMode();
 		m_prevScreenPosition = m_currScreenPosition;
+
+
+
+		// testing ground
+
+
+		//if (m_keyboardTracker.IsKeyPressed(Gino::Keys::A))
+		//	std::cout << "A pressed\n";
+		//if (m_keyboardTracker.IsKeyReleased(Gino::Keys::A))
+		//	std::cout << "A released\n";
+
+
 	}
 	void Input::InitMouse(DirectX::Mouse::Mode mode)
 	{
 		m_currMouseMode = mode;
 		SetMouseMode(mode);
 	}
+	
 	void Input::ChangeMouseMode(MouseMode mode)
 	{
 		switch (mode)
@@ -95,6 +85,7 @@ namespace Gino
 			assert(false);
 		}
 	}
+
 	bool Input::LMBIsPressed() const
 	{
 		return m_mouseTracker.leftButton == DirectX::Mouse::ButtonStateTracker::ButtonState::PRESSED;
@@ -133,6 +124,7 @@ namespace Gino
 	{
 		return m_mouseTracker.middleButton == DirectX::Mouse::ButtonStateTracker::ButtonState::HELD;
 	}
+	
 	int Input::GetScrollWheelValue() const
 	{
 		return m_mouseState.scrollWheelValue;
@@ -145,6 +137,20 @@ namespace Gino
 	{
 		return m_mouseDelta;
 	}
+
+	bool Input::KeyIsPressed(Keys key) const
+	{
+		return m_keyboardTracker.IsKeyPressed(key);
+	}
+	bool Input::KeyIsReleased(Keys key) const
+	{
+		return m_keyboardTracker.IsKeyReleased(key);
+	}
+	bool Input::KeyIsDown(Keys key) const
+	{
+		return m_keyboardState.IsKeyDown(key);
+	}
+
 	void Input::SetMouseMode(DirectX::Mouse::Mode mode)
 	{
 		m_prevMouseMode = m_currMouseMode;

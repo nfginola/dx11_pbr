@@ -36,21 +36,16 @@ namespace Gino
 	{
 		m_input->Update();
 
-		if (m_input->LMBIsPressed())
-			std::cout << "Hello LMB\n";
 
-		if (m_input->LMBIsDown())
-			std::cout << "LMB DOWN!!!\n";
+		if (m_input->KeyIsPressed(Keys::A))
+			std::cout << "A pressed\n";
+		if (m_input->KeyIsReleased(Keys::A))
+			std::cout << "A released\n";
 
-		if (m_input->LMBIsReleased())
-			std::cout << "Hello LMB Released\n";
+		if (m_input->KeyIsDown(Keys::T))
+			std::cout << "T down!\n";
 
-		if (m_input->MMBIsDown())
-		{
-			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
-			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
-
-		}
+	
 
 		/*
 		
