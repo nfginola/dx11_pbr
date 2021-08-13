@@ -342,8 +342,7 @@ namespace Gino
                 D3D11_TEX2D_SRV tex2DSrvDesc
                 {
                     .MostDetailedMip = 0,
-                    // MipLevels: Set to -1 to indicate all the mipmap levels from MostDetailedMip on down to least detailed
-                    .MipLevels = (uint32_t)-1
+                    .MipLevels = (uint32_t)-1    // MipLevels: Set to -1 to indicate all the mipmap levels from MostDetailedMip on down to least detailed
                 };
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
                 srvDesc.Texture2D = tex2DSrvDesc;
@@ -378,15 +377,11 @@ namespace Gino
         if (shouldCreateDSV)
         {
             HRCHECK(dev->CreateDepthStencilView(m_texture.Get(), &dsvDesc, m_dsv.GetAddressOf()));
-
         }
         if (shouldCreateUAV)
         {
 
         }
-
-
-
     }
 
     void Material::Initialize(const PhongMaterialData& data)

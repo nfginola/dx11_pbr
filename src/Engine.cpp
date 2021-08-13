@@ -12,6 +12,8 @@ namespace Gino
 	{
 		m_input = std::make_unique<Input>(settings.hwnd);
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
+		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
+		
 		// DXState state
 		/*
 			this should PRIMARILY be used inside CentralRenderer and other Render modules
@@ -19,24 +21,10 @@ namespace Gino
 			state->FinalizeBinds();		--> All API calls in one go
 		*/
 
-		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
-		
-
-		/*
-		
-			Load assimp data into Model
-				- Have texture hash map (hash function with filePath)
-				
-			LoadModel(filePath, Material::Phong)
-		
-		
-		
-		*/
-
+		// We should do something like: LoadModel("sponza", filePath)
+		// and keep an unordered map with models with string identifiers
+		// then when we have an Entity --> Entity.AddModel("sponza");
 		m_sponzaModel = LoadModel("../assets/Models/Sponza_new/sponza.obj");
-
-		std::cout << "hell yeah\n";
-
 	}
 
 	Engine::~Engine()
@@ -47,6 +35,22 @@ namespace Gino
 	void Engine::SimulateAndRender()
 	{
 		m_input->Update();
+
+		if (m_input->LMBIsPressed())
+			std::cout << "Hello LMB\n";
+
+		if (m_input->LMBIsDown())
+			std::cout << "LMB DOWN!!!\n";
+
+		if (m_input->LMBIsReleased())
+			std::cout << "Hello LMB Released\n";
+
+		if (m_input->MMBIsDown())
+		{
+			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
+			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
+
+		}
 
 		/*
 		
@@ -203,6 +207,7 @@ namespace Gino
 			std::string opacityLook = subset.opacityFilePath.has_value() ? directory + subset.opacityFilePath.value() : defaultOpacityFilePath;
 			std::string normalLook = subset.normalFilePath.has_value() ? directory + subset.normalFilePath.value() : defaultNormalFilePath;
 
+			// Create material for this submesh to use
 			Material mat;
 			mat.Initialize(PhongMaterialData
 				{

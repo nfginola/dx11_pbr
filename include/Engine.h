@@ -33,8 +33,12 @@ namespace Gino
 
 		void SimulateAndRender();
 
-			
 		Input* GetInput();
+
+		/*
+		void SetScene(scene);		// All data from that scene will be used to Render
+		
+		*/
 
 		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
 
@@ -49,18 +53,15 @@ namespace Gino
 		std::unique_ptr<Input> m_input;
 
 		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
-		std::unique_ptr<Model> m_sponzaModel;
 
-		// -- Maybe we can wrap them in an AssetContext in the future (where we can load/unload multiple context depending on e.g Scene)
-		// Loaded Mesh Data (Vertex Buffer)
-		// Loaded Meshes (References into a VB (offsets and the like))
-		// Loaded Textures (Texture2D)
+		// For now, instead of Application asking the engine for a model, we will keep our workstation in Engine.cpp!
+		std::unique_ptr<Model> m_sponzaModel;
 		
 
 		//std::unique_ptr<Input> m_input;
 		/*
 		Input
-		Renderer
+		MainRenderer
 		Profiler
 		*/
 

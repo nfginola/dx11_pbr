@@ -17,20 +17,6 @@ namespace Gino
 		
 		*/
 
-		/*
-
-			We should make one Buffer class, which can take in multiple different descriptors of our choice instead of having multiple classes.
-			We simply follow the spirit of D3D11 when it comes to strongly typed vs non-strongly typed (in this case, there is only a ID3D11Buffer for all types of buffer)
-
-			struct ConstantBufferDesc
-			struct RWBufferDesc
-			struct UAVDesc
-			etc..
-
-			Although we should probably employ a single Texture class in line with Vulkan style (take in 1D, 2D, 3D descriptors) ??
-			We may have to read a bit more about the functionalities provided to textures.. (whether they differ between 1D, 2D and 3D)	
-
-		*/
 		auto dev = dxDev->GetDevice();
 		auto ctx = dxDev->GetContext();
 
@@ -41,34 +27,6 @@ namespace Gino
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 			.Build(dev);
 
-		// make vb (CW) and ib
-		std::vector<Vertex_POS_UV_NORMAL> triVerts
-		{
-			{ { 0.f, 0.5f, 0.f }, { 0.5f, 0.f }, { 0.f, 0.f, -1.f} },
-			{ { 0.5f, -0.5f, 0.f }, { 1.f, 1.f }, { 0.f, 0.f, -1.f} },
-			{ { -0.5f, -0.5f, 0.f }, { 0.f, 1.f }, { 0.f, 0.f, -1.f} }
-		};
-		std::vector<uint32_t> indices{ 0, 1, 2 };
-		
-		Buffer vb, ib;
-		vb.Initialize(dev, VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = triVerts });
-		ib.Initialize(dev, IndexBufferDesc{ .data = indices });
-
-		// make test model
-		Mesh myMesh
-		{
-			.numIndices = 3,
-			.indicesFirstIndex = 0,
-			.vertexOffset = 0
-		};
-
-		m_testMat.Initialize(PhongMaterialData{ .diffuse = &m_mainTex });
-		m_testModel.Initialize(vb, ib, { { myMesh, m_testMat } });
-
-
-
-		// make texture
-		m_mainTex.InitializeFromFile(dev, ctx, "../assets/Textures/Random/scenery.jpg");
 
 		// make rasterizer state
 		D3D11_RASTERIZER_DESC1 rsD
@@ -113,7 +71,7 @@ namespace Gino
 		// make framebuffer
 		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() }, m_depth.GetDSV());
 
-		// make depth stencil state
+		// make depth stencil state (closely tied to the depth stencil view, essentially configs for writing to the DSV)
 		D3D11_DEPTH_STENCIL_DESC dssDesc
 		{
 			.DepthEnable = true,
@@ -126,8 +84,8 @@ namespace Gino
 
 		// Try cb
 		m_cb.Initialize(dev);
-
-
+		
+		// Mvp cb
 		m_mvpCB.Initialize(dev);
 
 		// Test for resource cleanup warning signals
@@ -195,18 +153,6 @@ namespace Gino
 
 		m_shaderGroup.Bind(ctx);
 
-		ID3D11Buffer* vbs[] = { m_testModel.GetVB() };
-		UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
-		UINT vbOffsets[] = { m_testModel.GetMeshes()[0].vertexOffset };
-		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
-		ctx->IASetIndexBuffer(m_testModel.GetIB(), DXGI_FORMAT_R32_UINT, 0);
-		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-
-		// set shader resources
-		ID3D11ShaderResourceView* srvs[] = { m_mainTex.GetSRV() };
-		ctx->PSSetShaderResources(0, 1, srvs);
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
 
@@ -218,14 +164,9 @@ namespace Gino
 		// set OM state
 		m_finalFramebuffer.Clear(ctx, 
 			{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
-			DepthStencilClearDesc{ .clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, .depth = 1.f, .stencil = 1 
-			}
-		);
+			DepthStencilClearDesc{ .clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, .depth = 1.f, .stencil = 1 });
 		m_finalFramebuffer.Bind(ctx);
 		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
-
-		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
-
 
 		// Test draw model
 		{
@@ -235,13 +176,20 @@ namespace Gino
 			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
 			ctx->IASetIndexBuffer(model->GetIB(), DXGI_FORMAT_R32_UINT, 0);
+			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			auto meshes = model->GetMeshes();
 			auto materials = model->GetMaterials();
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
-				ID3D11ShaderResourceView* srvs[] = { materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() };
-				ctx->PSSetShaderResources(0, 1, srvs);
+				ID3D11ShaderResourceView* srvs[] = 
+				{ 
+					materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
+					materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
+					materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
+					materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
+				};
+				ctx->PSSetShaderResources(0, 4, srvs);
 				ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 			}
 

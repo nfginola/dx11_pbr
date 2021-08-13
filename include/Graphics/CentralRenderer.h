@@ -16,6 +16,12 @@ namespace Gino
 
 		void Render(Model* model);
 
+		/*
+		
+		SubmitOpaque, do once. (Dont submit per frame)
+		
+		*/
+
 		// Exposed surface area to outside modules
 		// This is required because we need to hook ImGui to the Window Proc for this applications main window!
 		ImGuiRenderer* GetImGui() const;
@@ -25,7 +31,8 @@ namespace Gino
 		{
 			float mipLevel;
 		};
-
+		
+		// Should change to Per Frame, Per Pass, Per Material and Per Object constant buffers
 		struct MVP
 		{
 			DirectX::SimpleMath::Matrix model;
@@ -35,29 +42,24 @@ namespace Gino
 
 
 	private:
-		bool m_vsync;
-
+		DXDevice* m_dxDev;
 		std::unique_ptr<ImGuiRenderer> m_imGui;
 
-		Texture m_depth;
-		DepthStencilStatePtr m_dss;
+		bool m_vsync;
 
-		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;
-
-		Texture m_mainTex;
-
-		Material m_testMat;
-		Model m_testModel;
 
 		ConstantBuffer<TestMipData> m_cb;
 		ConstantBuffer<MVP> m_mvpCB;
 
-		SamplerStatePtr m_mainSampler;
-
 		Framebuffer m_finalFramebuffer;
+		Texture m_depth;
 
+		DepthStencilStatePtr m_dss;
+		SamplerStatePtr m_mainSampler;
 		RasterizerState1Ptr m_rs;
+
+
 
 		/*
 		// Dynamic allocations tho....
