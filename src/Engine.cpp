@@ -41,44 +41,35 @@ namespace Gino
 	{
 		m_input->Update();
 
-		// Try camera
-		if (m_input->KeyIsDown(Keys::W))
-			m_fpCam->Move(MoveDirection::Forward);
-		if (m_input->KeyIsDown(Keys::A))
-			m_fpCam->Move(MoveDirection::Left);
-		if (m_input->KeyIsDown(Keys::S))
-			m_fpCam->Move(MoveDirection::Backward);
-		if (m_input->KeyIsDown(Keys::D))
-			m_fpCam->Move(MoveDirection::Right);
-		if (m_input->KeyIsDown(Keys::Space))
-			m_fpCam->Move(MoveDirection::Up);
-		if (m_input->KeyIsDown(Keys::LeftShift))
-			m_fpCam->Move(MoveDirection::Down);
+		// Camera move
+		if (m_input->KeyIsDown(Keys::W))			m_fpCam->Move(MoveDirection::Forward);
+		if (m_input->KeyIsDown(Keys::A))			m_fpCam->Move(MoveDirection::Left);
+		if (m_input->KeyIsDown(Keys::S))			m_fpCam->Move(MoveDirection::Backward);
+		if (m_input->KeyIsDown(Keys::D))			m_fpCam->Move(MoveDirection::Right);
+		if (m_input->KeyIsDown(Keys::Space))		m_fpCam->Move(MoveDirection::Up);
+		if (m_input->KeyIsDown(Keys::LeftShift))	m_fpCam->Move(MoveDirection::Down);
 
-		m_fpCam->Update(0.016f);
-
-
-
+		// Camera orient
 		if (m_input->RMBIsDown())
 		{
-			m_input->SetMouseMode(Input::MouseMode::REL);
+			m_input->HideCursor();
+			m_input->CenterCursor();
+
+			m_fpCam->RotateCamera(m_input->GetMouseDelta());
 		}
 		else
 		{
-			m_input->SetMouseMode(Input::MouseMode::ABS);
+			m_input->ShowCursor();
 		}
 
-		if (m_input->KeyIsPressed(Keys::T))
-		{
-			m_input->ToggleMouseMode();
-			std::cout << "Mouse mode toggled\n";
-		}
+		// Finalize camera changes
+		m_fpCam->Update(0.016f);
+
 
 		if (m_input->MMBIsDown())
 		{
 			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
 			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
-
 		}
 
 		/*

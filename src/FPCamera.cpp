@@ -13,6 +13,7 @@ namespace Gino
 		// Prior to change
 		m_camPitch(0.f),
 		m_camYaw(0.f),
+		m_mouseSpeed(0.2f),
 
 		m_fovInDegs(fovInDegs),
 		m_aspectRatio(aspectRatio),
@@ -57,6 +58,28 @@ namespace Gino
 		m_worldPosition = pos;
 	}
 
+	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
+	{
+		float deltaYaw = (float)mouseDt.first * m_mouseSpeed;
+		float deltaPitch = (float)mouseDt.second * m_mouseSpeed;
+
+		m_camYaw += deltaYaw;
+		m_camPitch += deltaPitch;
+
+		// Constrain to avoid gimbal lock
+		if (m_camPitch > 89.f)
+		{
+			m_camPitch = 89.f;
+		}
+		else if (m_camPitch < -89.f)
+		{
+			m_camPitch = -89.f;
+		}
+
+		std::cout << "dx: " << mouseDt.first << std::endl;
+		std::cout << "dy: " << mouseDt.second << std::endl << std::endl;
+	}
+
 	DirectX::SimpleMath::Matrix FPCamera::GetViewMatrix() const
 	{
 		auto lookAtPos = m_worldPosition + m_localForward;
@@ -70,10 +93,10 @@ namespace Gino
 
 	void FPCamera::Update(float dt)
 	{
+		// Update position
 		m_moveDirectionThisFrame.Normalize();
 		m_worldPosition += m_moveDirectionThisFrame * m_moveSpeed * dt;
 		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
-
 
 	}
 }

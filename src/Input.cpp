@@ -3,7 +3,11 @@
 
 namespace Gino
 {
-	Input::Input(HWND hwnd) 
+	Input::Input(HWND hwnd) :
+		m_hwnd(hwnd),
+		m_prevScreenPosition({ 0, 0 }),
+		m_currScreenPosition({ 0, 0 }),
+		m_mouseDelta({ 0, 0 })
 	{
 		m_keyboard = std::make_unique<DirectX::Keyboard>();
 
@@ -36,13 +40,9 @@ namespace Gino
 		m_keyboardState = m_keyboard->GetState();
 		m_keyboardTracker.Update(m_keyboardState);
 
-		// Get data and make sure to restore mouse state
+		// Extract relevant data and restore the initial mouse state
 		SetMouseMode(m_currMouseMode);
 		{
-			//// Get cursor delta
-			//m_mouse->SetMode(DirectX::Mouse::Mode::MODE_RELATIVE);
-			//m_screenPosition = { m_mouseState.x, m_mouseState.y };
-
 			// Get mouse screen position of cursor
 			m_mouse->SetMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
 			m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
@@ -51,53 +51,40 @@ namespace Gino
 			m_mouseDelta = { m_currScreenPosition.first - m_prevScreenPosition.first, m_currScreenPosition.second - m_prevScreenPosition.second };
 		}
 		RestorePreviousMouseMode();
+
+		// Save current screen position for next frame
 		m_prevScreenPosition = m_currScreenPosition;
 
-
-
-		// testing ground
-
-
-		//if (m_keyboardTracker.IsKeyPressed(Gino::Keys::A))
-		//	std::cout << "A pressed\n";
-		//if (m_keyboardTracker.IsKeyReleased(Gino::Keys::A))
-		//	std::cout << "A released\n";
-
-
+		// Reset cursor centered state
+		m_cursorCentered = false;
 	}
+
+	void Input::HideCursor() const
+	{
+		m_mouse->SetVisible(false);
+	}
+
+	void Input::ShowCursor() const
+	{
+		m_mouse->SetVisible(true);
+	}
+
+	void Input::CenterCursor()
+	{
+		// We cant explicitly interfere with the cursor position since we are using mouse absolute mode to calculate delta manually
+		//RECT rect{};
+		//GetWindowRect(m_hwnd, &rect);
+		//SetCursorPos((rect.right - rect.left) / 2, (rect.bottom - rect.top) / 2);
+
+		m_cursorCentered = true;
+	}
+
 	void Input::InitMouse(DirectX::Mouse::Mode mode)
 	{
 		m_currMouseMode = mode;
 		SetMouseMode(mode);
 	}
 	
-	void Input::SetMouseMode(MouseMode mode)
-	{
-		switch (mode)
-		{
-		case MouseMode::ABS:
-			SetMouseMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
-			break;
-		case MouseMode::REL:
-			SetMouseMode(DirectX::Mouse::Mode::MODE_RELATIVE);
-			break;
-		default:
-			assert(false);
-		}
-	}
-
-	void Input::ToggleMouseMode()
-	{
-		if (m_currMouseMode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
-		{
-			SetMouseMode(MouseMode::REL);
-		}
-		else
-		{
-			SetMouseMode(MouseMode::ABS);
-		}
-
-	}
 
 	bool Input::LMBIsPressed() const
 	{
@@ -142,9 +129,18 @@ namespace Gino
 	{
 		return m_mouseState.scrollWheelValue;
 	}
-	const std::pair<int, int>& Input::GetScreenPosition() const
+	std::pair<int, int> Input::GetScreenPosition() const
 	{
-		return m_currScreenPosition;
+		if (m_cursorCentered)
+		{
+			RECT rect{};
+			GetWindowRect(m_hwnd, &rect);
+			return { (rect.right - rect.left) / 2, (rect.bottom - rect.top) / 2 };
+		}
+		else
+		{
+			return m_currScreenPosition;
+		}
 	}
 	const std::pair<int, int>& Input::GetMouseDelta() const
 	{

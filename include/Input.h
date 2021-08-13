@@ -10,15 +10,10 @@ namespace Gino
 	using Keys = DirectX::Keyboard::Keys;
 
 	// Handles keyboard and mouse, not following SRP on purpose to make it simple
+	// I erase the notion of Mouse being in either "Absolute" or "Relative" mode for the interface
+	// Instead, the interface delivers all relevant data which may be queried from either Absolute or Relative mode (this makes it much simpler!)
 	class Input
 	{
-	public:
-		enum class MouseMode
-		{
-			ABS,	// Absolute mode
-			REL		// Relative mode
-		};
-
 	public:
 		Input(HWND hwnd);
 		~Input();
@@ -26,11 +21,12 @@ namespace Gino
 		// For systems to call to prepare input for use
 		void ProcessKeyboard(UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void ProcessMouse(UINT uMsg, WPARAM wParam, LPARAM lParam);
-		void Update();	// Called every frame
+		void Update();	// Called in the beginning of every frame
 
 		// Mouse
-		void SetMouseMode(MouseMode mode);
-		void ToggleMouseMode();
+		void HideCursor() const;
+		void ShowCursor() const;
+		void CenterCursor();
 
 		bool LMBIsPressed() const;
 		bool LMBIsReleased() const;
@@ -45,7 +41,7 @@ namespace Gino
 		bool MMBIsDown() const;
 
 		int GetScrollWheelValue() const;
-		const std::pair<int, int>& GetScreenPosition() const;
+		std::pair<int, int> GetScreenPosition() const;
 		const std::pair<int, int>& GetMouseDelta() const;
 
 		// Keyboard
@@ -59,6 +55,8 @@ namespace Gino
 		void RestorePreviousMouseMode();
 
 	private:
+		HWND m_hwnd;
+
 		std::unique_ptr<DirectX::Keyboard> m_keyboard;
 		std::unique_ptr<DirectX::Mouse> m_mouse;
 
@@ -70,6 +68,7 @@ namespace Gino
 		std::pair<int, int> m_prevScreenPosition;
 		std::pair<int, int> m_currScreenPosition;
 		std::pair<int, int> m_mouseDelta;
+		bool m_cursorCentered;
 
 		// Keyboard helper
 		DirectX::Keyboard::State m_keyboardState;
