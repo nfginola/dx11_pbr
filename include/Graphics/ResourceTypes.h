@@ -3,15 +3,17 @@
 #include <variant>
 #include <utility>
 #include "DXDevice.h"
+#include "SimpleMath.h"		// Must be included AFTEr <d3d11.h>
 #include "ShaderGroup.h"
+
 
 namespace Gino
 {
 	struct Vertex_POS_UV_NORMAL
 	{
-		DirectX::XMFLOAT3 pos;
-		DirectX::XMFLOAT2 uv;
-		DirectX::XMFLOAT3 normal;
+		DirectX::SimpleMath::Vector3 pos;
+		DirectX::SimpleMath::Vector2  uv;
+		DirectX::SimpleMath::Vector3  normal;
 
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GetElementDescriptors();
 	};
@@ -247,21 +249,21 @@ namespace Gino
 
 	struct PhongMaterialData
 	{
-		Texture* m_diffuse = nullptr;
-		Texture* m_specular = nullptr;
-		Texture* m_opacity = nullptr;
-		Texture* m_normal = nullptr;
+		Texture* diffuse = nullptr;
+		Texture* specular = nullptr;
+		Texture* opacity = nullptr;
+		Texture* normal = nullptr;
 
 		// Other misc. data (e.g colors) can be stored here too
 	};
 
 	struct PBRMaterialData
 	{
-		Texture* m_albedo = nullptr;
-		Texture* m_normal = nullptr;
-		Texture* m_metallic = nullptr;
-		Texture* m_roughness = nullptr;
-		Texture* m_ao = nullptr;
+		Texture* albedo = nullptr;
+		Texture* normal = nullptr;
+		Texture* metallic = nullptr;
+		Texture* roughness = nullptr;
+		Texture* ao = nullptr;
 
 		// Other misc. data can be stored here too
 	};
@@ -285,7 +287,7 @@ namespace Gino
 
 		MaterialType GetType() const;
 	private:
-		MaterialType m_type;
+		MaterialType m_type = MaterialType::PHONG;
 		std::variant<PhongMaterialData, PBRMaterialData> m_data;
 		// ShaderGroup and other Pipeline resources? Maybe not?
 
@@ -307,25 +309,25 @@ namespace Gino
 		Model() = default;
 		~Model() = default;
 
-		void Initialize(const Buffer& vb, const Buffer& ib, const std::vector<std::pair<Mesh, Material*>>& meshesAndMaterials);
+		void Initialize(const Buffer& vb, const Buffer& ib, const std::vector<std::pair<Mesh, Material>>& meshesAndMaterials);
 
 		// Mesh have an implicit but weak relation to materials.
 		// Here we ensure that we are working with them in pairs but still keeping them separate.
 		const std::vector<Mesh>& GetMeshes() const;
-		const std::vector<Material*>& GetMaterials() const;
+		const std::vector<Material>& GetMaterials() const;
 
 		ID3D11Buffer* GetVB() const;
 		ID3D11Buffer* GetIB() const;
 
 	private:
-		void AddMesh(const Mesh& mesh, Material* material);
+		void AddMesh(const Mesh& mesh, const Material& material);
 
 	private:
 		Buffer m_vb;
 		Buffer m_ib;
 
 		std::vector<Mesh> m_meshes;
-		std::vector<Material*> m_materials;
+		std::vector<Material> m_materials;
 	};
 
 	template<typename T>

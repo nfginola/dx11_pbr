@@ -11,10 +11,14 @@ namespace Gino
 	class CentralRenderer
 	{
 	public:
-		CentralRenderer(DXDevice* dxDev, ImGuiRenderer* imGui, bool vsync);
+		CentralRenderer(DXDevice* dxDev, bool vsync);
 		~CentralRenderer();
 
-		void Render();
+		void Render(Model* model);
+
+		// Exposed surface area to outside modules
+		// This is required because we need to hook ImGui to the Window Proc for this applications main window!
+		ImGuiRenderer* GetImGui() const;
 
 	private:
 		struct TestMipData
@@ -22,10 +26,21 @@ namespace Gino
 			float mipLevel;
 		};
 
+		struct MVP
+		{
+			DirectX::SimpleMath::Matrix model;
+			DirectX::SimpleMath::Matrix view;
+			DirectX::SimpleMath::Matrix projection;
+		};
+
+
 	private:
 		bool m_vsync;
 
-		ImGuiRenderer* m_imGui;
+		std::unique_ptr<ImGuiRenderer> m_imGui;
+
+		Texture m_depth;
+		DepthStencilStatePtr m_dss;
 
 		DXDevice* m_dxDev;
 		ShaderGroup m_shaderGroup;
@@ -36,6 +51,7 @@ namespace Gino
 		Model m_testModel;
 
 		ConstantBuffer<TestMipData> m_cb;
+		ConstantBuffer<MVP> m_mvpCB;
 
 		SamplerStatePtr m_mainSampler;
 

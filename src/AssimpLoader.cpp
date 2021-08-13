@@ -10,11 +10,11 @@ namespace Gino
 		const aiScene* scene = importer.ReadFile(
 			filePath.relative_path().string().c_str(),
 			aiProcess_Triangulate |
-
+			
 			// For Direct3D
-			aiProcess_MakeLeftHanded |
-			aiProcess_FlipUVs |					// (0, 0) is top left
-			aiProcess_FlipWindingOrder |		// D3D front face is CW
+			aiProcess_ConvertToLeftHanded |
+			//aiProcess_FlipUVs |					// (0, 0) is top left
+			//aiProcess_FlipWindingOrder |		// D3D front face is CW
 
 			aiProcess_GenSmoothNormals |
 			aiProcess_CalcTangentSpace

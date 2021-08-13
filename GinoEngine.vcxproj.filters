@@ -45,7 +45,7 @@
     <ClCompile Include="src\Graphics\ShaderGroup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="include\Graphics\ResourceTypes.cpp">
+    <ClCompile Include="src\Graphics\ResourceTypes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vendor\imgui-master\imgui_demo.cpp">

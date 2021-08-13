@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "ResourceTypes.h"
+#include "Graphics/ResourceTypes.h"
 
 namespace Gino
 {
@@ -331,7 +331,10 @@ namespace Gino
         D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
         srvDesc.Format = desc.Format;
 
-        if (desc.BindFlags | D3D11_BIND_SHADER_RESOURCE)
+        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+        dsvDesc.Format = desc.Format;
+
+        if ((desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) == D3D11_BIND_SHADER_RESOURCE)
         {
             shouldCreateSRV = true;
             if (desc.ArraySize == 1)
@@ -345,6 +348,19 @@ namespace Gino
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
                 srvDesc.Texture2D = tex2DSrvDesc;
             }
+        }
+
+        if ((desc.BindFlags & D3D11_BIND_DEPTH_STENCIL) == D3D11_BIND_DEPTH_STENCIL)
+        {
+            shouldCreateDSV = true;
+            assert(desc.ArraySize == 1);
+
+            D3D11_TEX2D_DSV tex2DDsvDesc
+            {
+                .MipSlice = 0
+            };
+            dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+            dsvDesc.Flags = 0;
         }
 
         if (shouldCreateSRV)
@@ -361,6 +377,7 @@ namespace Gino
         }
         if (shouldCreateDSV)
         {
+            HRCHECK(dev->CreateDepthStencilView(m_texture.Get(), &dsvDesc, m_dsv.GetAddressOf()));
 
         }
         if (shouldCreateUAV)
@@ -389,7 +406,7 @@ namespace Gino
         return m_type;
     }
 
-    void Model::Initialize(const Buffer& vb, const Buffer& ib, const std::vector<std::pair<Mesh, Material*>>& meshesAndMaterials)
+    void Model::Initialize(const Buffer& vb, const Buffer& ib, const std::vector<std::pair<Mesh, Material>>& meshesAndMaterials)
     {
         m_vb = vb;
         m_ib = ib;
@@ -401,7 +418,7 @@ namespace Gino
 
     }
 
-    void Model::AddMesh(const Mesh& mesh, Material* material)
+    void Model::AddMesh(const Mesh& mesh, const Material& material)
     {
         m_meshes.push_back(mesh);
         m_materials.push_back(material);
@@ -413,7 +430,7 @@ namespace Gino
         return m_meshes;
     }
 
-    const std::vector<Material*>& Model::GetMaterials() const
+    const std::vector<Material>& Model::GetMaterials() const
     {
         return m_materials;
     }

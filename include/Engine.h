@@ -8,7 +8,10 @@ namespace Gino
 	class CentralRenderer;
 	class ImGuiRenderer;
 	class AssimpLoader;
-
+	struct Texture;
+	struct Model;
+	struct Material;
+	
 	class Engine
 	{
 	public:
@@ -31,14 +34,22 @@ namespace Gino
 		void SimulateAndRender();
 
 			
-		//Input* GetInput();
+		Input* GetInput();
 
 		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
 
 	private:
+		Texture* LoadTexture(const std::string& filePath);
+		std::unique_ptr<Model> LoadModel(const std::filesystem::path& filePath);
+
+	private:
 		std::unique_ptr<DXDevice> m_dxDev;
 		std::unique_ptr<CentralRenderer> m_centralRenderer;
-		std::unique_ptr<ImGuiRenderer> m_imGuiRenderer;
+
+		std::unique_ptr<Input> m_input;
+
+		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
+		std::unique_ptr<Model> m_sponzaModel;
 
 		// -- Maybe we can wrap them in an AssetContext in the future (where we can load/unload multiple context depending on e.g Scene)
 		// Loaded Mesh Data (Vertex Buffer)

@@ -132,7 +132,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)vendor\assimp-4.1.0\build\include;$(ProjectDir)vendor\assimp-4.1.0\include;$(ProjectDir)vendor\imgui-master\backends;$(ProjectDir)vendor\imgui-master;$(ProjectDir)vendor\stb-master;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)vendor\DirectXTK-aug2021\Inc;$(ProjectDir)vendor\assimp-4.1.0\build\include;$(ProjectDir)vendor\assimp-4.1.0\include;$(ProjectDir)vendor\imgui-master\backends;$(ProjectDir)vendor\imgui-master;$(ProjectDir)vendor\stb-master;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -153,7 +153,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)vendor\assimp-4.1.0\build\include;$(ProjectDir)vendor\assimp-4.1.0\include;$(ProjectDir)vendor\imgui-master\backends;$(ProjectDir)vendor\imgui-master;$(ProjectDir)vendor\stb-master;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)vendor\DirectXTK-aug2021\Inc;$(ProjectDir)vendor\assimp-4.1.0\build\include;$(ProjectDir)vendor\assimp-4.1.0\include;$(ProjectDir)vendor\imgui-master\backends;$(ProjectDir)vendor\imgui-master;$(ProjectDir)vendor\stb-master;$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -169,7 +169,7 @@
   <ItemGroup>
     <ClCompile Include="src\AssimpLoader.cpp" />
     <ClCompile Include="src\Graphics\ImGuiRenderer.cpp" />
-    <ClCompile Include="include\Graphics\ResourceTypes.cpp" />
+    <ClCompile Include="src\Graphics\ResourceTypes.cpp" />
     <ClCompile Include="src\Graphics\ShaderGroup.cpp" />
     <ClCompile Include="src\Graphics\CentralRenderer.cpp" />
     <ClCompile Include="src\Graphics\DXDevice.cpp" />
@@ -263,6 +263,11 @@
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="vendor\DirectXTK-aug2021\DirectXTK_Desktop_2019_Win10.vcxproj">
+      <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

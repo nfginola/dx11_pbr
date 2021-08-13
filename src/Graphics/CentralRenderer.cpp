@@ -3,10 +3,10 @@
 
 namespace Gino
 {
-	CentralRenderer::CentralRenderer(DXDevice* dxDev, ImGuiRenderer* imGui, bool vsync) :
+	CentralRenderer::CentralRenderer(DXDevice* dxDev, bool vsync) :
 		m_vsync(vsync),
 		m_dxDev(dxDev),
-		m_imGui(imGui)
+		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice(), dxDev->GetContext()))
 	{
 		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
  
@@ -62,14 +62,13 @@ namespace Gino
 			.vertexOffset = 0
 		};
 
-		m_testMat.Initialize(PhongMaterialData{ .m_diffuse = &m_mainTex });
-		m_testModel.Initialize(vb, ib, { { myMesh, &m_testMat } });
+		m_testMat.Initialize(PhongMaterialData{ .diffuse = &m_mainTex });
+		m_testModel.Initialize(vb, ib, { { myMesh, m_testMat } });
 
-		// make framebuffer
-		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
+
 
 		// make texture
-		m_mainTex.InitializeFromFile(dev, ctx, "../assets/random_textures/scenery.jpg");
+		m_mainTex.InitializeFromFile(dev, ctx, "../assets/Textures/Random/scenery.jpg");
 
 		// make rasterizer state
 		D3D11_RASTERIZER_DESC1 rsD
@@ -95,17 +94,41 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateSamplerState(&samplerDesc, m_mainSampler.GetAddressOf()));
 
+		// make depth buffer
+		D3D11_TEXTURE2D_DESC depthDesc
+		{
+			.Width = (uint32_t)m_dxDev->GetBackbufferViewport().Width,
+			.Height = (uint32_t)m_dxDev->GetBackbufferViewport().Height,
+			.MipLevels = 1,
+			.ArraySize = 1,
+			.Format = DXGI_FORMAT_D32_FLOAT,		// NO STENCIL, otherwise use DXGI_FORMAT_D24_UNORM_S8_UINT
+			.SampleDesc = {.Count = 1, .Quality = 0 },
+			.Usage = D3D11_USAGE_DEFAULT,
+			.BindFlags = D3D11_BIND_DEPTH_STENCIL,
+			.CPUAccessFlags = 0,
+			.MiscFlags = 0
+		};
+		m_depth.Initialize(dev, ctx, depthDesc);
 
+		// make framebuffer
+		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() }, m_depth.GetDSV());
 
-
-
-
+		// make depth stencil state
+		D3D11_DEPTH_STENCIL_DESC dssDesc
+		{
+			.DepthEnable = true,
+			.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL,
+			.DepthFunc = D3D11_COMPARISON_LESS_EQUAL,
+			.StencilEnable = false
+		};
+		HRCHECK(dev->CreateDepthStencilState(&dssDesc, m_dss.GetAddressOf()));
 
 
 		// Try cb
 		m_cb.Initialize(dev);
 
 
+		m_mvpCB.Initialize(dev);
 
 		// Test for resource cleanup warning signals
 		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
@@ -117,9 +140,7 @@ namespace Gino
 		//	.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
 		//	.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
 		//};
-
 		//HRCHECK(dev->CreateBuffer(&vbDesc, NULL, &tmpBuf));
-
 	}
 
 	CentralRenderer::~CentralRenderer()
@@ -127,7 +148,7 @@ namespace Gino
 	}
 
 	static float timeElapsed = 0.f;
-	void CentralRenderer::Render()
+	void CentralRenderer::Render(Model* model)
 	{
 		/*
 		
@@ -153,21 +174,34 @@ namespace Gino
 
 		// Test update using constant buffer
 		float mipLevel = cosf(timeElapsed) * 5.f + 5.f;
-		std::cout << "mip: " << mipLevel << "\n";
+		//std::cout << "mip: " << mipLevel << "\n";
 		m_cb.data.mipLevel = mipLevel;
 		m_cb.Upload(ctx);
 		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
 
+		// MVP
+		m_mvpCB.data.model =
+			DirectX::SimpleMath::Matrix::CreateScale(0.07f);
+
+		m_mvpCB.data.view =
+			DirectX::XMMatrixLookAtLH({ 0.f, 2.f, 0.f }, { -4.f, 10.f - mipLevel, 0.f }, { 0.f, 1.f, 0.f });
+
+		m_mvpCB.data.projection =
+			DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(80.f), 16.f / 9.f, 0.1f, 1000.f);
+
+		m_mvpCB.Upload(ctx);
+		ctx->VSSetConstantBuffers(0, 1, m_mvpCB.buffer.GetAddressOf());
 
 
 		m_shaderGroup.Bind(ctx);
 
 		ID3D11Buffer* vbs[] = { m_testModel.GetVB() };
 		UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
-		UINT vbOffsets[] = { 0 };
+		UINT vbOffsets[] = { m_testModel.GetMeshes()[0].vertexOffset };
 		ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
 		ctx->IASetIndexBuffer(m_testModel.GetIB(), DXGI_FORMAT_R32_UINT, 0);
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 
 		// set shader resources
@@ -182,14 +216,48 @@ namespace Gino
 		ctx->RSSetState(m_rs.Get());
 
 		// set OM state
-		m_finalFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
+		m_finalFramebuffer.Clear(ctx, 
+			{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
+			DepthStencilClearDesc{ .clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, .depth = 1.f, .stencil = 1 
+			}
+		);
 		m_finalFramebuffer.Bind(ctx);
+		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
 
 		ctx->DrawIndexedInstanced(3, 1, 0, 0, 0);
+
+
+		// Test draw model
+		{
+			ID3D11Buffer* vbs[] = { model->GetVB() };
+			UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
+			UINT vbOffsets[] = { 0 };
+			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
+			ctx->IASetIndexBuffer(model->GetIB(), DXGI_FORMAT_R32_UINT, 0);
+
+			auto meshes = model->GetMeshes();
+			auto materials = model->GetMaterials();
+			for (uint32_t i = 0; i < meshes.size(); ++i)
+			{
+				ID3D11ShaderResourceView* srvs[] = { materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() };
+				ctx->PSSetShaderResources(0, 1, srvs);
+				ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
+			}
+
+		}
+
+
+
 
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
 
 		m_dxDev->GetSwapChain()->Present(m_vsync ? 1 : 0, 0);
+	}
+
+	ImGuiRenderer* CentralRenderer::GetImGui() const
+	{
+		return m_imGui.get();
 	}
 
 }

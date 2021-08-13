@@ -1,14 +1,16 @@
 #include "pch.h"
 #include "Application.h"
 #include "Engine.h"
+#include "Input.h"
 
 namespace Gino
 {
 	Application::Application(Settings& settings) :
 		m_appIsAlive(true)
-    {
+	{
 		InitWindow(settings);
 		InitConsoleCommands();
+		
 
 		// Other settings such as Shadow Map resolution, and other misc. will go through here
 		Engine::Settings engineSettings
@@ -226,6 +228,50 @@ namespace Gino
 
 		switch (uMsg)
 		{
+		// DirectXTK Mouse and Keyboard (Input)
+		case WM_ACTIVATEAPP:
+		{
+			if (m_engine && m_engine->GetInput())
+			{
+				m_engine->GetInput()->ProcessKeyboard(uMsg, wParam, lParam);
+				m_engine->GetInput()->ProcessMouse(uMsg, wParam, lParam);
+			}
+			break;
+		}
+		case WM_INPUT:
+		case WM_MOUSEMOVE:
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_MOUSEWHEEL:
+		case WM_XBUTTONDOWN:
+		case WM_XBUTTONUP:
+		case WM_MOUSEHOVER:
+		{
+			if (m_engine && m_engine->GetInput())
+			{
+				m_engine->GetInput()->ProcessMouse(uMsg, wParam, lParam);
+			}
+			break;
+		}
+
+		case WM_KEYDOWN:
+			if (wParam == VK_ESCAPE)
+			{
+				KillApp();
+				break;
+			}
+		case WM_KEYUP:
+		case WM_SYSKEYUP:
+			if (m_engine && m_engine->GetInput())
+			{
+				m_engine->GetInput()->ProcessKeyboard(uMsg, wParam, lParam);
+			}
+			break;
+
 		// Universal quit message
 		case WM_CLOSE:
 		{
@@ -259,18 +305,6 @@ namespace Gino
 				// Custom Alt + Enter to toggle windowed borderless
 				m_mainWindow->SetFullscreen(!m_mainWindow->IsFullscreen());
 				// Resizing will be handled through WM_SIZE through a subsequent WM
-			}
-			break;
-		}
-
-		case WM_KEYDOWN:
-		{
-			// Here, we will have many calls to the Input module in Engine to map KeyDown/KeyUp events from Win32 to our Engine
-			// Same goes for mouse (raw input)
-			if (wParam == VK_ESCAPE)
-			{
-				KillApp();
-				break;
 			}
 			break;
 		}
