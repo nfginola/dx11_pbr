@@ -16,8 +16,8 @@ namespace Gino
 		CentralRenderer(DXDevice* dxDev, bool vsync);
 		~CentralRenderer();
 
-		void SetMainCamera(FPCamera* cam);
-		void Render(Model* model);
+		void SetRenderCamera(FPCamera* cam);	// Primary camera to use to render the final image
+		void Render(Model* model);				// Temporary model argument for testing purposes
 
 		/*
 		
@@ -36,6 +36,7 @@ namespace Gino
 		};
 		
 		// Should change to Per Frame, Per Pass, Per Material and Per Object constant buffers
+		// Constant buffers by binding frequency!
 		struct MVP
 		{
 			DirectX::SimpleMath::Matrix model;

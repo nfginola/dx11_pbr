@@ -11,9 +11,9 @@ namespace Gino
 		m_worldPosition(0.f, 0.f, 0.f),
 
 		// Prior to change
-		m_camPitch(0.f),
+		m_camPitch(90.f),
 		m_camYaw(0.f),
-		m_mouseSpeed(0.2f),
+		m_mouseSpeed(0.4f),
 
 		m_fovInDegs(fovInDegs),
 		m_aspectRatio(aspectRatio),
@@ -58,26 +58,27 @@ namespace Gino
 		m_worldPosition = pos;
 	}
 
-	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
+	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt, float dt)
 	{
-		float deltaYaw = (float)mouseDt.first * m_mouseSpeed;
-		float deltaPitch = (float)mouseDt.second * m_mouseSpeed;
+		float deltaYaw = (float)mouseDt.first * m_mouseSpeed * dt;
+		float deltaPitch = (float)mouseDt.second * m_mouseSpeed * dt;
 
-		m_camYaw += deltaYaw;
+		m_camYaw += deltaYaw;		// -> Drag left: Decrease in yaw, Drag right: Increase in yaw
 		m_camPitch += deltaPitch;
 
+		// Note!!
+		// We will use pitch as the angle from Y to XZ plane
+		// We will use yaw as the angle from X to YZ plane. We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
+		
 		// Constrain to avoid gimbal lock
-		if (m_camPitch > 89.f)
+		if (m_camPitch > 179.f)
 		{
-			m_camPitch = 89.f;
+			m_camPitch = 179.f;
 		}
-		else if (m_camPitch < -89.f)
+		else if (m_camPitch < 1.f)
 		{
-			m_camPitch = -89.f;
+			m_camPitch = 1.f;
 		}
-
-		std::cout << "dx: " << mouseDt.first << std::endl;
-		std::cout << "dy: " << mouseDt.second << std::endl << std::endl;
 	}
 
 	DirectX::SimpleMath::Matrix FPCamera::GetViewMatrix() const
@@ -93,11 +94,42 @@ namespace Gino
 
 	void FPCamera::Update(float dt)
 	{
-		// Update position
-		m_moveDirectionThisFrame.Normalize();
-		m_worldPosition += m_moveDirectionThisFrame * m_moveSpeed * dt;
-		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
+		/* ============ TO DO!!!! ============= */
+		// Update orientation (typical spherical coordinates)
+		// We will use pitch as the angle from Y to XZ plane
+		// We will use yaw as the angle from X to YZ plane. We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
 
+		m_localForward.x = cos(DirectX::XMConvertToRadians(-m_camYaw + 90.f)) * sin(DirectX::XMConvertToRadians(m_camPitch));
+		m_localForward.z = sin(DirectX::XMConvertToRadians(-m_camYaw + 90.f)) * sin(DirectX::XMConvertToRadians(m_camPitch));
+		m_localForward.y = cos(DirectX::XMConvertToRadians(m_camPitch));
+		m_localForward.Normalize();
+
+		m_localRight.x = cos(DirectX::XMConvertToRadians(-m_camYaw));
+		m_localRight.z = sin(DirectX::XMConvertToRadians(-m_camYaw));
+		m_localRight.Normalize();
+
+		/*
+		
+		We wont change local up and down. We will keep them world up and down :)
+		
+		*/
+
+
+		// Update position
+		if (m_moveDirectionThisFrame.Length() >= DirectX::g_XMEpsilon[0])
+		{
+			m_moveDirectionThisFrame.Normalize();
+			m_worldPosition += m_moveDirectionThisFrame * m_moveSpeed * dt;
+		}
+
+
+	/*	std::cout << "Yaw: " << m_camYaw << std::endl;
+		std::cout << "Local forward || X: " << m_localForward.x << ", Y: " << m_localForward.y << ", Z: " << m_localForward.z << std::endl;
+		std::cout << "Local right || X: " << m_localRight.x << ", Y: " << m_localRight.y << ", Z: " << m_localRight.z << std::endl << std::endl;*/
+		//std::cout << "Move direction || X: " << m_moveDirectionThisFrame.x << ", Y: " << m_moveDirectionThisFrame.y << ", Z: " << m_moveDirectionThisFrame.z << std::endl;
+
+		// Reset move direction
+		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
 	}
 }
 

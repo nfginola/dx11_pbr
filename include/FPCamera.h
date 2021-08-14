@@ -24,7 +24,7 @@ namespace Gino
 		void Move(MoveDirection direction);
 		void SetPosition(const DirectX::SimpleMath::Vector3& pos);
 
-		void RotateCamera(const std::pair<int, int>& mouseDt);
+		void RotateCamera(const std::pair<int, int>& mouseDt, float dt);
 
 		DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		DirectX::SimpleMath::Matrix GetProjectionMatrix() const;

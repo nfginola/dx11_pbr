@@ -5,6 +5,7 @@
 namespace Gino
 {
 	CentralRenderer::CentralRenderer(DXDevice* dxDev, bool vsync) :
+		m_mainCamera(nullptr),
 		m_vsync(vsync),
 		m_dxDev(dxDev),
 		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice(), dxDev->GetContext()))
@@ -106,7 +107,7 @@ namespace Gino
 	{
 	}
 
-	void CentralRenderer::SetMainCamera(FPCamera* cam)
+	void CentralRenderer::SetRenderCamera(FPCamera* cam)
 	{
 		m_mainCamera = cam;
 	}
@@ -114,6 +115,8 @@ namespace Gino
 	static float timeElapsed = 0.f;
 	void CentralRenderer::Render(Model* model)
 	{
+		assert(m_mainCamera != nullptr);	// A render camera is required!
+
 		/*
 		
 		shadowFramebuffer = shadowPass->run(scene, meshes)
@@ -143,17 +146,15 @@ namespace Gino
 		m_cb.Upload(ctx);
 		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
 
-		// MVP
+		//// MVP
 		//m_mvpCB.data.model =
 		//	DirectX::SimpleMath::Matrix::CreateScale(0.07f);
-
 		//m_mvpCB.data.view =
 		//	DirectX::XMMatrixLookAtLH({ 0.f, 2.f, 0.f }, { -4.f, 10.f - mipLevel, 0.f }, { 0.f, 1.f, 0.f });
-
 		//m_mvpCB.data.projection =
 		//	DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(80.f), 16.f / 9.f, 0.1f, 1000.f);
 
-		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);
+		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
 		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
 		m_mvpCB.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_mvpCB.Upload(ctx);
@@ -173,7 +174,7 @@ namespace Gino
 		// set OM state
 		m_finalFramebuffer.Clear(ctx, 
 			{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
-			DepthStencilClearDesc{ .clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, .depth = 1.f, .stencil = 1 });
+			DepthStencilClearDesc{ .depth = 1.f });
 		m_finalFramebuffer.Bind(ctx);
 		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
 
@@ -203,9 +204,6 @@ namespace Gino
 			}
 
 		}
-
-
-
 
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
 

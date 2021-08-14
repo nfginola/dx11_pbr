@@ -7,6 +7,9 @@
 #include "Input.h"
 #include "FPCamera.h"
 
+// Temp
+#include "Timer.h"
+
 namespace Gino
 {
 	Engine::Engine(Settings& settings)
@@ -15,9 +18,9 @@ namespace Gino
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
 		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
 		
-		m_fpCam = std::make_unique<FPCamera>(16.f / 9.f, 80.f);
+		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 80.f);
 
-		m_centralRenderer->SetMainCamera(m_fpCam.get());
+		m_centralRenderer->SetRenderCamera(m_fpCam.get());
 
 		// DXState state
 		/*
@@ -37,11 +40,13 @@ namespace Gino
 
 	}
 
+	static float dt = 0.f;
 	void Engine::SimulateAndRender()
 	{
+		Timer timer;
 		m_input->Update();
 
-		// Camera move
+		// Move camera
 		if (m_input->KeyIsDown(Keys::W))			m_fpCam->Move(MoveDirection::Forward);
 		if (m_input->KeyIsDown(Keys::A))			m_fpCam->Move(MoveDirection::Left);
 		if (m_input->KeyIsDown(Keys::S))			m_fpCam->Move(MoveDirection::Backward);
@@ -49,21 +54,26 @@ namespace Gino
 		if (m_input->KeyIsDown(Keys::Space))		m_fpCam->Move(MoveDirection::Up);
 		if (m_input->KeyIsDown(Keys::LeftShift))	m_fpCam->Move(MoveDirection::Down);
 
-		// Camera orient
-		if (m_input->RMBIsDown())
+		// Hook camera rotate to raw input messages when RMB is pressed
+		if (m_input->RMBIsPressed())
 		{
-			m_input->HideCursor();
-			m_input->CenterCursor();
-
-			m_fpCam->RotateCamera(m_input->GetMouseDelta());
+			m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.07f); });	// Sensitivity last arg
+			m_input->SetMouseMode(MouseMode::Relative);
+			std::cout << "================== MOUSE RELATIVE =================== \n";
 		}
-		else
+		// Unhook camera from raw input messages when RMB is released
+		if (m_input->RMBIsReleased())
 		{
-			m_input->ShowCursor();
+			m_input->SetMouseRawDeltaFunc({});
+			m_input->SetMouseMode(MouseMode::Absolute);
+			std::cout << "================== MOUSE ABSOLUTE =================== \n";
+
 		}
 
-		// Finalize camera changes
-		m_fpCam->Update(0.016f);
+		//if (m_input->RMBIsDown())
+		//{
+		//	m_fpCam->RotateCamera(m_input->GetMouseDelta(), dt);
+		//}
 
 
 		if (m_input->MMBIsDown())
@@ -71,6 +81,15 @@ namespace Gino
 			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
 			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
 		}
+
+		// Finalize camera changes
+		m_fpCam->Update(dt);
+
+
+
+
+
+
 
 		/*
 		
@@ -85,6 +104,11 @@ namespace Gino
 		*/
 
 		m_centralRenderer->Render(m_sponzaModel.get());
+
+		m_input->Reset();
+
+		dt = timer.TimeElapsed();
+		//std::cout << dt << std::endl;
 	}
 
 	Input* Engine::GetInput()
@@ -129,7 +153,6 @@ namespace Gino
 		static std::string defaultOpacityFilePath = "../assets/Textures/Default/defaultopacity.jpg";
 		static std::string defaultNormalFilePath = "../assets/Textures/Default/defaultnormal.jpg";
 
-
 		AssimpLoader loader(filePath);
 
 		auto verts = loader.GetVertices();
@@ -137,7 +160,7 @@ namespace Gino
 		auto subsets = loader.GetSubsets();
 		auto mats = loader.GetMaterials();
 
-		const std::string directory = filePath.parent_path().string() + "/";
+		//const std::string directory = filePath.parent_path().string() + "/";
 
 		// Load textures
 		for (auto& mat : mats)
@@ -149,7 +172,7 @@ namespace Gino
 
 			if (mat.diffuseFilePath.has_value())
 			{
-				diffuse = LoadTexture(directory + mat.diffuseFilePath.value());
+				diffuse = LoadTexture(mat.diffuseFilePath.value());
 			}
 			else
 			{
@@ -158,7 +181,7 @@ namespace Gino
 
 			if (mat.normalFilePath.has_value())
 			{
-				normal = LoadTexture(directory + mat.normalFilePath.value());
+				normal = LoadTexture(mat.normalFilePath.value());
 			}
 			else
 			{
@@ -167,7 +190,7 @@ namespace Gino
 
 			if (mat.opacityFilePath.has_value())
 			{
-				opacity = LoadTexture(directory + mat.opacityFilePath.value());
+				opacity = LoadTexture(mat.opacityFilePath.value());
 			}
 			else
 			{
@@ -176,7 +199,7 @@ namespace Gino
 
 			if (mat.specularFilePath.has_value())
 			{
-				specular = LoadTexture(directory + mat.specularFilePath.value());
+				specular = LoadTexture(mat.specularFilePath.value());
 			}
 			else
 			{
@@ -222,10 +245,10 @@ namespace Gino
 				.vertexOffset = subset.vertexStart
 			};
 
-			std::string diffLook = subset.diffuseFilePath.has_value() ? directory + subset.diffuseFilePath.value() : defaultDiffuseFilePath;
-			std::string specLook = subset.specularFilePath.has_value() ? directory + subset.specularFilePath.value() : defaultSpecularFilePath;
-			std::string opacityLook = subset.opacityFilePath.has_value() ? directory + subset.opacityFilePath.value() : defaultOpacityFilePath;
-			std::string normalLook = subset.normalFilePath.has_value() ? directory + subset.normalFilePath.value() : defaultNormalFilePath;
+			std::string diffLook = subset.diffuseFilePath.has_value() ? subset.diffuseFilePath.value() : defaultDiffuseFilePath;
+			std::string specLook = subset.specularFilePath.has_value() ? subset.specularFilePath.value() : defaultSpecularFilePath;
+			std::string opacityLook = subset.opacityFilePath.has_value() ? subset.opacityFilePath.value() : defaultOpacityFilePath;
+			std::string normalLook = subset.normalFilePath.has_value() ? subset.normalFilePath.value() : defaultNormalFilePath;
 
 			// Create material for this submesh to use
 			Material mat;

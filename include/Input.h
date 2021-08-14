@@ -9,9 +9,22 @@ namespace Gino
 {
 	using Keys = DirectX::Keyboard::Keys;
 
+	/*
+	
+	=== NOTE TO SELF ===
+
+	In the future, we may want to try our hands on doing this without DirectXTK and directly using raw input and Window Messages with the same interface.
+	This is enough for now to keep moving with the project.
+
+	*/
+
+	enum class MouseMode
+	{
+		Absolute,
+		Relative
+	};
+
 	// Handles keyboard and mouse, not following SRP on purpose to make it simple
-	// I erase the notion of Mouse being in either "Absolute" or "Relative" mode for the interface
-	// Instead, the interface delivers all relevant data which may be queried from either Absolute or Relative mode (this makes it much simpler!)
 	class Input
 	{
 	public:
@@ -21,12 +34,18 @@ namespace Gino
 		// For systems to call to prepare input for use
 		void ProcessKeyboard(UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void ProcessMouse(UINT uMsg, WPARAM wParam, LPARAM lParam);
-		void Update();	// Called in the beginning of every frame
+		void Update();	// Called at the beginning of every frame
+		void Reset();	// Called at the end of every frame
 
 		// Mouse
+		void SetMouseMode(MouseMode mode);
 		void HideCursor() const;
 		void ShowCursor() const;
+
+		void SetMouseRawDeltaFunc(const std::function<void(int, int)>& func);
+
 		void CenterCursor();
+		void UncenterCursor();
 
 		bool LMBIsPressed() const;
 		bool LMBIsReleased() const;
@@ -69,6 +88,9 @@ namespace Gino
 		std::pair<int, int> m_currScreenPosition;
 		std::pair<int, int> m_mouseDelta;
 		bool m_cursorCentered;
+
+		std::function<void(int, int)> m_mouseRawDeltaCallback;
+
 
 		// Keyboard helper
 		DirectX::Keyboard::State m_keyboardState;

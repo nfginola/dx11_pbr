@@ -18,11 +18,12 @@ namespace Gino
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GetElementDescriptors();
 	};
 
+	// depth and stencil clear flags set automatically, override if needed
 	struct DepthStencilClearDesc
 	{
-		UINT clearFlags;		// D3D11_CLEAR_FLAG 
-		FLOAT depth;
-		UINT8 stencil;
+		FLOAT depth = 1.f;
+		UINT8 stencil = 0;		// Default stencil clear value
+		UINT clearFlags = D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL;		// D3D11_CLEAR_FLAG 
 	};
 
 	struct Framebuffer

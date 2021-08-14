@@ -43,6 +43,15 @@ namespace Gino
 		std::optional<std::string> opacityFilePath;
 	};
 
+	/*
+	
+	To do:
+
+	- Refactor material grabbing so that the duplicates are removed (Grab materials in ctor and grab materials in ProcessMesh..)
+	-- Priority: Low
+	
+	*/
+
 	class AssimpLoader
 	{
 	public:
@@ -60,6 +69,8 @@ namespace Gino
 		void ProcessNode(aiNode* node, const aiScene* scene);
 
 	private:
+		std::filesystem::path m_filePath;
+
 		uint32_t m_meshVertexCount = 0;
 		uint32_t m_meshIndexCount = 0;
 

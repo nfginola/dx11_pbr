@@ -4,7 +4,8 @@
 
 namespace Gino
 {
-	AssimpLoader::AssimpLoader(const std::filesystem::path& filePath)
+	AssimpLoader::AssimpLoader(const std::filesystem::path& filePath) :
+		m_filePath(filePath)
 	{
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(
@@ -19,6 +20,10 @@ namespace Gino
 			aiProcess_GenSmoothNormals |
 			aiProcess_CalcTangentSpace
 		);
+
+		// === WARNING - There are two place that use this directory
+		// One is here in Grab materials, but there is a duplicate in ProcessMesh!!!
+		const std::string directory = filePath.parent_path().string() + "/";
 
 		if (scene == nullptr)
 		{
@@ -55,10 +60,10 @@ namespace Gino
 			mtl->GetTexture(aiTextureType_UNKNOWN, 0, &bruh);
 
 			AssimpMaterialPaths matPaths;
-			matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(diffPath.C_Str());
-			matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(norPath.C_Str());
-			matPaths.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(opacityPath.C_Str());
-			matPaths.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(specularPath.C_Str());
+			matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
+			matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+			matPaths.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
+			matPaths.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
 			m_materials.push_back(matPaths);
 		}
 
@@ -129,6 +134,9 @@ namespace Gino
 
 		}
 
+
+		const std::string directory = m_filePath.parent_path().string() + "/";
+
 		// Get material
 		auto mtl = scene->mMaterials[mesh->mMaterialIndex];
 		aiString diffPath, norPath, opacityPath, specularPath;
@@ -143,10 +151,10 @@ namespace Gino
 
 		// Subset data
 		AssimpMeshSubset subsetData = { };
-		subsetData.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(diffPath.C_Str());
-		subsetData.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(norPath.C_Str());
-		subsetData.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(opacityPath.C_Str());
-		subsetData.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(specularPath.C_Str());
+		subsetData.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
+		subsetData.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+		subsetData.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
+		subsetData.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
 
 
 		subsetData.vertexStart = m_meshVertexCount;

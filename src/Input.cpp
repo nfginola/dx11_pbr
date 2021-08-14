@@ -7,14 +7,14 @@ namespace Gino
 		m_hwnd(hwnd),
 		m_prevScreenPosition({ 0, 0 }),
 		m_currScreenPosition({ 0, 0 }),
-		m_mouseDelta({ 0, 0 })
+		m_mouseDelta({ 0, 0 }),
+		m_cursorCentered(false)
 	{
 		m_keyboard = std::make_unique<DirectX::Keyboard>();
-
 		m_mouse = std::make_unique<DirectX::Mouse>();
 		m_mouse->SetWindow(hwnd);
-		InitMouse(DirectX::Mouse::Mode::MODE_ABSOLUTE);
 
+		InitMouse(DirectX::Mouse::Mode::MODE_ABSOLUTE);
 	}
 
 	Input::~Input()
@@ -30,7 +30,52 @@ namespace Gino
 	{
 		DirectX::Mouse::ProcessMessage(uMsg, wParam, lParam);
 
+		switch (uMsg)
+		{
+		case WM_INPUT:
+		{
+			UINT dwSize = 0;
+
+			GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+			LPBYTE lpb = new BYTE[dwSize];
+			if (lpb == NULL)
+			{
+				assert(false);
+			}
+
+			if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
+				OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
+
+			RAWINPUT* raw = (RAWINPUT*)lpb;
+
+			if (raw->header.dwType == RIM_TYPEMOUSE)
+			{
+				m_mouseDelta = { raw->data.mouse.lLastX, raw->data.mouse.lLastY };
+				/*
+					Sampling m_mouseDelta during a Frame is technically wrong! We are downsampling our raw input delta information!
+					What happens is that m_mouseDelta will be populated with the LATEST delta message and anything before that is ignored!!
+					Say that 10 delta WMs appear during one frame, we would end up ignoring 9 deltas thus losing movement details!
+					--> Using the last delta only during a frame is simply incorrect!
+
+					My solution for now is to hook a callback that requires these deltas. This way, I dont downsample the delta details and keep
+					full "resolution" of the deltas.
+					
+				*/
+
+				if (m_mouseRawDeltaCallback)
+				{
+					m_mouseRawDeltaCallback(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+				}
+			}
+
+			delete[] lpb;
+			break;
+		}
+		default:
+			break;
+		}
 	}
+	
 	void Input::Update()
 	{
 		// We cant update this on ProcessMouse. Otherwise some functionality dont work properly (e.g PRESSED)
@@ -40,23 +85,46 @@ namespace Gino
 		m_keyboardState = m_keyboard->GetState();
 		m_keyboardTracker.Update(m_keyboardState);
 
-		// Extract relevant data and restore the initial mouse state
-		SetMouseMode(m_currMouseMode);
+		// Track position only in absolute mode
+		if (m_currMouseMode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
 		{
-			// Get mouse screen position of cursor
-			m_mouse->SetMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
-			m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
+			SetMouseMode(m_currMouseMode);
+			{
+				// Get mouse screen position of cursor
+				m_mouse->SetMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
+				m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
 
-			// Calculate mouse delta
-			m_mouseDelta = { m_currScreenPosition.first - m_prevScreenPosition.first, m_currScreenPosition.second - m_prevScreenPosition.second };
+				// Save current screen position for next frame
+				m_prevScreenPosition = m_currScreenPosition;
+			}
+			RestorePreviousMouseMode();
 		}
-		RestorePreviousMouseMode();
+	}
 
-		// Save current screen position for next frame
-		m_prevScreenPosition = m_currScreenPosition;
+	void Input::Reset()
+	{
+		m_mouseDelta = { 0, 0 };
+	}
 
-		// Reset cursor centered state
-		m_cursorCentered = false;
+	void Input::SetMouseMode(MouseMode mode)
+	{
+		switch (mode)
+		{
+		case MouseMode::Relative:
+			SetMouseMode(DirectX::Mouse::Mode::MODE_RELATIVE);
+
+			CenterCursor();
+			break;
+		case MouseMode::Absolute:
+			SetMouseMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
+
+			// Restore cursor location
+			SetCursorPos(m_currScreenPosition.first, m_currScreenPosition.second);
+			UncenterCursor();
+			break;
+		default:
+			assert(false);
+		}
 	}
 
 	void Input::HideCursor() const
@@ -69,6 +137,11 @@ namespace Gino
 		m_mouse->SetVisible(true);
 	}
 
+	void Input::SetMouseRawDeltaFunc(const std::function<void(int, int)>& func)
+	{
+		m_mouseRawDeltaCallback = func;
+	}
+
 	void Input::CenterCursor()
 	{
 		// We cant explicitly interfere with the cursor position since we are using mouse absolute mode to calculate delta manually
@@ -79,13 +152,19 @@ namespace Gino
 		m_cursorCentered = true;
 	}
 
+	void Input::UncenterCursor()
+	{
+		m_cursorCentered = false;
+	}
+
+	
+
 	void Input::InitMouse(DirectX::Mouse::Mode mode)
 	{
 		m_currMouseMode = mode;
 		SetMouseMode(mode);
 	}
 	
-
 	bool Input::LMBIsPressed() const
 	{
 		return m_mouseTracker.leftButton == DirectX::Mouse::ButtonStateTracker::ButtonState::PRESSED;
