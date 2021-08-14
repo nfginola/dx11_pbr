@@ -44,13 +44,18 @@ namespace Gino
 			}
 
 			if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
+			{
+				assert(false);
 				OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
+			}
 
 			RAWINPUT* raw = (RAWINPUT*)lpb;
 
 			if (raw->header.dwType == RIM_TYPEMOUSE)
 			{
-				m_mouseDelta = { raw->data.mouse.lLastX, raw->data.mouse.lLastY };
+				m_mouseDeltasThisFrame.push({ raw->data.mouse.lLastX, raw->data.mouse.lLastY });
+
+				//m_mouseDelta = { raw->data.mouse.lLastX, raw->data.mouse.lLastY };
 				/*
 					Sampling m_mouseDelta using Input during a Frame is technically wrong! We are downsampling our raw input delta information!
 					What happens is that m_mouseDelta will be populated with the LATEST delta message and anything before that is ignored!!
@@ -65,6 +70,7 @@ namespace Gino
 				{
 					m_mouseRawDeltaCallback(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
 				}
+
 
 				//std::cout << "x :" << m_mouseDelta.first << " || y: " << m_mouseDelta.second << std::endl;
 			}
@@ -92,10 +98,29 @@ namespace Gino
 			m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
 			m_prevScreenPosition = m_currScreenPosition;
 		}
+
+		// Calculate total mouse delta
+		while (!m_mouseDeltasThisFrame.empty())
+		{
+			const auto& d = m_mouseDeltasThisFrame.front();
+			m_mouseDeltasThisFrame.pop();
+
+			m_mouseDelta.first += d.first;
+			m_mouseDelta.second += d.second;
+		}
 	}
 
 	void Input::Reset()
 	{
+		// Reset delta
+		/*
+			There is no WM for "no input", so we need to do this at the end of the frame once.
+			
+			NOTE:
+
+			The only time we should be using "GetDelta" is if it was computed through manual position absolute delta,
+			which does have full move information (unlike downsampling deltas from raw input WMs)
+		*/
 		m_mouseDelta = { 0, 0 };
 	}
 

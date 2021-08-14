@@ -173,7 +173,7 @@ namespace Gino
 		m_swapChainDesc.BufferDesc.Height = bbHeight;
 		m_swapChainDesc.BufferDesc.RefreshRate.Numerator = bestMode.RefreshRate.Numerator;
 		m_swapChainDesc.BufferDesc.RefreshRate.Denominator = bestMode.RefreshRate.Denominator;
-		m_swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		m_swapChainDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		m_swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
 		m_swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 

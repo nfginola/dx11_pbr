@@ -47,33 +47,37 @@ namespace Gino
 		m_input->Update();
 
 		// Move camera
-		if (m_input->KeyIsDown(Keys::W))			m_fpCam->Move(MoveDirection::Forward);
-		if (m_input->KeyIsDown(Keys::A))			m_fpCam->Move(MoveDirection::Left);
-		if (m_input->KeyIsDown(Keys::S))			m_fpCam->Move(MoveDirection::Backward);
-		if (m_input->KeyIsDown(Keys::D))			m_fpCam->Move(MoveDirection::Right);
-		if (m_input->KeyIsDown(Keys::Space))		m_fpCam->Move(MoveDirection::Up);
-		if (m_input->KeyIsDown(Keys::LeftShift))	m_fpCam->Move(MoveDirection::Down);
+		if (m_input->KeyIsDown(Keys::W))				m_fpCam->Move(MoveDirection::Forward);
+		if (m_input->KeyIsDown(Keys::A))				m_fpCam->Move(MoveDirection::Left);
+		if (m_input->KeyIsDown(Keys::S))				m_fpCam->Move(MoveDirection::Backward);
+		if (m_input->KeyIsDown(Keys::D))				m_fpCam->Move(MoveDirection::Right);
+		if (m_input->KeyIsDown(Keys::Space))			m_fpCam->Move(MoveDirection::Up);
+		if (m_input->KeyIsDown(Keys::LeftShift))		m_fpCam->Move(MoveDirection::Down);
+
+		if (m_input->KeyIsPressed(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Slow);
+		if (m_input->KeyIsReleased(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Normal);
 
 		// Hook camera rotate to raw input messages when RMB is pressed
 		if (m_input->RMBIsPressed())
 		{
-			m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.14f); });	// Sensitivity last arg
+			//m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.14f); });	// Sensitivity last arg
 			m_input->SetMouseMode(MouseMode::Relative);
 		}
 		// Unhook camera from raw input messages when RMB is released
 		if (m_input->RMBIsReleased())
 		{
-			m_input->SetMouseRawDeltaFunc({});
+			//m_input->SetMouseRawDeltaFunc({});
 			m_input->SetMouseMode(MouseMode::Absolute);
 		}
 
-		//if (m_input->RMBIsDown())
-		//{
-		//	m_fpCam->RotateCamera(m_input->GetMouseDelta(), dt);
-		//}
+		if (m_input->RMBIsDown())
+		{
+			m_fpCam->RotateCamera(m_input->GetMouseDelta(), 0.14f);	// No need for delta since we consume the WMs generated for this frame
+																	// We instead supply some multiplier per WM 
 
-		if (m_input->KeyIsPressed(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Slow);
-		if (m_input->KeyIsReleased(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Normal);
+			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
+			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
+		}
 
 
 		if (m_input->MMBIsDown())

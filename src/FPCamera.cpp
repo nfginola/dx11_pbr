@@ -8,10 +8,9 @@ namespace Gino
 		m_localRight(s_worldRight),
 		m_localForward(s_worldForward),
 		m_moveDirectionThisFrame(0.f, 0.f, 0.f),
-		m_worldPosition(0.f, 0.f, 0.f),
+		m_worldPosition(0.f, 2.f, 0.f),
 
-		// Prior to change
-		m_camPitch(90.f),
+		m_camPitch(90.f),	// We want to be looking parallell to the XZ plane at first!
 		m_camYaw(0.f),
 		m_mouseSpeed(0.35f),
 
@@ -117,11 +116,13 @@ namespace Gino
 
 	void FPCamera::Update(float dt)
 	{
-		/* ============ TO DO!!!! ============= */
-		// Update orientation (typical spherical coordinates)
-		// We will use pitch as the angle from Y to XZ plane
-		// We will use yaw as the angle from X to YZ plane. We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
+		// Update orientation
+		// Here I use the spherical coordinates for RH but replace the axis with LH system :)
 
+		// We will use pitch as the angle from Y to XZ plane (CCW, thumb on Z pointing Z+)
+		// We will use yaw as the angle from X to YZ plane (CCW). We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
+
+		// 90 deg offset since Forward vector is always 90 deg CCW from Right vector
 		m_localForward.x = cos(DirectX::XMConvertToRadians(-m_camYaw + 90.f)) * sin(DirectX::XMConvertToRadians(m_camPitch));
 		m_localForward.z = sin(DirectX::XMConvertToRadians(-m_camYaw + 90.f)) * sin(DirectX::XMConvertToRadians(m_camPitch));
 		m_localForward.y = cos(DirectX::XMConvertToRadians(m_camPitch));
@@ -133,7 +134,7 @@ namespace Gino
 
 		/*
 		
-		We wont change local up and down. We will keep them world up and down :)
+		We wont change local up and down. We will keep them world up and down :) (easier to navigate)
 		
 		*/
 
