@@ -52,7 +52,7 @@ namespace Gino
 			{
 				m_mouseDelta = { raw->data.mouse.lLastX, raw->data.mouse.lLastY };
 				/*
-					Sampling m_mouseDelta during a Frame is technically wrong! We are downsampling our raw input delta information!
+					Sampling m_mouseDelta using Input during a Frame is technically wrong! We are downsampling our raw input delta information!
 					What happens is that m_mouseDelta will be populated with the LATEST delta message and anything before that is ignored!!
 					Say that 10 delta WMs appear during one frame, we would end up ignoring 9 deltas thus losing movement details!
 					--> Using the last delta only during a frame is simply incorrect!
@@ -61,11 +61,12 @@ namespace Gino
 					full "resolution" of the deltas.
 					
 				*/
-
 				if (m_mouseRawDeltaCallback)
 				{
 					m_mouseRawDeltaCallback(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
 				}
+
+				//std::cout << "x :" << m_mouseDelta.first << " || y: " << m_mouseDelta.second << std::endl;
 			}
 
 			delete[] lpb;
@@ -88,16 +89,8 @@ namespace Gino
 		// Track position only in absolute mode
 		if (m_currMouseMode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
 		{
-			SetMouseMode(m_currMouseMode);
-			{
-				// Get mouse screen position of cursor
-				m_mouse->SetMode(DirectX::Mouse::Mode::MODE_ABSOLUTE);
-				m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
-
-				// Save current screen position for next frame
-				m_prevScreenPosition = m_currScreenPosition;
-			}
-			RestorePreviousMouseMode();
+			m_currScreenPosition = { m_mouseState.x, m_mouseState.y };
+			m_prevScreenPosition = m_currScreenPosition;
 		}
 	}
 
@@ -244,15 +237,6 @@ namespace Gino
 		m_prevMouseMode = m_currMouseMode;
 		m_currMouseMode = mode;
 		m_mouse->SetMode(mode);
-
-		if (mode == DirectX::Mouse::Mode::MODE_RELATIVE)
-		{
-			m_mouse->SetVisible(false);
-		}
-		else if (mode == DirectX::Mouse::Mode::MODE_ABSOLUTE)
-		{
-			m_mouse->SetVisible(true);
-		}
 	}
 	void Input::RestorePreviousMouseMode()
 	{

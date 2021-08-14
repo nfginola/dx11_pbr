@@ -15,14 +15,28 @@ namespace Gino
 		Down
 	};
 
+	enum class MoveSpeed
+	{
+		Slow,
+		Normal,
+		Fast
+	};
+
 	class FPCamera
 	{
+	private:
+		static constexpr float s_moveSpeedSlow = 15.f;
+		static constexpr float s_moveSpeeNormal = 35.f;
+		static constexpr float s_moveSpeedFast = 50.f;
+
 	public:
-		FPCamera(float aspectRatio, float fovInDegs, float nearPlane = 0.1f, float farPlane = 1000.f, float moveSpeed = 35.f);
+		FPCamera(float aspectRatio, float fovInDegs, float nearPlane = 0.1f, float farPlane = 1000.f, float defaultMoveSpeed = s_moveSpeeNormal);
 		~FPCamera() = default;
 
 		void Move(MoveDirection direction);
 		void SetPosition(const DirectX::SimpleMath::Vector3& pos);
+		void SetMoveSpeed(float moveSpeed);
+		void SetMoveSpeed(MoveSpeed speed);
 
 		void RotateCamera(const std::pair<int, int>& mouseDt, float dt);
 

@@ -57,23 +57,23 @@ namespace Gino
 		// Hook camera rotate to raw input messages when RMB is pressed
 		if (m_input->RMBIsPressed())
 		{
-			m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.07f); });	// Sensitivity last arg
+			m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.14f); });	// Sensitivity last arg
 			m_input->SetMouseMode(MouseMode::Relative);
-			std::cout << "================== MOUSE RELATIVE =================== \n";
 		}
 		// Unhook camera from raw input messages when RMB is released
 		if (m_input->RMBIsReleased())
 		{
 			m_input->SetMouseRawDeltaFunc({});
 			m_input->SetMouseMode(MouseMode::Absolute);
-			std::cout << "================== MOUSE ABSOLUTE =================== \n";
-
 		}
 
 		//if (m_input->RMBIsDown())
 		//{
 		//	m_fpCam->RotateCamera(m_input->GetMouseDelta(), dt);
 		//}
+
+		if (m_input->KeyIsPressed(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Slow);
+		if (m_input->KeyIsReleased(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Normal);
 
 
 		if (m_input->MMBIsDown())
@@ -82,7 +82,7 @@ namespace Gino
 			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
 		}
 
-		// Finalize camera changes
+		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
 
 

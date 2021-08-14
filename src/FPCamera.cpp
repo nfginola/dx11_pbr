@@ -3,7 +3,7 @@
 
 namespace Gino
 {
-	FPCamera::FPCamera(float aspectRatio, float fovInDegs, float nearPlane, float farPlane, float moveSpeed) :
+	FPCamera::FPCamera(float aspectRatio, float fovInDegs, float nearPlane, float farPlane, float defaultMoveSpeed) :
 		m_localUp(s_worldUp),
 		m_localRight(s_worldRight),
 		m_localForward(s_worldForward),
@@ -13,14 +13,14 @@ namespace Gino
 		// Prior to change
 		m_camPitch(90.f),
 		m_camYaw(0.f),
-		m_mouseSpeed(0.4f),
+		m_mouseSpeed(0.35f),
 
 		m_fovInDegs(fovInDegs),
 		m_aspectRatio(aspectRatio),
 		m_nearPlane(nearPlane),
 		m_farPlane(farPlane),
 
-		m_moveSpeed(moveSpeed)
+		m_moveSpeed(defaultMoveSpeed)
 	{
 	}
 
@@ -58,6 +58,29 @@ namespace Gino
 		m_worldPosition = pos;
 	}
 
+	void FPCamera::SetMoveSpeed(float moveSpeed)
+	{
+		m_moveSpeed = moveSpeed;
+	}
+
+	void FPCamera::SetMoveSpeed(MoveSpeed speed)
+	{
+		switch (speed)
+		{
+		case MoveSpeed::Slow:
+			m_moveSpeed = s_moveSpeedSlow;
+			break;
+		case MoveSpeed::Normal:
+			m_moveSpeed = s_moveSpeeNormal;
+			break;
+		case MoveSpeed::Fast:
+			m_moveSpeed = s_moveSpeedFast;
+			break;
+		}
+	}
+
+
+	// note: dt should be renamed to sensitivity or something..
 	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt, float dt)
 	{
 		float deltaYaw = (float)mouseDt.first * m_mouseSpeed * dt;
