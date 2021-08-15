@@ -116,6 +116,8 @@ namespace Gino
 	void CentralRenderer::Render(Model* model)
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
+		auto ctx = m_dxDev->GetContext();
+
 
 		/*
 		
@@ -136,7 +138,6 @@ namespace Gino
 
 		m_imGui->BeginFrame();
 		
-		auto ctx = m_dxDev->GetContext();
 
 
 		// Test update using constant buffer
@@ -146,20 +147,11 @@ namespace Gino
 		m_cb.Upload(ctx);
 		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
 
-		//// MVP
-		//m_mvpCB.data.model =
-		//	DirectX::SimpleMath::Matrix::CreateScale(0.07f);
-		//m_mvpCB.data.view =
-		//	DirectX::XMMatrixLookAtLH({ 0.f, 2.f, 0.f }, { -4.f, 10.f - mipLevel, 0.f }, { 0.f, 1.f, 0.f });
-		//m_mvpCB.data.projection =
-		//	DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(80.f), 16.f / 9.f, 0.1f, 1000.f);
-
 		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
 		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
 		m_mvpCB.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_mvpCB.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_mvpCB.buffer.GetAddressOf());
-
 
 		m_shaderGroup.Bind(ctx);
 
@@ -190,6 +182,7 @@ namespace Gino
 
 			auto meshes = model->GetMeshes();
 			auto materials = model->GetMaterials();
+			assert(meshes.size() == materials.size());
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
 				ID3D11ShaderResourceView* srvs[] = 

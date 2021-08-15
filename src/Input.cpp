@@ -32,6 +32,10 @@ namespace Gino
 
 		switch (uMsg)
 		{
+
+		case WM_MOUSEMOVE:
+			// abs position
+			break;
 		case WM_INPUT:
 		{
 			UINT dwSize = 0;
@@ -53,26 +57,9 @@ namespace Gino
 
 			if (raw->header.dwType == RIM_TYPEMOUSE)
 			{
+				// We grab all the raw delta WMs that occured between last frames PumpMessage and this frames PumpMessage!
+				// We used to grab the last delta, which is incorrect! (We would be ignoring a bunch of movement)
 				m_mouseDeltasThisFrame.push({ raw->data.mouse.lLastX, raw->data.mouse.lLastY });
-
-				//m_mouseDelta = { raw->data.mouse.lLastX, raw->data.mouse.lLastY };
-				/*
-					Sampling m_mouseDelta using Input during a Frame is technically wrong! We are downsampling our raw input delta information!
-					What happens is that m_mouseDelta will be populated with the LATEST delta message and anything before that is ignored!!
-					Say that 10 delta WMs appear during one frame, we would end up ignoring 9 deltas thus losing movement details!
-					--> Using the last delta only during a frame is simply incorrect!
-
-					My solution for now is to hook a callback that requires these deltas. This way, I dont downsample the delta details and keep
-					full "resolution" of the deltas.
-					
-				*/
-				if (m_mouseRawDeltaCallback)
-				{
-					m_mouseRawDeltaCallback(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
-				}
-
-
-				//std::cout << "x :" << m_mouseDelta.first << " || y: " << m_mouseDelta.second << std::endl;
 			}
 
 			delete[] lpb;
@@ -99,7 +86,7 @@ namespace Gino
 			m_prevScreenPosition = m_currScreenPosition;
 		}
 
-		// Calculate total mouse delta
+		// Calculate total mouse delta for this frame
 		while (!m_mouseDeltasThisFrame.empty())
 		{
 			const auto& d = m_mouseDeltasThisFrame.front();
@@ -155,10 +142,6 @@ namespace Gino
 		m_mouse->SetVisible(true);
 	}
 
-	void Input::SetMouseRawDeltaFunc(const std::function<void(int, int)>& func)
-	{
-		m_mouseRawDeltaCallback = func;
-	}
 
 	void Input::CenterCursor()
 	{

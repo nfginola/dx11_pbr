@@ -78,12 +78,13 @@ namespace Gino
 		}
 	}
 
-
 	// note: dt should be renamed to sensitivity or something..
-	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt, float dt)
+	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
 	{
-		float deltaYaw = (float)mouseDt.first * m_mouseSpeed * dt;
-		float deltaPitch = (float)mouseDt.second * m_mouseSpeed * dt;
+		// No need for delta since we consume the WMs generated for this frame
+		// We instead supply some multiplier which is applied per WM (applied on the frames total delta)
+		float deltaYaw = (float)mouseDt.first * m_mouseSpeed * 0.14f;
+		float deltaPitch = (float)mouseDt.second * m_mouseSpeed * 0.14f;
 
 		m_camYaw += deltaYaw;		// -> Drag left: Decrease in yaw, Drag right: Increase in yaw
 		m_camPitch += deltaPitch;

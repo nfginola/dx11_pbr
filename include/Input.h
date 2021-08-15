@@ -43,8 +43,6 @@ namespace Gino
 		void HideCursor() const;
 		void ShowCursor() const;
 
-		void SetMouseRawDeltaFunc(const std::function<void(int, int)>& func);
-
 		void CenterCursor();
 		void UncenterCursor();
 
@@ -62,10 +60,6 @@ namespace Gino
 
 		int GetScrollWheelValue() const;
 		std::pair<int, int> GetScreenPosition() const;
-
-		// We should remake this so that this is Mouse Delta that is given by manual absolute position difference calculation, which would
-		// give us the proper full detail of the mouse movement from the previous frame rather than a downsampled information on the delta
-		// Perhaps we can queue the deltas from the WM and add em up
 		const std::pair<int, int>& GetMouseDelta() const;
 
 		// Keyboard
@@ -95,8 +89,6 @@ namespace Gino
 		bool m_cursorCentered;
 
 		std::queue<std::pair<int, int>> m_mouseDeltasThisFrame;
-
-		std::function<void(int, int)> m_mouseRawDeltaCallback;
 
 
 		// Keyboard helper

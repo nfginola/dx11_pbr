@@ -38,7 +38,7 @@ namespace Gino
 		void SetMoveSpeed(float moveSpeed);
 		void SetMoveSpeed(MoveSpeed speed);
 
-		void RotateCamera(const std::pair<int, int>& mouseDt, float dt);
+		void RotateCamera(const std::pair<int, int>& mouseDt);
 
 		DirectX::SimpleMath::Matrix GetViewMatrix() const;
 		DirectX::SimpleMath::Matrix GetProjectionMatrix() const;

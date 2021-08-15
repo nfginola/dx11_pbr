@@ -18,7 +18,7 @@ namespace Gino
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
 		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
 		
-		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 80.f);
+		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 87.f);
 
 		m_centralRenderer->SetRenderCamera(m_fpCam.get());
 
@@ -46,7 +46,7 @@ namespace Gino
 		Timer timer;
 		m_input->Update();
 
-		// Move camera
+		// Update camera state
 		if (m_input->KeyIsDown(Keys::W))				m_fpCam->Move(MoveDirection::Forward);
 		if (m_input->KeyIsDown(Keys::A))				m_fpCam->Move(MoveDirection::Left);
 		if (m_input->KeyIsDown(Keys::S))				m_fpCam->Move(MoveDirection::Backward);
@@ -57,34 +57,10 @@ namespace Gino
 		if (m_input->KeyIsPressed(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Slow);
 		if (m_input->KeyIsReleased(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Normal);
 
-		// Hook camera rotate to raw input messages when RMB is pressed
-		if (m_input->RMBIsPressed())
-		{
-			//m_input->SetMouseRawDeltaFunc([this](int dx, int dy) { this->m_fpCam->RotateCamera({ dx, dy }, 0.14f); });	// Sensitivity last arg
-			m_input->SetMouseMode(MouseMode::Relative);
-		}
-		// Unhook camera from raw input messages when RMB is released
-		if (m_input->RMBIsReleased())
-		{
-			//m_input->SetMouseRawDeltaFunc({});
-			m_input->SetMouseMode(MouseMode::Absolute);
-		}
+		if (m_input->RMBIsPressed())		m_input->SetMouseMode(MouseMode::Relative);
+		if (m_input->RMBIsReleased())		m_input->SetMouseMode(MouseMode::Absolute);
 
-		if (m_input->RMBIsDown())
-		{
-			m_fpCam->RotateCamera(m_input->GetMouseDelta(), 0.14f);	// No need for delta since we consume the WMs generated for this frame
-																	// We instead supply some multiplier per WM 
-
-			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
-			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
-		}
-
-
-		if (m_input->MMBIsDown())
-		{
-			std::cout << "dx: " << m_input->GetMouseDelta().first << "|| dy: " << m_input->GetMouseDelta().second << std::endl;
-			std::cout << "xPos: " << m_input->GetScreenPosition().first << "|| yPos: " << m_input->GetScreenPosition().second << std::endl;
-		}
+		if (m_input->RMBIsDown())			m_fpCam->RotateCamera(m_input->GetMouseDelta());	
 
 		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
@@ -109,10 +85,12 @@ namespace Gino
 
 		m_centralRenderer->Render(m_sponzaModel.get());
 
-		m_input->Reset();
 
+
+
+
+		m_input->Reset();
 		dt = timer.TimeElapsed();
-		//std::cout << dt << std::endl;
 	}
 
 	Input* Engine::GetInput()
