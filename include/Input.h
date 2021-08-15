@@ -15,7 +15,7 @@ namespace Gino
 	=== NOTE TO SELF ===
 
 	In the future, we may want to try our hands on doing this without DirectXTK and directly using raw input and Window Messages with the same interface.
-	This is enough for now to keep moving with the project.
+	This is enough for now to move forward with the project.
 
 	*/
 
@@ -40,11 +40,6 @@ namespace Gino
 
 		// Mouse
 		void SetMouseMode(MouseMode mode);
-		void HideCursor() const;
-		void ShowCursor() const;
-
-		void CenterCursor();
-		void UncenterCursor();
 
 		bool LMBIsPressed() const;
 		bool LMBIsReleased() const;
@@ -71,6 +66,14 @@ namespace Gino
 		void InitMouse(DirectX::Mouse::Mode mode);
 		void SetMouseMode(DirectX::Mouse::Mode mode);
 		void RestorePreviousMouseMode();
+
+		// Cursor hidden automatically in Relative mode and shown automatically in Absolute mode
+		void HideCursor() const;
+		void ShowCursor() const;
+
+		// Cursor centered automatically in Relative mode and uncentered automatically in Absolute mode
+		void CenterCursor();
+		void UncenterCursor();
 
 	private:
 		HWND m_hwnd;

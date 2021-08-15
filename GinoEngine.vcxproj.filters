@@ -161,5 +161,7 @@
   <ItemGroup>
     <FxCompile Include="shaders\tri_vs.hlsl" />
     <FxCompile Include="shaders\tri_ps.hlsl" />
+    <FxCompile Include="shaders\quadpass_vs.hlsl" />
+    <FxCompile Include="shaders\quadpass_ps.hlsl" />
   </ItemGroup>
 </Project>

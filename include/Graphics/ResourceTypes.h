@@ -3,7 +3,7 @@
 #include <variant>
 #include <utility>
 #include "DXDevice.h"
-#include "SimpleMath.h"		// Must be included AFTEr <d3d11.h>
+#include "SimpleMath.h"		// Must be included AFTER <d3d11.h>/<DirectXMath.h> (SimpleMath depends on DirectXMath)
 #include "ShaderGroup.h"
 
 
@@ -12,8 +12,8 @@ namespace Gino
 	struct Vertex_POS_UV_NORMAL
 	{
 		DirectX::SimpleMath::Vector3 pos;
-		DirectX::SimpleMath::Vector2  uv;
-		DirectX::SimpleMath::Vector3  normal;
+		DirectX::SimpleMath::Vector2 uv;
+		DirectX::SimpleMath::Vector3 normal;
 
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GetElementDescriptors();
 	};
@@ -34,8 +34,9 @@ namespace Gino
 		
 		void Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv = nullptr);
 
-		void Clear(const DeviceContextPtr& ctx, const std::array<FLOAT[4], D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> clearValues, const DepthStencilClearDesc& dsClearDesc = {});
+		void Clear(const DeviceContextPtr& ctx, const std::array<FLOAT[4], D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> clearValues = { 0.f, 0.f, 0.f, 1.f }, const DepthStencilClearDesc& dsClearDesc = {});
 		void Bind(const DeviceContextPtr& ctx);
+		void Unbind(const DeviceContextPtr& ctx);
 		
 		// For OMSetRenderTargetsAndUnorderedAccessViews usage
 		// Otherwise we can have another Bind function for the Framebuffer which instead takes in UAVs
@@ -240,7 +241,7 @@ namespace Gino
 
 
 
-	// ====================== Higher level abstractions
+	// ====================== Higher level abstractions - We might want to place these in another file!
 
 	enum class MaterialType
 	{

@@ -78,7 +78,6 @@ namespace Gino
 		}
 	}
 
-	// note: dt should be renamed to sensitivity or something..
 	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
 	{
 		// No need for delta since we consume the WMs generated for this frame
@@ -86,10 +85,11 @@ namespace Gino
 		float deltaYaw = (float)mouseDt.first * m_mouseSpeed * 0.14f;
 		float deltaPitch = (float)mouseDt.second * m_mouseSpeed * 0.14f;
 
-		m_camYaw += deltaYaw;		// -> Drag left: Decrease in yaw, Drag right: Increase in yaw
+		// Remember that 0, 0 is top left and positive dx is right and positive dy is down
+		m_camYaw += deltaYaw;		
 		m_camPitch += deltaPitch;
 
-		// Note!!
+		// Using spherical coordinates
 		// We will use pitch as the angle from Y to XZ plane
 		// We will use yaw as the angle from X to YZ plane. We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
 		
@@ -118,8 +118,8 @@ namespace Gino
 	void FPCamera::Update(float dt)
 	{
 		// Update orientation
-		// Here I use the spherical coordinates for RH but replace the axis with LH system :)
-
+		
+		// Here I use the spherical coordinates
 		// We will use pitch as the angle from Y to XZ plane (CCW, thumb on Z pointing Z+)
 		// We will use yaw as the angle from X to YZ plane (CCW). We need to use the inverted yaw since dragging the mouse to the left applies negative yaw
 
@@ -133,28 +133,26 @@ namespace Gino
 		m_localRight.z = sin(DirectX::XMConvertToRadians(-m_camYaw));
 		m_localRight.Normalize();
 
-		/*
+		// We wont change local up and down. We will keep them world up and down :) (easier to navigate)
 		
-		We wont change local up and down. We will keep them world up and down :) (easier to navigate)
-		
-		*/
-
-
 		// Update position
 		if (m_moveDirectionThisFrame.Length() >= DirectX::g_XMEpsilon[0])
 		{
 			m_moveDirectionThisFrame.Normalize();
 			m_worldPosition += m_moveDirectionThisFrame * m_moveSpeed * dt;
+
 		}
 
+		// Reset move direction
+		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
 
+
+		// Debug print
 	/*	std::cout << "Yaw: " << m_camYaw << std::endl;
 		std::cout << "Local forward || X: " << m_localForward.x << ", Y: " << m_localForward.y << ", Z: " << m_localForward.z << std::endl;
 		std::cout << "Local right || X: " << m_localRight.x << ", Y: " << m_localRight.y << ", Z: " << m_localRight.z << std::endl << std::endl;*/
 		//std::cout << "Move direction || X: " << m_moveDirectionThisFrame.x << ", Y: " << m_moveDirectionThisFrame.y << ", Z: " << m_moveDirectionThisFrame.z << std::endl;
 
-		// Reset move direction
-		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
 	}
 }
 

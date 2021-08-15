@@ -68,10 +68,10 @@ namespace Gino
 		for (const auto& mod : m_modules)
 		{
 			mod.createFunc(dev, mod.code);
-
-			if (mod.stage == ShaderStage::Vertex)
+			
+			// We can still create Vertex shader without input description (using immediate buffer and vertex ID)
+			if (mod.stage == ShaderStage::Vertex && !m_inputDescs.empty())
 			{
-				assert(!m_inputDescs.empty());
 				dev->CreateInputLayout(m_inputDescs.data(), (uint32_t)m_inputDescs.size(), mod.code.data(), mod.code.size(), m_inputLayout.GetAddressOf());
 			}
 		}

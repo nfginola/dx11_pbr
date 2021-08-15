@@ -71,7 +71,7 @@ namespace Gino
 		m_depth.Initialize(dev, ctx, depthDesc);
 
 		// make framebuffer
-		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() }, m_depth.GetDSV());
+		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
 
 		// make depth stencil state (closely tied to the depth stencil view, essentially configs for writing to the DSV)
 		D3D11_DEPTH_STENCIL_DESC dssDesc
@@ -82,12 +82,8 @@ namespace Gino
 			.StencilEnable = false
 		};
 		HRCHECK(dev->CreateDepthStencilState(&dssDesc, m_dss.GetAddressOf()));
-
-
-		// Try cb
-		m_cb.Initialize(dev);
 		
-		// Mvp cb
+		// MVP CB
 		m_mvpCB.Initialize(dev);
 
 		// Test for resource cleanup warning signals
@@ -101,6 +97,47 @@ namespace Gino
 		//	.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
 		//};
 		//HRCHECK(dev->CreateBuffer(&vbDesc, NULL, &tmpBuf));
+
+
+		// Setup HDR render to texture
+		D3D11_TEXTURE2D_DESC renderTexDesc
+		{
+			.Width = (uint32_t)m_dxDev->GetBackbufferViewport().Width,
+			.Height = (uint32_t)m_dxDev->GetBackbufferViewport().Height,
+			.MipLevels = 1,
+			.ArraySize = 1,
+			.Format = DXGI_FORMAT_R16G16B16A16_FLOAT,		// Floating point 16bit for HDR
+			.SampleDesc = {.Count = 1, .Quality = 0 },
+			.Usage = D3D11_USAGE_DEFAULT,
+			.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
+			.CPUAccessFlags = 0,
+			.MiscFlags = 0
+		};
+		m_renderTexture.Initialize(dev, ctx, renderTexDesc);
+
+		m_renderFramebuffer.Initialize({ m_renderTexture.GetRTV() }, m_depth.GetDSV());
+
+		m_quadPass
+			.AddStage(ShaderStage::Vertex, "compiled_shaders/quadpass_vs.cso")
+			.AddStage(ShaderStage::Pixel, "compiled_shaders/quadpass_ps.cso")
+			.Build(dev);
+
+		// make point sampler
+		D3D11_SAMPLER_DESC pointSSDesc
+		{
+			.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT,
+			.AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
+			.AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
+			.AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
+			.MipLODBias = 0.f,
+			.MaxAnisotropy = 0,
+			.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL,
+			.BorderColor = { 0.f, 0.f, 0.f, 1.f },
+			.MinLOD = 0.f,
+			.MaxLOD = 0.f
+		};
+		HRCHECK(dev->CreateSamplerState(&pointSSDesc, m_pointSampler.GetAddressOf()));
+
 	}
 
 	CentralRenderer::~CentralRenderer()
@@ -139,14 +176,6 @@ namespace Gino
 		m_imGui->BeginFrame();
 		
 
-
-		// Test update using constant buffer
-		float mipLevel = cosf(timeElapsed) * 5.f + 5.f;
-		//std::cout << "mip: " << mipLevel << "\n";
-		m_cb.data.mipLevel = mipLevel;
-		m_cb.Upload(ctx);
-		ctx->PSSetConstantBuffers(0, 1, m_cb.buffer.GetAddressOf());
-
 		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
 		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
 		m_mvpCB.data.projection = m_mainCamera->GetProjectionMatrix();
@@ -164,10 +193,15 @@ namespace Gino
 		ctx->RSSetState(m_rs.Get());
 
 		// set OM state
-		m_finalFramebuffer.Clear(ctx, 
-			{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
-			DepthStencilClearDesc{ .depth = 1.f });
-		m_finalFramebuffer.Bind(ctx);
+		//m_finalFramebuffer.Clear(ctx, 
+		//	{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
+		//	DepthStencilClearDesc{ .depth = 1.f });
+		//m_finalFramebuffer.Bind(ctx);
+		//ctx->OMSetDepthStencilState(m_dss.Get(), 0);
+
+		// Render to texture
+		m_renderFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
+		m_renderFramebuffer.Bind(ctx);
 		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
 
 		// Test draw model
@@ -195,9 +229,44 @@ namespace Gino
 				ctx->PSSetShaderResources(0, 4, srvs);
 				ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 			}
-
 		}
 
+		// Unbind previous framebuffer so that we can read textures associated with it
+		m_renderFramebuffer.Unbind(ctx);
+
+		// Render to fullscreen quad
+		m_quadPass.Bind(ctx);
+		m_finalFramebuffer.Clear(ctx);
+		m_finalFramebuffer.Bind(ctx);
+		ID3D11ShaderResourceView* srvs[] = { m_renderTexture.GetSRV() };
+		ctx->PSSetShaderResources(0, 1, srvs);
+		ID3D11SamplerState* smplrs[] = { m_pointSampler.Get() };
+		ctx->PSSetSamplers(0, 1, smplrs);
+		ctx->Draw(6, 0);
+
+		// Unbind texture so that we can reuse it for writing next frame
+		ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
+		ctx->PSSetShaderResources(0, 1, nullSRVs);
+
+		/*
+		
+		Idea:
+						(Probably some overhead as we would bind all framebuffer image for writing)
+						(No single texture granularity for simplicity)
+		Framebuffer.WriteBind();				--> Bind for writing
+		Framebuffer.ReadBind(ctx, startSlot);	--> Bind for reading
+
+		(We are loosely following what a Framebuffer is in Vulkan)
+		(It can be written to by a subpass and read from in a subsequent subpass)
+
+		We would in this case want to store Texture instead because we want to have multiple type of views associated
+
+		
+		*/
+
+		// No need to unbind final framebuffer
+		
+		// Draw last on fullscreen quad
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
 
 		m_dxDev->GetSwapChain()->Present(m_vsync ? 1 : 0, 0);

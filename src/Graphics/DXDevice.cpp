@@ -145,6 +145,7 @@ namespace Gino
 		HRCHECK(m_debug->QueryInterface(__uuidof(ID3D11InfoQueue), (void**)g_infoQueue.GetAddressOf()));
 		g_infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
 		g_infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+		g_infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
 		g_infoQueue->SetMuteDebugOutput(false);
 	}
 

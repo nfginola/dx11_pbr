@@ -127,6 +127,12 @@ namespace Gino
         }
     }
 
+    void Framebuffer::Unbind(const DeviceContextPtr& ctx)
+    {
+        static std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> nullRTVs;
+        ctx->OMSetRenderTargets(nullRTVs.size(), nullRTVs.data(), nullptr);
+    }
+
     Framebuffer::Framebuffer() :
         m_renderTargets({}),
         m_activeRenderTargets(0),
@@ -334,6 +340,9 @@ namespace Gino
         D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
         dsvDesc.Format = desc.Format;
 
+        D3D11_RENDER_TARGET_VIEW_DESC rtvDesc{};
+        rtvDesc.Format = desc.Format;
+
         if ((desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) == D3D11_BIND_SHADER_RESOURCE)
         {
             shouldCreateSRV = true;
@@ -360,6 +369,20 @@ namespace Gino
             };
             dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             dsvDesc.Flags = 0;
+            dsvDesc.Texture2D = tex2DDsvDesc;
+        }
+
+        if ((desc.BindFlags & D3D11_BIND_RENDER_TARGET) == D3D11_BIND_RENDER_TARGET)
+        {
+            shouldCreateRTV = true;
+            assert(desc.ArraySize == 1);
+
+            D3D11_TEX2D_RTV tex2DRtvDesc
+            {
+                .MipSlice = 0
+            };
+            rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+            rtvDesc.Texture2D = tex2DRtvDesc;
         }
 
         if (shouldCreateSRV)
@@ -372,7 +395,7 @@ namespace Gino
         }
         if (shouldCreateRTV)
         {
-
+            HRCHECK(dev->CreateRenderTargetView(m_texture.Get(), &rtvDesc, m_rtv.GetAddressOf()));
         }
         if (shouldCreateDSV)
         {

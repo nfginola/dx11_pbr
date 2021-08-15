@@ -16,7 +16,8 @@ namespace Gino
 		CentralRenderer(DXDevice* dxDev, bool vsync);
 		~CentralRenderer();
 
-		void SetRenderCamera(FPCamera* cam);	// Primary camera to use to render the final image
+		void SetRenderCamera(FPCamera* cam);	// Primary user camera to use for rendering
+
 		void Render(Model* model);				// Temporary model argument for testing purposes
 
 		/*
@@ -56,11 +57,18 @@ namespace Gino
 
 		ShaderGroup m_shaderGroup;
 
-		ConstantBuffer<TestMipData> m_cb;
-		ConstantBuffer<MVP> m_mvpCB;
+		ConstantBuffer<MVP> m_mvpCB;	
 
+		// Swapchain framebuffer
 		Framebuffer m_finalFramebuffer;
+
 		Texture m_depth;
+
+		// Render to texture
+		Texture m_renderTexture;
+		Framebuffer m_renderFramebuffer;
+		ShaderGroup m_quadPass;
+		SamplerStatePtr m_pointSampler;
 
 		DepthStencilStatePtr m_dss;
 		SamplerStatePtr m_mainSampler;

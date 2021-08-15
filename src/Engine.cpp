@@ -57,10 +57,10 @@ namespace Gino
 		if (m_input->KeyIsPressed(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Slow);
 		if (m_input->KeyIsReleased(Keys::LeftControl))	m_fpCam->SetMoveSpeed(MoveSpeed::Normal);
 
-		if (m_input->RMBIsPressed())		m_input->SetMouseMode(MouseMode::Relative);
-		if (m_input->RMBIsReleased())		m_input->SetMouseMode(MouseMode::Absolute);
+		if (m_input->RMBIsPressed())					m_input->SetMouseMode(MouseMode::Relative);
+		if (m_input->RMBIsReleased())					m_input->SetMouseMode(MouseMode::Absolute);
 
-		if (m_input->RMBIsDown())			m_fpCam->RotateCamera(m_input->GetMouseDelta());	
+		if (m_input->RMBIsDown())						m_fpCam->RotateCamera(m_input->GetMouseDelta());	
 
 		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
