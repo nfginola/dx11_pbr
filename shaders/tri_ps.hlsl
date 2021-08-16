@@ -21,7 +21,7 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //float3 color = diffuseTex.SampleLevel(mainSampler, input.uv, mipLevel).xyz; // Note that the sampler must an unlocked maxLOD
     //float3 color = normalize(input.normal);
     float3 color = diffuseTex.Sample(mainSampler, input.uv).xyz;
-
-		
+    
+    //color.x *= 300.f;
     return float4(color, 1.f);
 }
