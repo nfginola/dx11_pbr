@@ -93,6 +93,11 @@ namespace Gino
 		return m_swapChain;
 	}
 
+	const Tex2DPtr& DXDevice::GetBackbufferTexture() const
+	{
+		return m_bbTex;
+	}
+
 	const RtvPtr& DXDevice::GetBackbufferTarget() const
 	{
 		return m_bbView;

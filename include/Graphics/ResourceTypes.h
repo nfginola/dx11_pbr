@@ -35,7 +35,7 @@ namespace Gino
 		void Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv = nullptr);
 
 		void Clear(const DeviceContextPtr& ctx, const std::array<FLOAT[4], D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> clearValues = { 0.f, 0.f, 0.f, 1.f }, const DepthStencilClearDesc& dsClearDesc = {});
-		void Bind(const DeviceContextPtr& ctx);
+		void Bind(const DeviceContextPtr& ctx);						// RTV bind (writing)
 		void Unbind(const DeviceContextPtr& ctx);
 		
 		// For OMSetRenderTargetsAndUnorderedAccessViews usage
@@ -192,6 +192,7 @@ namespace Gino
 		ctx->Unmap(buffer.Get(), 0);
 	}
 
+
 	template<typename T>
 	inline void Buffer::Initialize(const DevicePtr& dev, VertexBufferDesc<T> desc)
 	{
@@ -222,6 +223,7 @@ namespace Gino
 		ID3D11UnorderedAccessView* GetUAV() const;
 
 		void InitializeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::filesystem::path& filePath, bool srgb = true, bool genMipMaps = true);
+		void InitializeFromExisting(const Tex2DPtr& tex, const RtvPtr& rtv = nullptr, const SrvPtr& srv = nullptr, const DsvPtr& dsv = nullptr, const UavPtr& uav = nullptr);
 
 	private:
 		void CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc);
@@ -233,8 +235,6 @@ namespace Gino
 		RtvPtr m_rtv;
 		DsvPtr m_dsv;
 		UavPtr m_uav;
-
-		
 
 
 	};

@@ -39,7 +39,7 @@
     <ClCompile Include="src\Graphics\DXDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\CentralRenderer.cpp">
+    <ClCompile Include="src\Graphics\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\ShaderGroup.cpp">
@@ -110,7 +110,7 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Graphics\CentralRenderer.h">
+    <ClInclude Include="include\Graphics\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Graphics\ShaderGroup.h">

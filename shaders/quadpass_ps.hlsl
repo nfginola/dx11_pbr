@@ -62,6 +62,19 @@ float3 reinhard(float3 v)
 
 // https://64.github.io/tonemapping/
 
+float luminance(float3 color)
+{
+    return dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+}
+
+float3 reinhard_jodie(float3 v)
+{
+    float l = luminance(v);
+    float3 tv = v / (1.0f + v);
+    return lerp(v / (1.0f + l), tv, tv);
+}
+
+
 float4 PSMain(PS_IN input) : SV_TARGET
 {
     float3 hdrColor = renderTexture.Sample(mainSampler, input.uv);
@@ -71,11 +84,20 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //ldrColor = hdrColor / (hdrColor + float3(1.f, 1.f, 1.f));
     
     // Compare tonemapped (right) vs non-tonemapped (left)
-    if (input.uv.x >= 0.5f)
-        ldrColor = aces_fitted(hdrColor);
-    else
-        ldrColor = reinhard(hdrColor);
-        //ldrColor = hdrColor;
+    //if (input.uv.y >= 0.75f)
+    //    ldrColor = reinhard_jodie(hdrColor);
+    //else if (input.uv.y >= 0.50f)
+    //    ldrColor = reinhard(hdrColor);
+    //else if (input.uv.y >= 0.25f)
+    //    ldrColor = aces_fitted(hdrColor);
+    //else
+    //    ldrColor = hdrColor;
+    
+    //ldrColor = reinhard_jodie(hdrColor);
+   
+    ldrColor = reinhard_jodie(hdrColor);
+    
+    //ldrColor = aces_fitted(hdrColor);
     
     // Exposure based
     //float3 ldrColor = float3(1.f, 1.f, 1.f) - exp(-hdrColor * EXPOSURE);

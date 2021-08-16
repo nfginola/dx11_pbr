@@ -65,6 +65,7 @@ namespace Gino
 		const DeviceContext1Ptr& GetContext() const;
 
 		const SwapChainPtr& GetSwapChain() const;
+		const Tex2DPtr& GetBackbufferTexture() const;
 		const RtvPtr& GetBackbufferTarget() const;
 		const D3D11_VIEWPORT& GetBackbufferViewport() const;
 		const DXGI_SWAP_CHAIN_DESC& GetSwapChainDesc() const;

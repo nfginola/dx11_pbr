@@ -5,7 +5,7 @@ namespace Gino
 {
 	class Input;
 	class DXDevice;
-	class CentralRenderer;
+	class Renderer;
 	class ImGuiRenderer;
 	class AssimpLoader;
 	class FPCamera;
@@ -49,7 +49,7 @@ namespace Gino
 
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;
-		std::unique_ptr<CentralRenderer> m_centralRenderer;
+		std::unique_ptr<Renderer> m_Renderer;
 
 		std::unique_ptr<Input> m_input;
 		

@@ -172,7 +172,7 @@
     <ClCompile Include="src\Graphics\ImGuiRenderer.cpp" />
     <ClCompile Include="src\Graphics\ResourceTypes.cpp" />
     <ClCompile Include="src\Graphics\ShaderGroup.cpp" />
-    <ClCompile Include="src\Graphics\CentralRenderer.cpp" />
+    <ClCompile Include="src\Graphics\Renderer.cpp" />
     <ClCompile Include="src\Graphics\DXDevice.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Engine.cpp" />
@@ -218,7 +218,7 @@
     <ClInclude Include="include\FPCamera.h" />
     <ClInclude Include="include\AssimpLoader.h" />
     <ClInclude Include="include\Graphics\ImGuiRenderer.h" />
-    <ClInclude Include="include\Graphics\CentralRenderer.h" />
+    <ClInclude Include="include\Graphics\Renderer.h" />
     <ClInclude Include="include\Graphics\DXDevice.h" />
     <ClInclude Include="include\Engine.h" />
     <ClInclude Include="include\Application.h" />

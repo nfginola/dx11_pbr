@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "Graphics/ResourceTypes.h"
 #include "Graphics/DXDevice.h"
-#include "Graphics/CentralRenderer.h"
+#include "Graphics/Renderer.h"
 #include "AssimpLoader.h"
 #include "Input.h"
 #include "FPCamera.h"
@@ -16,15 +16,15 @@ namespace Gino
 	{
 		m_input = std::make_unique<Input>(settings.hwnd);
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
-		m_centralRenderer = std::make_unique<CentralRenderer>(m_dxDev.get(), settings.vsync);
+		m_Renderer = std::make_unique<Renderer>(m_dxDev.get(), settings.vsync);
 		
 		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 87.f);
 
-		m_centralRenderer->SetRenderCamera(m_fpCam.get());
+		m_Renderer->SetRenderCamera(m_fpCam.get());
 
 		// DXState state
 		/*
-			this should PRIMARILY be used inside CentralRenderer and other Render modules
+			this should PRIMARILY be used inside Renderer and other Render modules
 			state->Set(...)
 			state->FinalizeBinds();		--> All API calls in one go
 		*/
@@ -83,7 +83,7 @@ namespace Gino
 		
 		*/
 
-		m_centralRenderer->Render(m_sponzaModel.get());
+		m_Renderer->Render(m_sponzaModel.get());
 
 
 
@@ -100,9 +100,9 @@ namespace Gino
 
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> Engine::GetImGuiHook() const
 	{
-		if (m_centralRenderer && m_centralRenderer->GetImGui())
+		if (m_Renderer && m_Renderer->GetImGui())
 		{
-			return m_centralRenderer->GetImGui()->GetWin32Hook();
+			return m_Renderer->GetImGui()->GetWin32Hook();
 		}
 		else
 		{

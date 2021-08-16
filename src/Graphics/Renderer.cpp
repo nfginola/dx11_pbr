@@ -1,10 +1,10 @@
 #include "pch.h"
-#include "Graphics/CentralRenderer.h"
+#include "Graphics/Renderer.h"
 #include "FPCamera.h"
 
 namespace Gino
 {
-	CentralRenderer::CentralRenderer(DXDevice* dxDev, bool vsync) :
+	Renderer::Renderer(DXDevice* dxDev, bool vsync) :
 		m_mainCamera(nullptr),
 		m_vsync(vsync),
 		m_dxDev(dxDev),
@@ -12,18 +12,11 @@ namespace Gino
 	{
 		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
  
-		/*
-		
-		For automatically avoiding rebinding already bound resources:
-			We can call it DXStateCache
-		
-		*/
-
 		auto dev = dxDev->GetDevice();
 		auto ctx = dxDev->GetContext();
 
 		// make shaders
-		m_shaderGroup
+		m_forwardOpaqueShaders
 			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
 			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
@@ -117,7 +110,7 @@ namespace Gino
 
 		m_renderFramebuffer.Initialize({ m_renderTexture.GetRTV() }, m_depth.GetDSV());
 
-		m_quadPass
+		m_fullscreenQuadShaders
 			.AddStage(ShaderStage::Vertex, "compiled_shaders/quadpass_vs.cso")
 			.AddStage(ShaderStage::Pixel, "compiled_shaders/quadpass_ps.cso")
 			.Build(dev);
@@ -140,41 +133,34 @@ namespace Gino
 
 	}
 
-	CentralRenderer::~CentralRenderer()
+	Renderer::~Renderer()
 	{
 	}
 
-	void CentralRenderer::SetRenderCamera(FPCamera* cam)
+	void Renderer::SetRenderCamera(FPCamera* cam)
 	{
 		m_mainCamera = cam;
 	}
 	
-	static float timeElapsed = 0.f;
-	void CentralRenderer::Render(Model* model)
+	void Renderer::Render(Model* model)
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
-
+		m_imGui->BeginFrame();
 
 		/*
-		
+
 		shadowFramebuffer = shadowPass->run(scene, meshes)
 		msFramebuffer = forwardPass->run(shadowFrameBuffer, meshes, material)
 
 		resolveFramebuffer(msFramebuffer, resolvedFramebuffer, format);
-	
-		// This should finally render to the swapchain directly 
+
+		// This should finally render to the swapchain directly
 		// Internally, it may do some copies since we may do some PostProcess through a PS (tonemapping)
 		// downsample and then use a compute shader to do a two-pass gaussian blur and then upsample
 		postProcessPass->run(resolveFramebuffer, finalRenderTarget);
-		
+
 		*/
-
-		timeElapsed += 0.002f;
-
-
-		m_imGui->BeginFrame();
-		
 
 		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
 		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
@@ -182,7 +168,7 @@ namespace Gino
 		m_mvpCB.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_mvpCB.buffer.GetAddressOf());
 
-		m_shaderGroup.Bind(ctx);
+		m_forwardOpaqueShaders.Bind(ctx);
 
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
@@ -191,13 +177,6 @@ namespace Gino
 		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
 		ctx->RSSetViewports(_countof(viewports), viewports);
 		ctx->RSSetState(m_rs.Get());
-
-		// set OM state
-		//m_finalFramebuffer.Clear(ctx, 
-		//	{ { 0.529f, 0.808f, 0.922f, 1.f } }, 
-		//	DepthStencilClearDesc{ .depth = 1.f });
-		//m_finalFramebuffer.Bind(ctx);
-		//ctx->OMSetDepthStencilState(m_dss.Get(), 0);
 
 		// Render to texture
 		m_renderFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
@@ -219,8 +198,8 @@ namespace Gino
 			assert(meshes.size() == materials.size());
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
-				ID3D11ShaderResourceView* srvs[] = 
-				{ 
+				ID3D11ShaderResourceView* srvs[] =
+				{
 					materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
 					materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
 					materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
@@ -231,48 +210,41 @@ namespace Gino
 			}
 		}
 
-		// Unbind previous framebuffer so that we can read textures associated with it
+		// Unbind framebuffer so that we can read textures associated with it
 		m_renderFramebuffer.Unbind(ctx);
 
-		// Render to fullscreen quad
-		m_quadPass.Bind(ctx);
-		m_finalFramebuffer.Clear(ctx);
-		m_finalFramebuffer.Bind(ctx);
-		ID3D11ShaderResourceView* srvs[] = { m_renderTexture.GetSRV() };
-		ctx->PSSetShaderResources(0, 1, srvs);
-		ID3D11SamplerState* smplrs[] = { m_pointSampler.Get() };
-		ctx->PSSetSamplers(0, 1, smplrs);
-		ctx->Draw(6, 0);
 
-		// Unbind texture so that we can reuse it for writing next frame
-		ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
-		ctx->PSSetShaderResources(0, 1, nullSRVs);
+		// Render fullscreen quad pass
+		// Input --> Render texture to read from and framebuffer to render to
+		{
+			m_fullscreenQuadShaders.Bind(ctx);
+			m_finalFramebuffer.Clear(ctx);
+			m_finalFramebuffer.Bind(ctx);
 
-		/*
-		
-		Idea:
-						(Probably some overhead as we would bind all framebuffer image for writing)
-						(No single texture granularity for simplicity)
-		Framebuffer.WriteBind();				--> Bind for writing
-		Framebuffer.ReadBind(ctx, startSlot);	--> Bind for reading
+			// Bind previous framebuffer render content for reading
+			ID3D11ShaderResourceView* srvs[] = { m_renderTexture.GetSRV() };
+			ctx->PSSetShaderResources(0, 1, srvs);
 
-		(We are loosely following what a Framebuffer is in Vulkan)
-		(It can be written to by a subpass and read from in a subsequent subpass)
+			// Point sample
+			ID3D11SamplerState* smplrs[] = { m_pointSampler.Get() };
+			ctx->PSSetSamplers(0, 1, smplrs);
 
-		We would in this case want to store Texture instead because we want to have multiple type of views associated
+			// Draw quad
+			ctx->Draw(6, 0);
 
-		
-		*/
+			// Unbind texture so that it can be reused for writing
+			ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
+			ctx->PSSetShaderResources(0, 1, nullSRVs);
+		}
 
-		// No need to unbind final framebuffer
-		
-		// Draw last on fullscreen quad
+
+
+		// Draw UI directly on swapchain (no filtering or anything applied on it)
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
-
 		m_dxDev->GetSwapChain()->Present(m_vsync ? 1 : 0, 0);
 	}
 
-	ImGuiRenderer* CentralRenderer::GetImGui() const
+	ImGuiRenderer* Renderer::GetImGui() const
 	{
 		return m_imGui.get();
 	}

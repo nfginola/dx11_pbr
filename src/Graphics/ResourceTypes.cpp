@@ -127,6 +127,7 @@ namespace Gino
         }
     }
 
+
     void Framebuffer::Unbind(const DeviceContextPtr& ctx)
     {
         static std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> nullRTVs;
@@ -325,6 +326,17 @@ namespace Gino
         //    .CPUAccessFlags = 0,
         //    .MiscFlags = 0
         //};
+    }
+
+    void Texture::InitializeFromExisting(const Tex2DPtr& tex, const RtvPtr& rtv, const SrvPtr& srv, const DsvPtr& dsv, const UavPtr& uav)
+    {
+        assert(tex != nullptr);
+        m_texture = tex;
+
+        if (rtv) m_rtv = rtv;
+        if (srv) m_srv = srv;
+        if (dsv) m_dsv = dsv;
+        if (uav) m_uav = uav;
     }
 
     void Texture::CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc)

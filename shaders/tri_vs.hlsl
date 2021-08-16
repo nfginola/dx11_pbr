@@ -30,7 +30,6 @@ VS_OUT VSMain(VS_INPUT input)
 	
     output.pos = mul(projection, mul(view, mul(model, float4(input.pos, 1.f))));
     output.normal = normalize(mul(model, float4(input.normal, 0.f)).xyz);
-	
     output.uv = input.uv;
 	
 	return output;

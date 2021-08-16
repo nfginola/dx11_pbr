@@ -10,11 +10,11 @@ namespace Gino
 {
 	class FPCamera;
 
-	class CentralRenderer
+	class Renderer
 	{
 	public:
-		CentralRenderer(DXDevice* dxDev, bool vsync);
-		~CentralRenderer();
+		Renderer(DXDevice* dxDev, bool vsync);
+		~Renderer();
 
 		void SetRenderCamera(FPCamera* cam);	// Primary user camera to use for rendering
 
@@ -47,40 +47,31 @@ namespace Gino
 
 
 	private:
-		DXDevice* m_dxDev;
 		std::unique_ptr<ImGuiRenderer> m_imGui;
-		FPCamera* m_mainCamera;
-
-		Texture m_backbuffer;
 
 		bool m_vsync;
-
-		ShaderGroup m_shaderGroup;
-
-		ConstantBuffer<MVP> m_mvpCB;	
+		DXDevice* m_dxDev;
+		FPCamera* m_mainCamera;
 
 		// Swapchain framebuffer
 		Framebuffer m_finalFramebuffer;
+		Texture m_backbuffer;
 
-		Texture m_depth;
-
-		// Render to texture
-		Texture m_renderTexture;
+		// Model draw pass
+		ShaderGroup m_forwardOpaqueShaders;
+		ConstantBuffer<MVP> m_mvpCB;	
 		Framebuffer m_renderFramebuffer;
-		ShaderGroup m_quadPass;
-		SamplerStatePtr m_pointSampler;
+		Texture m_depth;
+		Texture m_renderTexture;
 
 		DepthStencilStatePtr m_dss;
 		SamplerStatePtr m_mainSampler;
 		RasterizerState1Ptr m_rs;
 
+		// Render to quad (with renderFramebuffer as input)
+		ShaderGroup m_fullscreenQuadShaders;
+		SamplerStatePtr m_pointSampler;
 
-
-		/*
-		// Dynamic allocations tho....
-		std::vector<std::tuple<Mesh, Material, std::vector<Transform>> m_opaqueMeshes;
-		std::vector<std::pair<Mesh, std::vector<Transform>> m_transparentMeshes;
-		*/
 
 	};
 }
