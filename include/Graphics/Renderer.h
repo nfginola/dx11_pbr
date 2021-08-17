@@ -9,6 +9,7 @@
 namespace Gino
 {
 	class FPCamera;
+	class Model;
 
 	class Renderer
 	{
@@ -17,6 +18,8 @@ namespace Gino
 		~Renderer();
 
 		void SetRenderCamera(FPCamera* cam);	// Primary user camera to use for rendering
+
+		void AddOpaqueModel(Model* model);
 
 		void Render(Model* model);				// Temporary model argument for testing purposes
 
@@ -45,7 +48,10 @@ namespace Gino
 			DirectX::SimpleMath::Matrix projection;
 		};
 
+	private:
+		//std::vector<Model*> m_opaqueModels;
 
+	// Render resources
 	private:
 		std::unique_ptr<ImGuiRenderer> m_imGui;
 

@@ -167,6 +167,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Component.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
+    <ClCompile Include="src\Graphics\Material.cpp" />
+    <ClCompile Include="src\Graphics\Model.cpp" />
     <ClCompile Include="src\FPCamera.cpp" />
     <ClCompile Include="src\AssimpLoader.cpp" />
     <ClCompile Include="src\Graphics\ImGuiRenderer.cpp" />
@@ -215,6 +219,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Component.h" />
+    <ClInclude Include="include\Entity.h" />
     <ClInclude Include="include\FPCamera.h" />
     <ClInclude Include="include\AssimpLoader.h" />
     <ClInclude Include="include\Graphics\ImGuiRenderer.h" />
@@ -227,6 +233,8 @@
     <ClInclude Include="include\Window.h" />
     <ClInclude Include="include\pch.h" />
     <ClInclude Include="include\Input.h" />
+    <ClInclude Include="include\Graphics\Model.h" />
+    <ClInclude Include="include\Graphics\Material.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="include\Graphics\ShaderGroup.h" />
     <ClInclude Include="include\Timer.h" />

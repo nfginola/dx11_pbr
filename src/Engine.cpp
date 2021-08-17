@@ -7,6 +7,10 @@
 #include "Input.h"
 #include "FPCamera.h"
 
+#include "Graphics/Model.h"
+
+#include "Entity.h"
+
 // Temp
 #include "Timer.h"
 
@@ -33,6 +37,17 @@ namespace Gino
 		// and keep an unordered map with models with string identifiers
 		// then when we have an Entity --> Entity.AddModel("sponza");
 		m_sponzaModel = LoadModel("../assets/Models/Sponza_new/sponza.obj");
+
+		
+		Entity testE;
+		Transform t;
+
+		testE.AddComponent<ComponentType::ModelType>(m_sponzaModel.get());
+	
+		auto cmp = testE.GetComponent<ComponentType::ModelType>();
+
+
+		auto trr = testE.GetComponent<ComponentType::TransformType>();
 	}
 
 	Engine::~Engine()

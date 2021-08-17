@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Graphics/Renderer.h"
+
 #include "FPCamera.h"
+#include "Graphics/Model.h"
+
 
 namespace Gino
 {
@@ -10,20 +13,21 @@ namespace Gino
 		m_dxDev(dxDev),
 		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice(), dxDev->GetContext()))
 	{
+
+		// make swapchain framebuffer
+		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
+
 		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
  
 		auto dev = dxDev->GetDevice();
 		auto ctx = dxDev->GetContext();
 
-		// make shaders
 		m_forwardOpaqueShaders
 			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
 			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 			.Build(dev);
 
-
-		// make rasterizer state
 		D3D11_RASTERIZER_DESC1 rsD
 		{
 			.FillMode = D3D11_FILL_SOLID,
@@ -63,8 +67,6 @@ namespace Gino
 		};
 		m_depth.Initialize(dev, ctx, depthDesc);
 
-		// make framebuffer
-		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
 
 		// make depth stencil state (closely tied to the depth stencil view, essentially configs for writing to the DSV)
 		D3D11_DEPTH_STENCIL_DESC dssDesc
@@ -79,17 +81,6 @@ namespace Gino
 		// MVP CB
 		m_mvpCB.Initialize(dev);
 
-		// Test for resource cleanup warning signals
-		// If we enable this code and let the code run and exit, we will see D3D11 memory leak since we dont release
-		//ID3D11Buffer* tmpBuf;
-		//D3D11_BUFFER_DESC vbDesc
-		//{
-		//	.ByteWidth = 32,
-		//	.Usage = D3D11_USAGE_DYNAMIC,
-		//	.BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-		//	.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
-		//};
-		//HRCHECK(dev->CreateBuffer(&vbDesc, NULL, &tmpBuf));
 
 
 		// Setup HDR render to texture
@@ -141,26 +132,17 @@ namespace Gino
 	{
 		m_mainCamera = cam;
 	}
+
+	void Renderer::AddOpaqueModel(Model* model)
+	{
+		assert(false);
+	}
 	
 	void Renderer::Render(Model* model)
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
 		m_imGui->BeginFrame();
-
-		/*
-
-		shadowFramebuffer = shadowPass->run(scene, meshes)
-		msFramebuffer = forwardPass->run(shadowFrameBuffer, meshes, material)
-
-		resolveFramebuffer(msFramebuffer, resolvedFramebuffer, format);
-
-		// This should finally render to the swapchain directly
-		// Internally, it may do some copies since we may do some PostProcess through a PS (tonemapping)
-		// downsample and then use a compute shader to do a two-pass gaussian blur and then upsample
-		postProcessPass->run(resolveFramebuffer, finalRenderTarget);
-
-		*/
 
 		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
 		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();

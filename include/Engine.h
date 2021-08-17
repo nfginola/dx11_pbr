@@ -10,8 +10,8 @@ namespace Gino
 	class AssimpLoader;
 	class FPCamera;
 	struct Texture;
-	struct Model;
-	struct Material;
+	class Model;
+	class Material;
 	
 	class Engine
 	{
