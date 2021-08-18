@@ -6,6 +6,8 @@
 // Sub-renderers
 #include "ImGuiRenderer.h"
 
+#include "Component.h"		// Needs to know Transform Component
+
 namespace Gino
 {
 	class FPCamera;
@@ -18,8 +20,8 @@ namespace Gino
 		~Renderer();
 
 		void SetRenderCamera(FPCamera* cam);	// Primary user camera to use for rendering
+		void SetModels(const std::vector<std::pair<Model*, std::vector<Transform*>>>* models);
 
-		void AddOpaqueModel(Model* model);
 
 		void Render(Model* model);				// Temporary model argument for testing purposes
 
@@ -38,6 +40,17 @@ namespace Gino
 		{
 			float mipLevel;
 		};
+
+		struct CB_PerFrame
+		{
+			DirectX::SimpleMath::Matrix view;
+			DirectX::SimpleMath::Matrix projection;
+		};
+
+		struct CB_PerObject
+		{
+			DirectX::SimpleMath::Matrix model;
+		};
 		
 		// Should change to Per Frame, Per Pass, Per Material and Per Object constant buffers
 		// Constant buffers by binding frequency!
@@ -48,8 +61,9 @@ namespace Gino
 			DirectX::SimpleMath::Matrix projection;
 		};
 
+	// Things to render
 	private:
-		//std::vector<Model*> m_opaqueModels;
+		const std::vector<std::pair<Model*, std::vector<Transform*>>>* m_opaqueModels; // Current scene data
 
 	// Render resources
 	private:
@@ -59,13 +73,17 @@ namespace Gino
 		DXDevice* m_dxDev;
 		FPCamera* m_mainCamera;
 
+		ConstantBuffer<CB_PerFrame> m_cbPerFrame;
+
 		// Swapchain framebuffer
 		Framebuffer m_finalFramebuffer;
 		Texture m_backbuffer;
 
 		// Model draw pass
 		ShaderGroup m_forwardOpaqueShaders;
-		ConstantBuffer<MVP> m_mvpCB;	
+		//ConstantBuffer<MVP> m_mvpCB;	
+		ConstantBuffer<CB_PerObject> m_cbPerObject;
+		Buffer m_instanceBuffer;
 		Framebuffer m_renderFramebuffer;
 		Texture m_depth;
 		Texture m_renderTexture;

@@ -7,6 +7,7 @@
 namespace Gino
 {
 	class Engine;
+	class Scene;
 
 	class Application
 	{
@@ -44,6 +45,8 @@ namespace Gino
 
 		std::unique_ptr<Window> m_mainWindow;
 		std::unique_ptr<Engine> m_engine;
+
+		std::unique_ptr<Scene> m_scene;
 
 		std::unordered_map<std::string, std::function<void()>> m_consoleCommands;
 

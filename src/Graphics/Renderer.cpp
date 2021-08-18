@@ -4,6 +4,12 @@
 #include "FPCamera.h"
 #include "Graphics/Model.h"
 
+// Temp
+#include "Timer.h"
+
+#include "Graphics/ImGuiRenderer.h"
+
+#define MAX_INSTANCES 3500
 
 namespace Gino
 {
@@ -22,10 +28,27 @@ namespace Gino
 		auto dev = dxDev->GetDevice();
 		auto ctx = dxDev->GetContext();
 
+		// setup instancing buffer
+		D3D11_BUFFER_DESC instanceDesc
+		{
+			.ByteWidth = sizeof(DirectX::SimpleMath::Matrix) * MAX_INSTANCES,		// Support 1k instances in one go
+			.Usage = D3D11_USAGE_DYNAMIC,
+			.BindFlags = D3D11_BIND_VERTEX_BUFFER,
+			.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
+		};
+		m_instanceBuffer.Initialize(dev, instanceDesc);
+
 		m_forwardOpaqueShaders
 			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
 			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
+
+			// Setup instance data (Buffer 1)
+			.AddInputDesc({ "INSTANCE_WM_ROW", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1})
+			.AddInputDesc({ "INSTANCE_WM_ROW", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+			.AddInputDesc({ "INSTANCE_WM_ROW", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+			.AddInputDesc({ "INSTANCE_WM_ROW", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+
 			.Build(dev);
 
 		D3D11_RASTERIZER_DESC1 rsD
@@ -79,8 +102,10 @@ namespace Gino
 		HRCHECK(dev->CreateDepthStencilState(&dssDesc, m_dss.GetAddressOf()));
 		
 		// MVP CB
-		m_mvpCB.Initialize(dev);
+		//m_mvpCB.Initialize(dev);
 
+		m_cbPerFrame.Initialize(dev);
+		m_cbPerObject.Initialize(dev);
 
 
 		// Setup HDR render to texture
@@ -133,9 +158,9 @@ namespace Gino
 		m_mainCamera = cam;
 	}
 
-	void Renderer::AddOpaqueModel(Model* model)
+	void Renderer::SetModels(const std::vector<std::pair<Model*, std::vector<Transform*>>>* models)
 	{
-		assert(false);
+		m_opaqueModels = models;
 	}
 	
 	void Renderer::Render(Model* model)
@@ -144,14 +169,12 @@ namespace Gino
 		auto ctx = m_dxDev->GetContext();
 		m_imGui->BeginFrame();
 
-		m_mvpCB.data.model = DirectX::SimpleMath::Matrix::CreateScale(0.07f);	// Specific to sponza
-		m_mvpCB.data.view = m_mainCamera->GetViewMatrix();
-		m_mvpCB.data.projection = m_mainCamera->GetProjectionMatrix();
-		m_mvpCB.Upload(ctx);
-		ctx->VSSetConstantBuffers(0, 1, m_mvpCB.buffer.GetAddressOf());
+		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
+		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
+		m_cbPerFrame.Upload(ctx);
+		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
 
 		m_forwardOpaqueShaders.Bind(ctx);
-
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
 
@@ -165,19 +188,38 @@ namespace Gino
 		m_renderFramebuffer.Bind(ctx);
 		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
 
-		// Test draw model
+		// Render models
+		Timer opaquePassTimer;
+		for (const auto& modelInstance : *m_opaqueModels)
 		{
-			ID3D11Buffer* vbs[] = { model->GetVB() };
-			UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL) };
-			UINT vbOffsets[] = { 0 };
+			const auto& model = modelInstance.first;
+			const auto& instances = modelInstance.second;
+
+			assert(instances.size() <= MAX_INSTANCES);		// Max 1000 instances supported
+
+			// Fill instance data
+			D3D11_MAPPED_SUBRESOURCE mappedInstSubres;
+			ctx->Map(m_instanceBuffer.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedInstSubres);
+			auto seat = (DirectX::SimpleMath::Matrix*)mappedInstSubres.pData;
+			for (int i = 0; i < instances.size(); ++i)
+			{
+				seat[i] = instances[i]->GetWorldMatrix();
+			}
+			ctx->Unmap(m_instanceBuffer.buffer.Get(), 0);
+
+
+			ID3D11Buffer* vbs[] = { model->GetVB(), m_instanceBuffer.buffer.Get() };
+			UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL), sizeof(DirectX::SimpleMath::Matrix) };
+			UINT vbOffsets[] = { 0, 0 };
 			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
 			ctx->IASetIndexBuffer(model->GetIB(), DXGI_FORMAT_R32_UINT, 0);
 			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			auto meshes = model->GetMeshes();
-			auto materials = model->GetMaterials();
+			const auto& meshes = model->GetMeshes();
+			const auto& materials = model->GetMaterials();
 			assert(meshes.size() == materials.size());
+
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
 				ID3D11ShaderResourceView* srvs[] =
@@ -188,9 +230,27 @@ namespace Gino
 					materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
 				};
 				ctx->PSSetShaderResources(0, 4, srvs);
-				ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
+
+				//// no instanced for now
+				//for (int instanceID = 0; instanceID < modelInstance.second.size(); ++instanceID)
+				//{
+				//	m_cbPerObject.data.model = modelInstance.second[instanceID]->GetWorldMatrix();
+				//	m_cbPerObject.Upload(ctx);
+				//	ctx->VSSetConstantBuffers(1, 1, m_cbPerObject.buffer.GetAddressOf());
+
+				//	ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
+				//}
+
+				ctx->VSSetConstantBuffers(1, 1, m_cbPerObject.buffer.GetAddressOf());
+				ctx->DrawIndexedInstanced(meshes[i].numIndices, instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 			}
 		}
+		auto opaqueTime = opaquePassTimer.TimeElapsed();
+
+		ImGui::Begin("Frame Statistics");
+		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaqueTime * 1000.f));
+		ImGui::End();
+
 
 		// Unbind framebuffer so that we can read textures associated with it
 		m_renderFramebuffer.Unbind(ctx);

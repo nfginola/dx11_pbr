@@ -12,6 +12,9 @@ namespace Gino
 	struct Texture;
 	class Model;
 	class Material;
+	class Component;
+	class Entity;
+	class Scene;
 	
 	class Engine
 	{
@@ -32,33 +35,58 @@ namespace Gino
 		Engine(Settings& settings);
 		~Engine();
 
-		void SimulateAndRender();
+		void SetScene(Scene* scene);
+
+		void SimulateAndRender(float dt);
 
 		Input* GetInput();
 
+		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
+
+		// Creational functions
+		Model* CreateModel(const std::string& id, const std::filesystem::path& filePath);
+		Model* GetModel(const std::string& id);
+
+
+
+
+	private:
 		/*
-		void SetScene(scene);		// All data from that scene will be used to Render
+		
+		// The cache should reset if we switch scene.
+		// Engine does not support streaming or single-removals
+		// It will only Load new or clear completely 
+		// Lets make this when we actually have multiple scenes
+		TextureCache
+		ModelCache
+		// These can live inside Model Loader for now
+
+		ModelLoader()
+
+		auto mod = ModelLoader->LoadModel(name, filePath)
+		
+		Entity e;
+		e.AddComponent<ComponentType::ModelType>(mod.get());
 		
 		*/
 
-		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
-
-	private:
 		Texture* LoadTexture(const std::string& filePath);
 		std::unique_ptr<Model> LoadModel(const std::filesystem::path& filePath);
 
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;
-		std::unique_ptr<Renderer> m_Renderer;
+		std::unique_ptr<Renderer> m_renderer;
 
 		std::unique_ptr<Input> m_input;
-		
 		std::unique_ptr<FPCamera> m_fpCam;
 
-		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
+		Scene* m_scene;
 
-		// For now, instead of Application asking the engine for a model, we will keep our workstation in Engine.cpp!
+		// "Model Loader"
 		std::unique_ptr<Model> m_sponzaModel;
+		
+		std::unordered_map<std::string, std::unique_ptr<Model>> m_loadedModels; 
+		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
 		
 
 		//std::unique_ptr<Input> m_input;

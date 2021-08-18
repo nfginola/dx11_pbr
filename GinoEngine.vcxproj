@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Graphics\Material.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="include\Graphics\ShaderGroup.h" />
     <ClInclude Include="include\Timer.h" />
+    <ClInclude Include="include\Scene.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_dx11.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_win32.h" />
     <ClInclude Include="vendor\imgui-master\imconfig.h" />

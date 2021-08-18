@@ -2,6 +2,8 @@
 #include "Application.h"
 #include "Engine.h"
 #include "Input.h"
+#include "Scene.h"
+#include "Timer.h"
 
 namespace Gino
 {
@@ -41,6 +43,8 @@ namespace Gino
 		NOTE: We want to have: Engine->SetResolution(int width, int height); to change the underlying image quality (orthogonal from window dimensions)
 
 		*/
+
+		m_scene = std::make_unique<Scene>(m_engine.get());
     }
 
     Application::~Application()
@@ -52,11 +56,15 @@ namespace Gino
 	void Application::Run()
 	{
 		// Loop
+		float dt = 0.f;
 		while (m_appIsAlive)
 		{
+			Timer frameTimer;
 			m_mainWindow->PumpMessages();
 
-			m_engine->SimulateAndRender();
+			m_engine->SimulateAndRender(dt);
+
+			dt = frameTimer.TimeElapsed();
 			/*
 
 

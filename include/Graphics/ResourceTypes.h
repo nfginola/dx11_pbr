@@ -115,6 +115,7 @@ namespace Gino
 		void Initialize(const DevicePtr& dev, RWBufferDesc desc);
 		void Initialize(const DevicePtr& dev, ByteAddressBufferDesc desc);
 		void Initialize(const DevicePtr& dev, IndirectArgsBufferDesc desc);
+		void Initialize(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc);
 	}; 
 
 	template <typename T>

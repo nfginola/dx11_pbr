@@ -77,7 +77,7 @@ float3 reinhard_jodie(float3 v)
 
 float4 PSMain(PS_IN input) : SV_TARGET
 {
-    float3 hdrColor = renderTexture.Sample(mainSampler, input.uv);
+    float3 hdrColor = renderTexture.Sample(mainSampler, input.uv).xyz;
     float3 ldrColor;
     
     // Reinhard tonemapping (HDR to LDR mapping)

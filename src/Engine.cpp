@@ -11,8 +11,7 @@
 
 #include "Entity.h"
 
-// Temp
-#include "Timer.h"
+#include "Scene.h"
 
 namespace Gino
 {
@@ -20,11 +19,11 @@ namespace Gino
 	{
 		m_input = std::make_unique<Input>(settings.hwnd);
 		m_dxDev = std::make_unique<DXDevice>(settings.hwnd, settings.resolutionWidth, settings.resolutionHeight);
-		m_Renderer = std::make_unique<Renderer>(m_dxDev.get(), settings.vsync);
-		
+		m_renderer = std::make_unique<Renderer>(m_dxDev.get(), settings.vsync);
+
 		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 87.f);
 
-		m_Renderer->SetRenderCamera(m_fpCam.get());
+		m_renderer->SetRenderCamera(m_fpCam.get());
 
 		// DXState state
 		/*
@@ -38,16 +37,18 @@ namespace Gino
 		// then when we have an Entity --> Entity.AddModel("sponza");
 		m_sponzaModel = LoadModel("../assets/Models/Sponza_new/sponza.obj");
 
+		/*
 		
-		Entity testE;
-		Transform t;
+		// Send all the models that can be rendered, culling and others happen inside
+		// This vector is fixed size. (One whole scene)
+		m_renderer->SubmitOpaqueModels( &vector<std::pair<Model*, std::vector<Matrix>> )
+		
+		--> m_renderer->SubmitOpaqueModels( scene->GetRenderModels() );
 
-		testE.AddComponent<ComponentType::ModelType>(m_sponzaModel.get());
-	
-		auto cmp = testE.GetComponent<ComponentType::ModelType>();
 
+		
+		*/
 
-		auto trr = testE.GetComponent<ComponentType::TransformType>();
 	}
 
 	Engine::~Engine()
@@ -55,10 +56,14 @@ namespace Gino
 
 	}
 
-	static float dt = 0.f;
-	void Engine::SimulateAndRender()
+	void Engine::SetScene(Scene* scene)
 	{
-		Timer timer;
+		m_scene = scene;
+		m_renderer->SetModels(m_scene->GetModelInstances());
+	}
+
+	void Engine::SimulateAndRender(float dt)
+	{
 		m_input->Update();
 
 		// Update camera state
@@ -80,6 +85,9 @@ namespace Gino
 		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
 
+		// Update scene
+		m_scene->Update(dt);
+
 
 
 
@@ -98,14 +106,13 @@ namespace Gino
 		
 		*/
 
-		m_Renderer->Render(m_sponzaModel.get());
+		m_renderer->Render(m_sponzaModel.get());
 
 
 
 
 
 		m_input->Reset();
-		dt = timer.TimeElapsed();
 	}
 
 	Input* Engine::GetInput()
@@ -115,14 +122,34 @@ namespace Gino
 
 	std::function<void(HWND, UINT, WPARAM, LPARAM)> Engine::GetImGuiHook() const
 	{
-		if (m_Renderer && m_Renderer->GetImGui())
+		if (m_renderer && m_renderer->GetImGui())
 		{
-			return m_Renderer->GetImGui()->GetWin32Hook();
+			return m_renderer->GetImGui()->GetWin32Hook();
 		}
 		else
 		{
 			return[](HWND, UINT, WPARAM, LPARAM) {};
 		}
+	}
+
+	Model* Engine::CreateModel(const std::string& id, const std::filesystem::path& filePath)
+	{
+		auto model = LoadModel(filePath);
+		auto ret = model.get();
+		m_loadedModels.insert({ id, std::move(model) });
+		return ret;
+	}
+
+	Model* Engine::GetModel(const std::string& id)
+	{
+		auto it = m_loadedModels.find(id);
+		if (it == m_loadedModels.end())
+		{
+			std::cout << "Could not find model with ID: '" << id << "'\n";
+			assert(false);
+		}
+
+		return (*it).second.get();
 	}
 
 

@@ -80,6 +80,11 @@ namespace Gino
         assert(false);      // To extend
     }
 
+    void Buffer::Initialize(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc)
+    {
+        HRCHECK(dev->CreateBuffer(&desc, nullptr, buffer.GetAddressOf()));
+    }
+
 
     void Framebuffer::Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv)
     {

@@ -2,6 +2,8 @@
 #include "DXDevice.h"
 #include "Graphics/ResourceTypes.h"
 
+#include "imgui.h"
+
 namespace Gino
 {
 
