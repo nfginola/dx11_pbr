@@ -40,7 +40,6 @@ namespace Gino
 		void SimulateAndRender(float dt);
 
 		Input* GetInput();
-
 		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
 
 		// Creational functions
@@ -76,25 +75,23 @@ namespace Gino
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;
 		std::unique_ptr<Renderer> m_renderer;
-
 		std::unique_ptr<Input> m_input;
+
 		std::unique_ptr<FPCamera> m_fpCam;
 
 		Scene* m_scene;
 
 		// "Model Loader"
-		std::unique_ptr<Model> m_sponzaModel;
-		
+		// Our engine only has one memory context.
 		std::unordered_map<std::string, std::unique_ptr<Model>> m_loadedModels; 
 		std::unordered_map<std::string, std::unique_ptr<Texture>> m_loadedTextures;
 		
-
-		//std::unique_ptr<Input> m_input;
+		/* To  make: */
 		/*
-		Input
-		MainRenderer
-		Profiler
+		CPUProfiler
+		GPUProfiler
 		*/
+
 
 	};
 }

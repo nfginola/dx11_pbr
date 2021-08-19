@@ -22,33 +22,7 @@ namespace Gino
 		m_renderer = std::make_unique<Renderer>(m_dxDev.get(), settings.vsync);
 
 		m_fpCam = std::make_unique<FPCamera>((float)settings.resolutionWidth / settings.resolutionHeight, 87.f);
-
 		m_renderer->SetRenderCamera(m_fpCam.get());
-
-		// DXState state
-		/*
-			this should PRIMARILY be used inside Renderer and other Render modules
-			state->Set(...)
-			state->FinalizeBinds();		--> All API calls in one go
-		*/
-
-		// We should do something like: LoadModel("sponza", filePath)
-		// and keep an unordered map with models with string identifiers
-		// then when we have an Entity --> Entity.AddModel("sponza");
-		m_sponzaModel = LoadModel("../assets/Models/Sponza_new/sponza.obj");
-
-		/*
-		
-		// Send all the models that can be rendered, culling and others happen inside
-		// This vector is fixed size. (One whole scene)
-		m_renderer->SubmitOpaqueModels( &vector<std::pair<Model*, std::vector<Matrix>> )
-		
-		--> m_renderer->SubmitOpaqueModels( scene->GetRenderModels() );
-
-
-		
-		*/
-
 	}
 
 	Engine::~Engine()
@@ -85,14 +59,9 @@ namespace Gino
 		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
 
-		// Update scene
 		m_scene->Update(dt);
 
-
-
-
-
-
+		m_renderer->Render();
 
 		/*
 		
@@ -105,12 +74,6 @@ namespace Gino
 			cr->SubmitTransparentModel(mesh, material);
 		
 		*/
-
-		m_renderer->Render(m_sponzaModel.get());
-
-
-
-
 
 		m_input->Reset();
 	}
@@ -134,6 +97,13 @@ namespace Gino
 
 	Model* Engine::CreateModel(const std::string& id, const std::filesystem::path& filePath)
 	{
+		auto it = m_loadedModels.find(id);
+		if (it != m_loadedModels.end())
+		{
+			std::cout << "ID already taken!\n";
+			assert(false);
+		}
+
 		auto model = LoadModel(filePath);
 		auto ret = model.get();
 		m_loadedModels.insert({ id, std::move(model) });

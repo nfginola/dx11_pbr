@@ -22,8 +22,19 @@ namespace Gino
 		void SetRenderCamera(FPCamera* cam);	// Primary user camera to use for rendering
 		void SetModels(const std::vector<std::pair<Model*, std::vector<Transform*>>>* models);
 
+		/*
+		 
+		Engine takes care of data extraction from Scene to Renderer :)
+		 
+		SetDirectionalLight(color, direction)			// Hardcode max 1
+		SetPointLight(idx, color, attenuation)			// Hardcode max 5 
+		SetSpotlight(idx, color, angle, distance)		// Hardcode max 5
+		
+		the alpha channel of the color can be the contribution factor so we can turn off the light
 
-		void Render(Model* model);				// Temporary model argument for testing purposes
+		*/
+
+		void Render();				// Temporary model argument for testing purposes
 
 		/*
 		
@@ -45,6 +56,13 @@ namespace Gino
 		{
 			DirectX::SimpleMath::Matrix view;
 			DirectX::SimpleMath::Matrix projection;
+		};
+
+		struct SB_PointLight
+		{
+			DirectX::SimpleMath::Vector4 position;
+			DirectX::SimpleMath::Vector4 color;
+			// We can add attenuation later (we will use inverse square law for PBR for now)
 		};
 
 		struct CB_PerObject
@@ -79,9 +97,11 @@ namespace Gino
 		Framebuffer m_finalFramebuffer;
 		Texture m_backbuffer;
 
+		// Lights
+		Buffer m_sbPointLights;
+
 		// Model draw pass
 		ShaderGroup m_forwardOpaqueShaders;
-		//ConstantBuffer<MVP> m_mvpCB;	
 		ConstantBuffer<CB_PerObject> m_cbPerObject;
 		Buffer m_instanceBuffer;
 		Framebuffer m_renderFramebuffer;

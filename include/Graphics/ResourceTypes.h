@@ -67,9 +67,14 @@ namespace Gino
 		std::vector<uint32_t> data;
 	};
 
+	template <typename T>
 	struct StructuredBufferDesc
 	{
-		int a;		// To be extended
+		size_t elementCount;
+		bool dynamic;
+		bool cpuWrite;
+		std::vector<T> data;
+		
 	};
 
 	// Special type of Structured Buffer
@@ -95,6 +100,9 @@ namespace Gino
 	{
 		BufferPtr buffer;
 
+		SrvPtr srv;
+		UavPtr uav;
+
 		/*
 		Stride,
 		Offset,
@@ -108,14 +116,20 @@ namespace Gino
 		void Initialize(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc, const void* initData);
 		
 		template <typename T>
-		void Initialize(const DevicePtr& dev, VertexBufferDesc<T> desc);			// Templated version for ease of use
-		void Initialize(const DevicePtr& dev, VertexBufferDescRaw desc);
-		void Initialize(const DevicePtr& dev, IndexBufferDesc desc);
-		void Initialize(const DevicePtr& dev, StructuredBufferDesc desc);
-		void Initialize(const DevicePtr& dev, RWBufferDesc desc);
-		void Initialize(const DevicePtr& dev, ByteAddressBufferDesc desc);
-		void Initialize(const DevicePtr& dev, IndirectArgsBufferDesc desc);
+		void Initialize(const DevicePtr& dev, const VertexBufferDesc<T>& desc);			// Templated version for ease of use
+		void Initialize(const DevicePtr& dev, const VertexBufferDescRaw& desc);
+		void Initialize(const DevicePtr& dev, const IndexBufferDesc& desc);
+
+		template <typename T>
+		void Initialize(const DevicePtr& dev, const StructuredBufferDesc<T>& desc);
+		void Initialize(const DevicePtr& dev, const RWBufferDesc& desc);
+		void Initialize(const DevicePtr& dev, const ByteAddressBufferDesc& desc);
+		void Initialize(const DevicePtr& dev, const IndirectArgsBufferDesc& desc);
 		void Initialize(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc);
+
+	private:
+		void CreateViews(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc);
+
 	}; 
 
 	template <typename T>
@@ -195,7 +209,7 @@ namespace Gino
 
 
 	template<typename T>
-	inline void Buffer::Initialize(const DevicePtr& dev, VertexBufferDesc<T> desc)
+	inline void Buffer::Initialize(const DevicePtr& dev, const VertexBufferDesc<T>& desc)
 	{
 		D3D11_BUFFER_DESC vbDesc
 		{
@@ -209,6 +223,55 @@ namespace Gino
 			.SysMemPitch = vbDesc.ByteWidth
 		};
 		HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, buffer.GetAddressOf()));
+	}
+
+	template<typename T>
+	inline void Buffer::Initialize(const DevicePtr& dev, const StructuredBufferDesc<T>& desc)
+	{
+		size_t totalSize = sizeof(T) * desc.elementCount;
+		size_t alignedTotalSize = totalSize + (sizeof(T) - (totalSize % sizeof(T)));      // must be multiple of structuedByteStride!
+
+		D3D11_USAGE usage;
+		UINT cpuAccessFlags = 0;
+
+		if (desc.cpuWrite && desc.dynamic) // gpu read, cpu write
+		{
+			usage = D3D11_USAGE_DYNAMIC;
+			cpuAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		}
+		else if (!desc.cpuWrite && desc.dynamic)
+		{
+			usage = D3D11_USAGE_DEFAULT;
+			cpuAccessFlags = 0;
+		}
+		else
+		{
+			usage = D3D11_USAGE_IMMUTABLE;
+			cpuAccessFlags = 0;
+		}
+
+		D3D11_BUFFER_DESC sbDesc
+		{
+			.ByteWidth = (uint32_t)alignedTotalSize,
+			.Usage = usage,
+			.BindFlags = D3D11_BIND_SHADER_RESOURCE,
+			.CPUAccessFlags = cpuAccessFlags,
+			.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
+			.StructureByteStride = sizeof(T)
+		};
+
+		if (desc.data.empty())
+		{
+			// no init data
+			HRCHECK(dev->CreateBuffer(&sbDesc, nullptr, buffer.GetAddressOf()));
+		}
+		else
+		{
+			D3D11_SUBRESOURCE_DATA subres{ .pSysMem = desc.data.data() };
+			HRCHECK(dev->CreateBuffer(&sbDesc, &subres, buffer.GetAddressOf()));
+		}
+
+		CreateViews(dev, sbDesc);
 	}
 
 	// Subject to change (adding 1D/3D)

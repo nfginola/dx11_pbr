@@ -24,7 +24,7 @@ namespace Gino
         HRCHECK(dev->CreateBuffer(&desc, &subres, buffer.GetAddressOf()));
     }
 
-    void Buffer::Initialize(const DevicePtr& dev, VertexBufferDescRaw desc)
+    void Buffer::Initialize(const DevicePtr& dev, const VertexBufferDescRaw& desc)
     {
         D3D11_BUFFER_DESC vbDesc
         {
@@ -40,7 +40,7 @@ namespace Gino
         HRCHECK(dev->CreateBuffer(&vbDesc, &vbDat, buffer.GetAddressOf()));
     }
 
-    void Buffer::Initialize(const DevicePtr& dev, IndexBufferDesc desc)
+    void Buffer::Initialize(const DevicePtr& dev, const IndexBufferDesc& desc)
     {
         D3D11_BUFFER_DESC ibDesc
         {
@@ -56,25 +56,20 @@ namespace Gino
         HRCHECK(dev->CreateBuffer(&ibDesc, &ibDat, buffer.GetAddressOf()));
     }
 
-    void Buffer::Initialize(const DevicePtr& dev, StructuredBufferDesc desc)
+
+    void Buffer::Initialize(const DevicePtr& dev, const RWBufferDesc& desc)
     {
         std::cout << "Nagi::Buffer : Not implemented";
         assert(false);      // To extend
     }
 
-    void Buffer::Initialize(const DevicePtr& dev, RWBufferDesc desc)
+    void Buffer::Initialize(const DevicePtr& dev, const ByteAddressBufferDesc& desc)
     {
         std::cout << "Nagi::Buffer : Not implemented";
         assert(false);      // To extend
     }
 
-    void Buffer::Initialize(const DevicePtr& dev, ByteAddressBufferDesc desc)
-    {
-        std::cout << "Nagi::Buffer : Not implemented";
-        assert(false);      // To extend
-    }
-
-    void Buffer::Initialize(const DevicePtr& dev, IndirectArgsBufferDesc desc)
+    void Buffer::Initialize(const DevicePtr& dev, const IndirectArgsBufferDesc& desc)
     {
         std::cout << "Nagi::Buffer : Not implemented";
         assert(false);      // To extend
@@ -84,6 +79,52 @@ namespace Gino
     {
         HRCHECK(dev->CreateBuffer(&desc, nullptr, buffer.GetAddressOf()));
     }
+
+    void Buffer::CreateViews(const DevicePtr& dev, const D3D11_BUFFER_DESC& desc)
+    {
+        bool shouldCreateSRV = false;
+        bool shouldCreateUAV = false;
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+
+        if ((desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) == D3D11_BIND_SHADER_RESOURCE)
+        {
+            shouldCreateSRV = true;
+
+            // https://stackoverflow.com/questions/26544489/d3d11-buffer-srv-how-do-i-use-it
+            D3D11_BUFFER_SRV bufSrvDesc
+            {
+                .FirstElement = 0,
+
+                // we should probably fix so that number of elements is integral in buffer initialization instead of doing this calc
+                // it will work for now
+                .NumElements = (uint32_t)std::ceil((float)desc.ByteWidth / desc.StructureByteStride)
+            };
+
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer = bufSrvDesc;
+        }
+        if ((desc.BindFlags & D3D11_BIND_UNORDERED_ACCESS) == D3D11_BIND_UNORDERED_ACCESS)
+        {
+            shouldCreateUAV = true;
+
+            std::cout << "Buffer unordered access view creation not yet implemented\n";
+            assert(false);
+        }
+
+        if (shouldCreateSRV)
+        {
+            HRCHECK(dev->CreateShaderResourceView(buffer.Get(), &srvDesc, srv.GetAddressOf()));
+        }
+        if (shouldCreateUAV)
+        {
+
+        }
+    }
+
+
 
 
     void Framebuffer::Initialize(std::array<RtvPtr, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> targets, DsvPtr dsv)
@@ -136,7 +177,7 @@ namespace Gino
     void Framebuffer::Unbind(const DeviceContextPtr& ctx)
     {
         static std::array<ID3D11RenderTargetView*, D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT> nullRTVs;
-        ctx->OMSetRenderTargets(nullRTVs.size(), nullRTVs.data(), nullptr);
+        ctx->OMSetRenderTargets((uint32_t)nullRTVs.size(), nullRTVs.data(), nullptr);
     }
 
     Framebuffer::Framebuffer() :

@@ -5,15 +5,22 @@ struct PS_IN
 	float3 normal : NORMAL;
 };
 
+struct SB_PointLight
+{
+    float4 position;
+    float4 color;
+};
+
 Texture2D diffuseTex : register(t0);
 Texture2D specularTex : register(t1);
 Texture2D normalTex : register(t2);
 Texture2D opacityTex : register(t3);
 
+StructuredBuffer<SB_PointLight> pointLightList : register(t7);
+
 SamplerState mainSampler : register(s0);
 
-
-
+// Hardcoded PBR stuff below
 
 float4 PSMain(PS_IN input) : SV_TARGET
 {
@@ -21,6 +28,12 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //float3 color = diffuseTex.SampleLevel(mainSampler, input.uv, mipLevel).xyz; // Note that the sampler must an unlocked maxLOD
     //float3 color = normalize(input.normal);
     float3 color = diffuseTex.Sample(mainSampler, input.uv).xyz;
-        
+    
+    
+ 
+    
+    
+    
+    
     return float4(color, 1.f);
 }

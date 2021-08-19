@@ -19,12 +19,11 @@ namespace Gino
 		m_dxDev(dxDev),
 		m_imGui(std::make_unique<ImGuiRenderer>(dxDev->GetHWND(), dxDev->GetDevice(), dxDev->GetContext()))
 	{
+		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
 
 		// make swapchain framebuffer
 		m_finalFramebuffer.Initialize({ m_dxDev->GetBackbufferTarget() });
 
-		std::cout << "vsync: " << (vsync ? "on" : "off") << '\n';
- 
 		auto dev = dxDev->GetDevice();
 		auto ctx = dxDev->GetContext();
 
@@ -38,24 +37,20 @@ namespace Gino
 		};
 		m_instanceBuffer.Initialize(dev, instanceDesc);
 
+		// setup default forward shaders with instancing layout
 		m_forwardOpaqueShaders
 			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
 			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 
-			// Setup instance data (Buffer 1)
+			// Setup instancing data (Buffer 1)
 			.AddInputDesc({ "INSTANCE_WM_ROW", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1})
 			.AddInputDesc({ "INSTANCE_WM_ROW", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
 			.AddInputDesc({ "INSTANCE_WM_ROW", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
 			.AddInputDesc({ "INSTANCE_WM_ROW", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
-
 			.Build(dev);
 
-		D3D11_RASTERIZER_DESC1 rsD
-		{
-			.FillMode = D3D11_FILL_SOLID,
-			.CullMode = D3D11_CULL_BACK
-		};
+		D3D11_RASTERIZER_DESC1 rsD{ .FillMode = D3D11_FILL_SOLID, .CullMode = D3D11_CULL_BACK };
 		HRCHECK(dev->CreateRasterizerState1(&rsD, m_rs.GetAddressOf()));
 	
 		// make sampler
@@ -66,7 +61,7 @@ namespace Gino
 			.AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
 			.AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
 			.MipLODBias = 0.f,
-			.MaxAnisotropy = 8,								// We have to check max anisotropy available, but lets set to 8
+			.MaxAnisotropy = 8,									// We have to check max anisotropy available, but lets set to 8
 			.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL,		// Not used.. what do we do with the information on whether it has passed?? // Read more
 			.BorderColor = { 0.f, 0.f, 0.f, 1.f },
 			.MinLOD = 0.f,
@@ -90,7 +85,6 @@ namespace Gino
 		};
 		m_depth.Initialize(dev, ctx, depthDesc);
 
-
 		// make depth stencil state (closely tied to the depth stencil view, essentially configs for writing to the DSV)
 		D3D11_DEPTH_STENCIL_DESC dssDesc
 		{
@@ -101,8 +95,6 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateDepthStencilState(&dssDesc, m_dss.GetAddressOf()));
 		
-		// MVP CB
-		//m_mvpCB.Initialize(dev);
 
 		m_cbPerFrame.Initialize(dev);
 		m_cbPerObject.Initialize(dev);
@@ -147,6 +139,9 @@ namespace Gino
 		};
 		HRCHECK(dev->CreateSamplerState(&pointSSDesc, m_pointSampler.GetAddressOf()));
 
+		// setup point light structued buffer
+		StructuredBufferDesc<SB_PointLight> sbDesc{ .elementCount = 4, .dynamic = true, .cpuWrite = true };
+		m_sbPointLights.Initialize(dev, sbDesc);
 	}
 
 	Renderer::~Renderer()
@@ -163,7 +158,7 @@ namespace Gino
 		m_opaqueModels = models;
 	}
 	
-	void Renderer::Render(Model* model)
+	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
@@ -174,14 +169,37 @@ namespace Gino
 		m_cbPerFrame.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
 
-		m_forwardOpaqueShaders.Bind(ctx);
-		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
-		ctx->PSSetSamplers(0, 1, samplers);
 
 		// set rasterizer state
 		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
 		ctx->RSSetViewports(_countof(viewports), viewports);
 		ctx->RSSetState(m_rs.Get());
+
+		/*
+		
+		Input: m_renderFramebuffer
+		Skybox Pass --> Render to texture
+
+		--> skybox.Render(m_renderFramebuffer);
+
+		*/
+
+		// Bind lights structured buffer
+		D3D11_MAPPED_SUBRESOURCE plMapped;
+		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
+		auto light = (SB_PointLight*)plMapped.pData;
+		light[0] = { .position = { 2.f, 2.f, 0.f, 0.f }, .color = { 1.f, 0.f, 0.f, 1.f } };
+		light[1] = { .position = { -2.f, 2.f, 0.f, 0.f }, .color = { 0.f, 1.f, 0.f, 1.f } };
+		light[2] = { .position = { 2.f, 2.f, 2.f, 0.f }, .color = { 0.f, 0.f, 1.f, 1.f } };
+		light[3] = { .position = { 2.f, 2.f, -2.f, 0.f }, .color = { 1.f, 0.f, 1.f, 1.f } };
+		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
+
+		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
+
+
+		m_forwardOpaqueShaders.Bind(ctx);
+		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
+		ctx->PSSetSamplers(0, 1, samplers);
 
 		// Render to texture
 		m_renderFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
@@ -195,7 +213,7 @@ namespace Gino
 			const auto& model = modelInstance.first;
 			const auto& instances = modelInstance.second;
 
-			assert(instances.size() <= MAX_INSTANCES);		// Max 1000 instances supported
+			assert(instances.size() <= MAX_INSTANCES);
 
 			// Fill instance data
 			D3D11_MAPPED_SUBRESOURCE mappedInstSubres;
@@ -206,7 +224,6 @@ namespace Gino
 				seat[i] = instances[i]->GetWorldMatrix();
 			}
 			ctx->Unmap(m_instanceBuffer.buffer.Get(), 0);
-
 
 			ID3D11Buffer* vbs[] = { model->GetVB(), m_instanceBuffer.buffer.Get() };
 			UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL), sizeof(DirectX::SimpleMath::Matrix) };
@@ -220,8 +237,26 @@ namespace Gino
 			const auto& materials = model->GetMaterials();
 			assert(meshes.size() == materials.size());
 
+			// Draw submeshes
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
+				/*
+				
+				If (PBR)
+				{
+					Bind PBR Mats and other resources
+					Draw
+				}
+				else
+				{
+					Bind normal mats
+					Draw
+				}
+				
+				
+				*/
+
+				// Bind material
 				ID3D11ShaderResourceView* srvs[] =
 				{
 					materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
@@ -230,8 +265,9 @@ namespace Gino
 					materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
 				};
 				ctx->PSSetShaderResources(0, 4, srvs);
+				ctx->DrawIndexedInstanced(meshes[i].numIndices, (uint32_t)instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 
-				//// no instanced for now
+				//// no instancing
 				//for (int instanceID = 0; instanceID < modelInstance.second.size(); ++instanceID)
 				//{
 				//	m_cbPerObject.data.model = modelInstance.second[instanceID]->GetWorldMatrix();
@@ -240,21 +276,17 @@ namespace Gino
 
 				//	ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 				//}
-
-				ctx->VSSetConstantBuffers(1, 1, m_cbPerObject.buffer.GetAddressOf());
-				ctx->DrawIndexedInstanced(meshes[i].numIndices, instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 			}
 		}
 		auto opaqueTime = opaquePassTimer.TimeElapsed();
 
 		ImGui::Begin("Frame Statistics");
-		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaqueTime * 1000.f));
+		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaqueTime * 1000.f).c_str());
 		ImGui::End();
 
 
 		// Unbind framebuffer so that we can read textures associated with it
 		m_renderFramebuffer.Unbind(ctx);
-
 
 		// Render fullscreen quad pass
 		// Input --> Render texture to read from and framebuffer to render to
@@ -279,10 +311,10 @@ namespace Gino
 			ctx->PSSetShaderResources(0, 1, nullSRVs);
 		}
 
-
-
-		// Draw UI directly on swapchain (no filtering or anything applied on it)
+		// Draw UI directly on swapchain (no post-process or anything applied on it)
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
+
+		// Present to swapchain
 		m_dxDev->GetSwapChain()->Present(m_vsync ? 1 : 0, 0);
 	}
 

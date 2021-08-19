@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Scene.h"
 #include "Input.h"
+#include "FPCamera.h"
 
 namespace Gino
 {
@@ -22,7 +23,7 @@ namespace Gino
 		e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
 
 		int counter = 0;
-		for (int x = -10; x < 10; ++x)
+		for (int x = -7; x < 7; ++x)
 		{
 			for (int z = -5; z < 5; ++z)
 			{
@@ -32,8 +33,16 @@ namespace Gino
 			}
 		}
 
+		auto sphere = CreateEntity("pbrSphere");
+		m_engine->CreateModel("pbrSphere", "../assets/Models/sphere/Sphere.obj");
+		sphere->AddComponent<ModelType>(m_engine->GetModel("pbrSphere"));
+		sphere->GetComponent<TransformType>()->m_position = { 40.f, 15.f, 0.f };
+		sphere->GetComponent<TransformType>()->m_scaling = { 3.f, 3.f, 3.f };
 
 
+		// Currently no support for adding entities on update and hooking it up to renderer
+		// We Finalize Scene to hook the existing entities to the renderers
+		// We could make it dynamic by looping through all entities every frame and then sending the new hook to Engine
 		FinalizeScene();
 	}
 
@@ -99,7 +108,6 @@ namespace Gino
 			assert(false);
 		}
 
-		
 		return m_entities.insert({ name, std::make_unique<Entity>() }).first->second.get();
 	}
 	Entity* Scene::GetEntity(const std::string& name)

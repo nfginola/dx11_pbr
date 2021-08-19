@@ -13,7 +13,6 @@ namespace Gino
 		InitWindow(settings);
 		InitConsoleCommands();
 		
-
 		// Other settings such as Shadow Map resolution, and other misc. will go through here
 		Engine::Settings engineSettings
 		{
@@ -25,25 +24,6 @@ namespace Gino
 		};
 
 		m_engine = std::make_unique<Engine>(engineSettings);
-	
-		/*
-		
-		std::make_unique<Engine>(settings.engine);
-
-		MainWindowProc --> We get the "Input" component from Engine to call onkeydown and other misc. things
-					   --> We call engine to resize
-
-		For now, we will work in Engine with our objects. We will take care of "Scenes" later down the road.
-
-		Thoughts: When working inside a Scene, we DO NOT want to have any notion of GPU resources! It should be Models, Materials, Transform, etc.
-		Surely we can simplify materials to a set of ENUMS if we choose to do so (for example for debugging purposes)
-
-		Therefore, Scenes are the highest-level of abstraction that we should take care of much later.
-
-		NOTE: We want to have: Engine->SetResolution(int width, int height); to change the underlying image quality (orthogonal from window dimensions)
-
-		*/
-
 		m_scene = std::make_unique<Scene>(m_engine.get());
     }
 
@@ -63,8 +43,8 @@ namespace Gino
 			m_mainWindow->PumpMessages();
 
 			m_engine->SimulateAndRender(dt);
-
 			dt = frameTimer.TimeElapsed();
+
 			/*
 
 
@@ -230,7 +210,6 @@ namespace Gino
 				imGuiFunc(hwnd, uMsg, wParam, lParam);
 			}
 		}
-
 
 		switch (uMsg)
 		{
