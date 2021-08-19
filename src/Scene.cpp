@@ -36,8 +36,9 @@ namespace Gino
 		auto sphere = CreateEntity("pbrSphere");
 		m_engine->CreateModel("pbrSphere", "../assets/Models/sphere/Sphere.obj");
 		sphere->AddComponent<ModelType>(m_engine->GetModel("pbrSphere"));
-		sphere->GetComponent<TransformType>()->m_position = { 40.f, 15.f, 0.f };
-		sphere->GetComponent<TransformType>()->m_scaling = { 3.f, 3.f, 3.f };
+		sphere->GetComponent<TransformType>()->m_position = { -4.f, -4.f, 5.f };
+		sphere->GetComponent<TransformType>()->m_scaling = { 0.05f, 0.05f, 0.05f };
+
 
 
 		// Currently no support for adding entities on update and hooking it up to renderer
@@ -54,8 +55,8 @@ namespace Gino
 		/* Simulate models */
 		timeElapsed += dt;
 	
-		GetEntity("Entity2")->GetComponent<TransformType>()->m_rotation.y += 45.f * dt;
-		GetEntity("Entity2")->GetComponent<TransformType>()->m_position.y = cosf(timeElapsed) * 40.f;
+		//GetEntity("Entity2")->GetComponent<TransformType>()->m_rotation.y += 45.f * dt;
+		//GetEntity("Entity2")->GetComponent<TransformType>()->m_position.y = cosf(timeElapsed) * 40.f;
 
 
 	}

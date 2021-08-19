@@ -78,6 +78,11 @@ namespace Gino
 		}
 	}
 
+	const DirectX::SimpleMath::Vector4& FPCamera::GetPosition() const
+	{
+		return DirectX::SimpleMath::Vector4(m_worldPosition.x, m_worldPosition.y, m_worldPosition.z, 1.f);
+	}
+
 	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
 	{
 		// No need for delta since we consume the WMs generated for this frame

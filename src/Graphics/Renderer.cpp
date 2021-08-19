@@ -158,16 +158,32 @@ namespace Gino
 		m_opaqueModels = models;
 	}
 	
+	float metallic = 0.f;
+	float roughness = 0.f;
 	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
 		m_imGui->BeginFrame();
 
+
+		ImGui::Begin("PBR");
+		ImGui::SliderFloat("Metallic", &metallic, 0.f, 1.f);
+		ImGui::SliderFloat("Roughness", &roughness, 0.f, 1.f);
+
+		ImGui::End();
+
+
 		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
 		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
+		m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
+		m_cbPerFrame.data.g_color = { 0.f, 1.f, 0.f, 1.f };
+		m_cbPerFrame.data.g_ao = 0.f;
+		m_cbPerFrame.data.g_metallic = metallic;
+		m_cbPerFrame.data.g_roughness = roughness;
 		m_cbPerFrame.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
+		ctx->PSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
 
 
 		// set rasterizer state
@@ -188,10 +204,10 @@ namespace Gino
 		D3D11_MAPPED_SUBRESOURCE plMapped;
 		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
 		auto light = (SB_PointLight*)plMapped.pData;
-		light[0] = { .position = { 2.f, 2.f, 0.f, 0.f }, .color = { 1.f, 0.f, 0.f, 1.f } };
-		light[1] = { .position = { -2.f, 2.f, 0.f, 0.f }, .color = { 0.f, 1.f, 0.f, 1.f } };
-		light[2] = { .position = { 2.f, 2.f, 2.f, 0.f }, .color = { 0.f, 0.f, 1.f, 1.f } };
-		light[3] = { .position = { 2.f, 2.f, -2.f, 0.f }, .color = { 1.f, 0.f, 1.f, 1.f } };
+		light[0] = { .position = { 2.f, 2.f, 0.f, 1.f }, .color = { 250.f, 250.f, 250.f, 1.f } };
+		light[1] = { .position = { -2.f, 2.f, 0.f, 1.f }, .color = { 0.f, 1.f, 0.f, 1.f } };
+		light[2] = { .position = { 2.f, 2.f, 2.f, 1.f }, .color = { 0.f, 0.f, 1.f, 1.f } };
+		light[3] = { .position = { 2.f, 2.f, -2.f, 1.f }, .color = { 1.f, 0.f, 1.f, 1.f } };
 		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
 
 		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());

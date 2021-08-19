@@ -16,12 +16,14 @@ struct VS_OUT
 	float4 pos : SV_POSITION;
 	float2 uv : TEXCOORD;
 	float3 normal : NORMAL;
+    float3 worldPos : WORLDPOS;
 };
 
 cbuffer CB_PerFrame : register(b0)
 {
     matrix view;
     matrix projection;
+    float3 cameraPosition;
 }
 
 cbuffer CB_PerObject : register(b1)
@@ -40,9 +42,11 @@ VS_OUT VSMain(VS_INPUT input)
 	//output.uv = input.uv;
 	//output.normal = input.normal;
 	
-    output.pos = mul(projection, mul(view, mul(worldMat, float4(input.pos, 1.f))));
+    output.worldPos = mul(worldMat, float4(input.pos, 1.f)).xyz;
+    output.pos = mul(projection, mul(view, float4(output.worldPos, 1.f)));
     //output.pos = mul(projection, mul(view, mul(float4(input.pos, 1.f), worldMat)));
-    output.normal = normalize(mul(model, float4(input.normal, 0.f)).xyz);
+    //output.normal = input.normal;
+    output.normal = mul(worldMat, float4(input.normal, 0.f)).xyz;
     output.uv = input.uv;
 	
 	return output;

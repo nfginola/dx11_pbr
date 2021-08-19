@@ -56,6 +56,13 @@ namespace Gino
 		{
 			DirectX::SimpleMath::Matrix view;
 			DirectX::SimpleMath::Matrix projection;
+			DirectX::SimpleMath::Vector4 cameraPosition;
+
+			// temp
+			DirectX::SimpleMath::Vector3 g_color;
+			float g_metallic;
+			float g_roughness;
+			float g_ao;
 		};
 
 		struct SB_PointLight
