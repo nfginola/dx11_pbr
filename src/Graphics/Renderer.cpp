@@ -38,13 +38,25 @@ namespace Gino
 		m_instanceBuffer.Initialize(dev, instanceDesc);
 
 		// setup default forward shaders with instancing layout
-		m_forwardOpaqueShaders
-			.AddStage(ShaderStage::Vertex, "compiled_shaders/tri_vs.cso")
-			.AddStage(ShaderStage::Pixel, "compiled_shaders/tri_ps.cso")
+		m_forwardOpaquePBRShaders
+			.AddStage(ShaderStage::Vertex, "compiled_shaders/ForwardPBR_VS.cso")
+			.AddStage(ShaderStage::Pixel, "compiled_shaders/ForwardPBR_PS.cso")
 			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
 
 			// Setup instancing data (Buffer 1)
 			.AddInputDesc({ "INSTANCE_WM_ROW", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1})
+			.AddInputDesc({ "INSTANCE_WM_ROW", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+			.AddInputDesc({ "INSTANCE_WM_ROW", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+			.AddInputDesc({ "INSTANCE_WM_ROW", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
+			.Build(dev);
+
+		m_forwardOpaquePhongShaders
+			.AddStage(ShaderStage::Vertex, "compiled_shaders/ForwardPhong_VS.cso")
+			.AddStage(ShaderStage::Pixel, "compiled_shaders/ForwardPhong_PS.cso")
+			.AddInputDescs(Vertex_POS_UV_NORMAL::GetElementDescriptors())
+
+			// Setup instancing data (Buffer 1)
+			.AddInputDesc({ "INSTANCE_WM_ROW", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
 			.AddInputDesc({ "INSTANCE_WM_ROW", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
 			.AddInputDesc({ "INSTANCE_WM_ROW", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
 			.AddInputDesc({ "INSTANCE_WM_ROW", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 })
@@ -140,7 +152,7 @@ namespace Gino
 		HRCHECK(dev->CreateSamplerState(&pointSSDesc, m_pointSampler.GetAddressOf()));
 
 		// setup point light structued buffer
-		StructuredBufferDesc<SB_PointLight> sbDesc{ .elementCount = 4, .dynamic = true, .cpuWrite = true };
+		StructuredBufferDesc<SB_PointLight> sbDesc{ .elementCount = 6, .dynamic = true, .cpuWrite = true };
 		m_sbPointLights.Initialize(dev, sbDesc);
 	}
 
@@ -206,16 +218,17 @@ namespace Gino
 		D3D11_MAPPED_SUBRESOURCE plMapped;
 		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
 		auto light = (SB_PointLight*)plMapped.pData;
-		light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 900.f, 900.f, 900.f, 1.f } };
-		light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 900.f, 0.f, 1.f } };
-		light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 900.f, 1.f } };
-		light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 900.f, 0.f, 900.f, 1.f } };
+		light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+		light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 1200.f, 0.f, 1.f } };
+		light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 1200.f, 1.f } };
+		light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 0.f, 1200.f, 1.f } };
+		light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 0.f, 1200.f, 1200.f, 1.f } };
+		light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 0.f, 0.f, 1.f } };
 		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
 
 		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
 
 
-		m_forwardOpaqueShaders.Bind(ctx);
 		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
 		ctx->PSSetSamplers(0, 1, samplers);
 
@@ -230,6 +243,17 @@ namespace Gino
 		{
 			const auto& model = modelInstance.first;
 			const auto& instances = modelInstance.second;
+
+			auto matType = model->GetMaterials()[0].GetType();
+			if (matType == MaterialType::PBR)
+			{
+				m_forwardOpaquePBRShaders.Bind(ctx);
+			}
+			else if (matType == MaterialType::Phong )
+			{
+				m_forwardOpaquePhongShaders.Bind(ctx);
+			}
+
 
 			assert(instances.size() <= MAX_INSTANCES);
 
@@ -258,43 +282,32 @@ namespace Gino
 			// Draw submeshes
 			for (uint32_t i = 0; i < meshes.size(); ++i)
 			{
-				/*
-				
-				If (PBR)
-				{
-					Bind PBR Mats and other resources
-					Draw
-				}
-				else
-				{
-					Bind normal mats
-					Draw
-				}
-				
-				
-				*/
-
-
-
-				// Bind material (Phong)
-				//ID3D11ShaderResourceView* srvs[] =
-				//{
-				//	materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
-				//	materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
-				//	materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
-				//	materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
-				//};
-
 				// Bind material (PBR)
-				ID3D11ShaderResourceView* srvs[] =
+				if (matType == MaterialType::PBR)
 				{
-					materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
-					materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
-					materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
-					materials[i].GetProperties<PBRMaterialData>().ao->GetSRV()
-				};
+					ID3D11ShaderResourceView* srvs[] =
+					{
+						materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
+						materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
+						materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
+						materials[i].GetProperties<PBRMaterialData>().ao->GetSRV()
+					};
 
-				ctx->PSSetShaderResources(0, 4, srvs);
+					ctx->PSSetShaderResources(0, 4, srvs);
+				}
+				else if (matType == MaterialType::Phong)
+				{
+					ID3D11ShaderResourceView* srvs[] =
+					{
+						materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV(),
+						materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
+						materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
+						materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
+					};
+
+					ctx->PSSetShaderResources(0, 4, srvs);
+				}
+
 
 				ctx->DrawIndexedInstanced(meshes[i].numIndices, (uint32_t)instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 

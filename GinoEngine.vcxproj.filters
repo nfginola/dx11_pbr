@@ -189,9 +189,11 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="shaders\tri_vs.hlsl" />
-    <FxCompile Include="shaders\tri_ps.hlsl" />
+    <FxCompile Include="shaders\ForwardPBR_VS.hlsl" />
+    <FxCompile Include="shaders\ForwardPBR_PS.hlsl" />
     <FxCompile Include="shaders\quadpass_vs.hlsl" />
     <FxCompile Include="shaders\quadpass_ps.hlsl" />
+    <FxCompile Include="shaders\ForwardPhong_VS.hlsl" />
+    <FxCompile Include="shaders\ForwardPhong_PS.hlsl" />
   </ItemGroup>
 </Project>

@@ -11,20 +11,30 @@ namespace Gino
 		m_engine->SetScene(this);
 
 		m_engine->CreateModel("sponza", "../assets/Models/Sponza_gltf/glTF/Sponza.gltf", true);
+		m_engine->CreateModel("pbrSpheres", "../assets/Models/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf", true);
 
 		auto e = CreateEntity("Entity1");
 		e->AddComponent<ModelType>(m_engine->GetModel("sponza"));
 		e->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
 
-		////m_engine->CreateModel("sponza", "../assets/Models/Sponza_new/sponza.fbx");
+		auto e2 = CreateEntity("Entity2");
+		e2->AddComponent<ModelType>(m_engine->GetModel("pbrSpheres"));
+		e2->GetComponent<TransformType>()->m_position = { 5.f, 50.f, 0.f };
+		e2->GetComponent<TransformType>()->m_rotation = { 90.f, 0.f, 0.f };
+
+
+
+
+
+		//////m_engine->CreateModel("sponza", "../assets/Models/Sponza_new/sponza.fbx");
 		//m_engine->CreateModel("nanosuit", "../assets/Models/nanosuit/nanosuit.obj");
-		//auto e2 = CreateEntity("Entity2");
+		////auto e2 = CreateEntity("Entity2");
 
 
 
-		//e2->AddComponent<ModelType>(m_engine->GetModel("sponza"));
-		//e2->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
-		//e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
+		////e2->AddComponent<ModelType>(m_engine->GetModel("sponza"));
+		////e2->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
+		////e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
 
 		//int counter = 0;
 		//for (int x = -7; x < 7; ++x)

@@ -108,7 +108,8 @@ namespace Gino
 		Buffer m_sbPointLights;
 
 		// Model draw pass
-		ShaderGroup m_forwardOpaqueShaders;
+		ShaderGroup m_forwardOpaquePBRShaders;
+		ShaderGroup m_forwardOpaquePhongShaders;
 		ConstantBuffer<CB_PerObject> m_cbPerObject;
 		Buffer m_instanceBuffer;
 		Framebuffer m_renderFramebuffer;

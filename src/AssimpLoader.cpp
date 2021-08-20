@@ -222,7 +222,6 @@ namespace Gino
 			mtl->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
 
 			// Subset data
-			AssimpMeshSubset subsetData = { };
 			AssimpMaterialPaths matPaths;
 			matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
 			matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));

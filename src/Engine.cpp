@@ -173,17 +173,25 @@ namespace Gino
 			Texture* opacity = nullptr;
 			Texture* normal = nullptr;
 
-			if (mat.diffuseFilePath.has_value())	diffuse = LoadTexture(mat.diffuseFilePath.value());
-			else									diffuse = LoadTexture(defaultDiffuseFilePath);
+			if (mat.diffuseFilePath.has_value())	
+				diffuse = LoadTexture(mat.diffuseFilePath.value());
+			else									
+				diffuse = LoadTexture(defaultDiffuseFilePath);
 
-			if (mat.normalFilePath.has_value())		normal = LoadTexture(mat.normalFilePath.value());
-			else									normal = LoadTexture(defaultNormalFilePath);
+			if (mat.normalFilePath.has_value())		
+				normal = LoadTexture(mat.normalFilePath.value());
+			else									
+				normal = LoadTexture(defaultNormalFilePath);
 
-			if (mat.opacityFilePath.has_value())	opacity = LoadTexture(mat.opacityFilePath.value());
-			else									opacity = LoadTexture(defaultOpacityFilePath);
+			if (mat.opacityFilePath.has_value())	
+				opacity = LoadTexture(mat.opacityFilePath.value());
+			else									
+				opacity = LoadTexture(defaultOpacityFilePath);
 
-			if (mat.specularFilePath.has_value())	specular = LoadTexture(mat.specularFilePath.value());
-			else									specular = LoadTexture(defaultSpecularFilePath);
+			if (mat.specularFilePath.has_value())	
+				specular = LoadTexture(mat.specularFilePath.value());
+			else									
+				specular = LoadTexture(defaultSpecularFilePath);
 		}
 
 		// Transform verts data into our specified input layout
