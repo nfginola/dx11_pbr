@@ -26,6 +26,7 @@ namespace Gino
 		Texture* normal = nullptr;
 		Texture* metallicAndRoughness = nullptr;
 		Texture* ao = nullptr;
+		Texture* emission = nullptr;
 
 		// Other misc. data can be stored here too
 	};

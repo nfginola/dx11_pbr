@@ -12,6 +12,7 @@ namespace Gino
 
 		m_engine->CreateModel("sponza", "../assets/Models/Sponza_gltf/glTF/Sponza.gltf", true);
 		m_engine->CreateModel("pbrSpheres", "../assets/Models/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf", true);
+		m_engine->CreateModel("helmet", "../assets/Models/DamagedHelmet/glTF/DamagedHelmet.gltf", true);
 
 		auto e = CreateEntity("Entity1");
 		e->AddComponent<ModelType>(m_engine->GetModel("sponza"));
@@ -21,6 +22,12 @@ namespace Gino
 		e2->AddComponent<ModelType>(m_engine->GetModel("pbrSpheres"));
 		e2->GetComponent<TransformType>()->m_position = { 5.f, 50.f, 0.f };
 		e2->GetComponent<TransformType>()->m_rotation = { 90.f, 0.f, 0.f };
+
+		auto e3 = CreateEntity("Entity3");
+		e3->AddComponent<ModelType>(m_engine->GetModel("helmet"));
+		e3->GetComponent<TransformType>()->m_position = { 0.f, 10.f, 0.f };
+		e3->GetComponent<TransformType>()->m_scaling = { 4.f, 4.f, 4.f };
+		e3->GetComponent<TransformType>()->m_rotation = { -90.f, 0.f, 0.f };
 
 
 

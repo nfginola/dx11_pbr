@@ -17,6 +17,7 @@ Texture2D albedoTex : register(t0);
 Texture2D metallicAndRoughnessTex : register(t1);
 Texture2D normalTex : register(t2);
 Texture2D aoTex : register(t3);
+Texture2D emissionTex : register(t4);
 
 StructuredBuffer<SB_PointLight> pointLightList : register(t7);
 
@@ -151,6 +152,8 @@ float4 PSMain(PS_IN input) : SV_TARGET
     float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedoInput * aoInput;
     float3 color = ambient + Lo;
 	
+    color += emissionTex.Sample(mainSampler, input.uv).xyz;
+    
     // No need for tonemapping and gamma correction, we do that on the subsequent fullscreen quad pass
     //color = color / (color + vec3(1.0));
     //color = pow(color, float3(1.0 / 2.2));

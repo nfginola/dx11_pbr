@@ -95,9 +95,9 @@ float4 PSMain(PS_IN input) : SV_TARGET
     
     //ldrColor = reinhard_jodie(hdrColor);
    
-    //ldrColor = reinhard_jodie(hdrColor);
+    ldrColor = reinhard_jodie(hdrColor);
     
-    ldrColor = aces_fitted(hdrColor);
+    //ldrColor = aces_fitted(hdrColor);
     
     // Exposure based
     //float3 ldrColor = float3(1.f, 1.f, 1.f) - exp(-hdrColor * EXPOSURE);

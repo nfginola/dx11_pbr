@@ -276,6 +276,7 @@ namespace Gino
 			Texture* normal = nullptr;
 			Texture* metallicAndRoughness = nullptr;
 			Texture* ao = nullptr;
+			Texture* emission = nullptr;
 
 			if (mat.albedo.has_value())					albedo = LoadTexture(mat.albedo.value());
 			else										albedo = LoadTexture(defaultDiffuseFilePath);				// Should be changed
@@ -288,6 +289,9 @@ namespace Gino
 
 			if (mat.ao.has_value())						ao = LoadTexture(mat.ao.value());
 			else										ao = LoadTexture(defaultSpecularFilePath);
+
+			if (mat.emission.has_value())				emission = LoadTexture(mat.emission.value());
+			else										emission = LoadTexture(defaultSpecularFilePath);
 		}
 
 		// Transform verts data into our specified input layout
@@ -332,6 +336,7 @@ namespace Gino
 			std::string normalLook = pbrMat.normal.has_value() ? pbrMat.normal.value() : defaultNormalFilePath;
 			std::string metallicAndRoughnessLook = pbrMat.metallicAndRoughness.has_value() ? pbrMat.metallicAndRoughness.value() : defaultSpecularFilePath;
 			std::string aoLook = pbrMat.ao.has_value() ? pbrMat.ao.value() : defaultSpecularFilePath;
+			std::string emissionLook = pbrMat.emission.has_value() ? pbrMat.emission.value() : defaultSpecularFilePath;
 
 			// Create material for this submesh to use
 			Material mat;
@@ -340,7 +345,8 @@ namespace Gino
 					.albedo = m_loadedTextures.find(albedoLook)->second.get(),
 					.normal = m_loadedTextures.find(normalLook)->second.get(),
 					.metallicAndRoughness = m_loadedTextures.find(metallicAndRoughnessLook)->second.get(),
-					.ao = m_loadedTextures.find(aoLook)->second.get()
+					.ao = m_loadedTextures.find(aoLook)->second.get(),
+					.emission = m_loadedTextures.find(emissionLook)->second.get()
 				});
 
 			materialsAndMeshes.push_back({ mesh, mat });

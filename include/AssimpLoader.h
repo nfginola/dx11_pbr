@@ -31,6 +31,8 @@ namespace Gino
 		std::optional<std::string> normal;
 		std::optional<std::string> metallicAndRoughness;		// Metalness in BLUE channel, roughness in GREEN channel
 		std::optional<std::string> ao;
+		std::optional<std::string> emission;
+
 
 		aiVector3D baseColorFactor;				// Multiplied component wise with albedo
 		aiVector2D metallicAndRoughnessFactor;	// Multiplied component wise with metallic and roughness

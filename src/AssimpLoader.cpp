@@ -79,7 +79,7 @@ namespace Gino
 			for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
 			{
 				auto mtl = scene->mMaterials[i];
-				aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath;
+				aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath, emissionPath;
 
 				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &albedoPath);
 
@@ -90,14 +90,14 @@ namespace Gino
 				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
 				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
 				mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+				mtl->GetTexture(aiTextureType_EMISSIVE, 0, &emissionPath);
 
 
-
-				aiString paths[aiTextureType_UNKNOWN];
-				for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
-				{
-					mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
-				}
+				//aiString paths[aiTextureType_UNKNOWN];
+				//for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
+				//{
+				//	mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
+				//}
 
 
 				AssimpMaterialPathsPBR matPaths;
@@ -105,6 +105,7 @@ namespace Gino
 				matPaths.normal = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
 				matPaths.metallicAndRoughness = (metallicPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicPath.C_Str()));
 				matPaths.ao = (aoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + aoPath.C_Str()));
+				matPaths.emission = (emissionPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + emissionPath.C_Str()));
 				
 				mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 0, matPaths.baseColorFactor.x);
 				mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 1, matPaths.baseColorFactor.y);
@@ -117,9 +118,6 @@ namespace Gino
 			}
 		}
 
-
-
-		// Grab PBR materials
 		
 
 
@@ -234,7 +232,7 @@ namespace Gino
 		else
 		{
 			auto mtl = scene->mMaterials[mesh->mMaterialIndex];
-			aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath;
+			aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath, emissionPath;
 
 			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &albedoPath);
 
@@ -245,7 +243,7 @@ namespace Gino
 			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
 			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
 			mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
-
+			mtl->GetTexture(aiTextureType_EMISSIVE, 0, &emissionPath);
 
 			aiString paths[aiTextureType_UNKNOWN];
 			for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
@@ -259,6 +257,7 @@ namespace Gino
 			matPaths.normal = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
 			matPaths.metallicAndRoughness = (metallicPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicPath.C_Str()));
 			matPaths.ao = (aoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + aoPath.C_Str()));
+			matPaths.emission = (emissionPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + emissionPath.C_Str()));
 
 			mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 0, matPaths.baseColorFactor.x);
 			mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 1, matPaths.baseColorFactor.y);

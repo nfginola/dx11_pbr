@@ -290,10 +290,11 @@ namespace Gino
 						materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
 						materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
 						materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
-						materials[i].GetProperties<PBRMaterialData>().ao->GetSRV()
+						materials[i].GetProperties<PBRMaterialData>().ao->GetSRV(),
+						materials[i].GetProperties<PBRMaterialData>().emission->GetSRV()
 					};
 
-					ctx->PSSetShaderResources(0, 4, srvs);
+					ctx->PSSetShaderResources(0, 5, srvs);
 				}
 				else if (matType == MaterialType::Phong)
 				{
