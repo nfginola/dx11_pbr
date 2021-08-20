@@ -24,8 +24,7 @@ namespace Gino
 	{
 		Texture* albedo = nullptr;
 		Texture* normal = nullptr;
-		Texture* metallic = nullptr;
-		Texture* roughness = nullptr;
+		Texture* metallicAndRoughness = nullptr;
 		Texture* ao = nullptr;
 
 		// Other misc. data can be stored here too

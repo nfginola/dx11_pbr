@@ -160,6 +160,7 @@ namespace Gino
 	
 	float metallic = 0.f;
 	float roughness = 0.f;
+	float color[3] = { 1.f, 0.f, 0.f };
 	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
@@ -168,6 +169,7 @@ namespace Gino
 
 
 		ImGui::Begin("PBR");
+		ImGui::SliderFloat3("Color", color, 0.f, 1.f);
 		ImGui::SliderFloat("Metallic", &metallic, 0.f, 1.f);
 		ImGui::SliderFloat("Roughness", &roughness, 0.f, 1.f);
 
@@ -177,7 +179,7 @@ namespace Gino
 		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
 		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
-		m_cbPerFrame.data.g_color = { 0.f, 1.f, 0.f, 1.f };
+		m_cbPerFrame.data.g_color = { color[0], color[1], color[2], 1.f };
 		m_cbPerFrame.data.g_ao = 0.f;
 		m_cbPerFrame.data.g_metallic = metallic;
 		m_cbPerFrame.data.g_roughness = roughness;
@@ -204,10 +206,10 @@ namespace Gino
 		D3D11_MAPPED_SUBRESOURCE plMapped;
 		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
 		auto light = (SB_PointLight*)plMapped.pData;
-		light[0] = { .position = { 2.f, 2.f, 0.f, 1.f }, .color = { 250.f, 250.f, 250.f, 1.f } };
-		light[1] = { .position = { -2.f, 2.f, 0.f, 1.f }, .color = { 0.f, 1.f, 0.f, 1.f } };
-		light[2] = { .position = { 2.f, 2.f, 2.f, 1.f }, .color = { 0.f, 0.f, 1.f, 1.f } };
-		light[3] = { .position = { 2.f, 2.f, -2.f, 1.f }, .color = { 1.f, 0.f, 1.f, 1.f } };
+		light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 900.f, 900.f, 900.f, 1.f } };
+		light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 900.f, 0.f, 1.f } };
+		light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 900.f, 1.f } };
+		light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 900.f, 0.f, 900.f, 1.f } };
 		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
 
 		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
@@ -272,15 +274,28 @@ namespace Gino
 				
 				*/
 
-				// Bind material
+
+
+				// Bind material (Phong)
+				//ID3D11ShaderResourceView* srvs[] =
+				//{
+				//	materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
+				//	materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
+				//	materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
+				//	materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
+				//};
+
+				// Bind material (PBR)
 				ID3D11ShaderResourceView* srvs[] =
 				{
-					materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV() ,
-					materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
-					materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
-					materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
+					materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
+					materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
+					materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
+					materials[i].GetProperties<PBRMaterialData>().ao->GetSRV()
 				};
+
 				ctx->PSSetShaderResources(0, 4, srvs);
+
 				ctx->DrawIndexedInstanced(meshes[i].numIndices, (uint32_t)instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 
 				//// no instancing

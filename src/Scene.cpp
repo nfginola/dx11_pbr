@@ -10,34 +10,39 @@ namespace Gino
 	{
 		m_engine->SetScene(this);
 
-		m_engine->CreateModel("sponza", "../assets/Models/Sponza_new/sponza.obj");
-		m_engine->CreateModel("nanosuit", "../assets/Models/nanosuit/nanosuit.obj");
-		auto e = CreateEntity("Entity1");
-		auto e2 = CreateEntity("Entity2");
+		m_engine->CreateModel("sponza", "../assets/Models/Sponza_gltf/glTF/Sponza.gltf", true);
 
+		auto e = CreateEntity("Entity1");
 		e->AddComponent<ModelType>(m_engine->GetModel("sponza"));
 		e->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
 
-		e2->AddComponent<ModelType>(m_engine->GetModel("sponza"));
-		e2->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
-		e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
+		////m_engine->CreateModel("sponza", "../assets/Models/Sponza_new/sponza.fbx");
+		//m_engine->CreateModel("nanosuit", "../assets/Models/nanosuit/nanosuit.obj");
+		//auto e2 = CreateEntity("Entity2");
 
-		int counter = 0;
-		for (int x = -7; x < 7; ++x)
-		{
-			for (int z = -5; z < 5; ++z)
-			{
-				auto newE = CreateEntity("ent" + std::to_string((counter++)));
-				newE->AddComponent<ModelType>(m_engine->GetModel("nanosuit"));
-				newE->GetComponent<TransformType>()->m_position = { (float)x * 3.f, 0.f, (float)z + 6.f };
-			}
-		}
 
-		auto sphere = CreateEntity("pbrSphere");
-		m_engine->CreateModel("pbrSphere", "../assets/Models/sphere/Sphere.obj");
-		sphere->AddComponent<ModelType>(m_engine->GetModel("pbrSphere"));
-		sphere->GetComponent<TransformType>()->m_position = { -4.f, -4.f, 5.f };
-		sphere->GetComponent<TransformType>()->m_scaling = { 0.05f, 0.05f, 0.05f };
+
+		//e2->AddComponent<ModelType>(m_engine->GetModel("sponza"));
+		//e2->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
+		//e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
+
+		//int counter = 0;
+		//for (int x = -7; x < 7; ++x)
+		//{
+		//	for (int z = -5; z < 5; ++z)
+		//	{
+		//		auto newE = CreateEntity("ent" + std::to_string((counter++)));
+		//		newE->AddComponent<ModelType>(m_engine->GetModel("nanosuit"));
+		//		newE->GetComponent<TransformType>()->m_position = { (float)x * 8.f, 0.f, (float)z * 3.f + 5.f };
+		//	}
+		//}
+
+		//auto sphere = CreateEntity("pbrSphere");
+		//m_engine->CreateModel("pbrSphere", "../assets/Models/sphere/Sphere.obj");
+		//sphere->AddComponent<ModelType>(m_engine->GetModel("pbrSphere"));
+		//sphere->GetComponent<TransformType>()->m_position = { -4.f, -4.f, 5.f };
+		//sphere->GetComponent<TransformType>()->m_scaling = { 0.05f, 0.05f, 0.05f };
+
 
 
 

@@ -85,11 +85,11 @@ float4 PSMain(PS_IN input) : SV_TARGET
     
     // Compare tonemapped (right) vs non-tonemapped (left)
     //if (input.uv.y >= 0.75f)
-    //    ldrColor = reinhard_jodie(hdrColor);
-    //else if (input.uv.y >= 0.50f)
-    //    ldrColor = reinhard(hdrColor);
-    //else if (input.uv.y >= 0.25f)
     //    ldrColor = aces_fitted(hdrColor);
+    //else if (input.uv.y >= 0.50f)
+    //    ldrColor = reinhard_jodie(hdrColor);
+    //else if (input.uv.y >= 0.25f)
+    //    ldrColor = reinhard(hdrColor);
     //else
     //    ldrColor = hdrColor;
     
@@ -106,7 +106,8 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //ldrColor = hdrColor;
     
     // Gamma correction
-    ldrColor = pow(ldrColor, float3(1.f / GAMMA, 1.f / GAMMA, 1.f / GAMMA));
+    //ldrColor = pow(ldrColor, float3(1.f / GAMMA, 1.f / GAMMA, 1.f / GAMMA));
+    ldrColor = pow(ldrColor, (1.f / GAMMA).xxx);
     
     return float4(ldrColor, 1.f);
 }

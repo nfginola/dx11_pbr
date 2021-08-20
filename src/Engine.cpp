@@ -13,6 +13,7 @@
 
 #include "Scene.h"
 
+
 namespace Gino
 {
 	Engine::Engine(Settings& settings)
@@ -95,7 +96,7 @@ namespace Gino
 		}
 	}
 
-	Model* Engine::CreateModel(const std::string& id, const std::filesystem::path& filePath)
+	Model* Engine::CreateModel(const std::string& id, const std::filesystem::path& filePath, bool PBR)
 	{
 		auto it = m_loadedModels.find(id);
 		if (it != m_loadedModels.end())
@@ -104,7 +105,7 @@ namespace Gino
 			assert(false);
 		}
 
-		auto model = LoadModel(filePath);
+		auto model = LoadModel(filePath, PBR);
 		auto ret = model.get();
 		m_loadedModels.insert({ id, std::move(model) });
 		return ret;
@@ -140,14 +141,22 @@ namespace Gino
 		}
 	}
 
-	std::unique_ptr<Model> Engine::LoadModel(const std::filesystem::path& filePath)
+	std::unique_ptr<Model> Engine::LoadModel(const std::filesystem::path& filePath, bool PBR)
+	{
+		AssimpLoader loader(filePath, PBR);
+
+		if (!PBR)
+			return LoadPhongModel(loader);
+		else
+			return LoadPBRModel(loader);
+	}
+
+	std::unique_ptr<Model> Engine::LoadPhongModel(const AssimpLoader& loader)
 	{
 		static std::string defaultDiffuseFilePath = "../assets/Textures/Default/defaultdiffuse.jpg";
 		static std::string defaultSpecularFilePath = "../assets/Textures/Default/defaultspecular.jpg";
 		static std::string defaultOpacityFilePath = "../assets/Textures/Default/defaultopacity.jpg";
 		static std::string defaultNormalFilePath = "../assets/Textures/Default/defaultnormal.jpg";
-
-		AssimpLoader loader(filePath);
 
 		auto verts = loader.GetVertices();
 		auto indices = loader.GetIndices();
@@ -164,44 +173,18 @@ namespace Gino
 			Texture* opacity = nullptr;
 			Texture* normal = nullptr;
 
-			if (mat.diffuseFilePath.has_value())
-			{
-				diffuse = LoadTexture(mat.diffuseFilePath.value());
-			}
-			else
-			{
-				diffuse = LoadTexture(defaultDiffuseFilePath);
-			}
+			if (mat.diffuseFilePath.has_value())	diffuse = LoadTexture(mat.diffuseFilePath.value());
+			else									diffuse = LoadTexture(defaultDiffuseFilePath);
 
-			if (mat.normalFilePath.has_value())
-			{
-				normal = LoadTexture(mat.normalFilePath.value());
-			}
-			else
-			{
-				normal = LoadTexture(defaultNormalFilePath);
-			}
+			if (mat.normalFilePath.has_value())		normal = LoadTexture(mat.normalFilePath.value());
+			else									normal = LoadTexture(defaultNormalFilePath);
 
-			if (mat.opacityFilePath.has_value())
-			{
-				opacity = LoadTexture(mat.opacityFilePath.value());
-			}
-			else
-			{
-				opacity = LoadTexture(defaultOpacityFilePath);
-			}
+			if (mat.opacityFilePath.has_value())	opacity = LoadTexture(mat.opacityFilePath.value());
+			else									opacity = LoadTexture(defaultOpacityFilePath);
 
-			if (mat.specularFilePath.has_value())
-			{
-				specular = LoadTexture(mat.specularFilePath.value());
-			}
-			else
-			{
-				specular = LoadTexture(defaultSpecularFilePath);
-			}
-			
+			if (mat.specularFilePath.has_value())	specular = LoadTexture(mat.specularFilePath.value());
+			else									specular = LoadTexture(defaultSpecularFilePath);
 		}
-
 
 		// Transform verts data into our specified input layout
 		std::vector<Vertex_POS_UV_NORMAL> vertsIn;
@@ -224,7 +207,7 @@ namespace Gino
 
 		Buffer vb;
 		Buffer ib;
-		vb.Initialize(m_dxDev->GetDevice(), VertexBufferDesc<Vertex_POS_UV_NORMAL>{ .data = vertsIn });
+		vb.Initialize(m_dxDev->GetDevice(), VertexBufferDesc<Vertex_POS_UV_NORMAL>{.data = vertsIn });
 		ib.Initialize(m_dxDev->GetDevice(), IndexBufferDesc{ .data = indices });
 
 		// Setup meshes
@@ -239,10 +222,12 @@ namespace Gino
 				.vertexOffset = subset.vertexStart
 			};
 
-			std::string diffLook = subset.diffuseFilePath.has_value() ? subset.diffuseFilePath.value() : defaultDiffuseFilePath;
-			std::string specLook = subset.specularFilePath.has_value() ? subset.specularFilePath.value() : defaultSpecularFilePath;
-			std::string opacityLook = subset.opacityFilePath.has_value() ? subset.opacityFilePath.value() : defaultOpacityFilePath;
-			std::string normalLook = subset.normalFilePath.has_value() ? subset.normalFilePath.value() : defaultNormalFilePath;
+			auto phongMat = std::get<0>(subset.mats);
+
+			std::string diffLook = phongMat.diffuseFilePath.has_value() ? phongMat.diffuseFilePath.value() : defaultDiffuseFilePath;
+			std::string specLook = phongMat.specularFilePath.has_value() ? phongMat.specularFilePath.value() : defaultSpecularFilePath;
+			std::string opacityLook = phongMat.opacityFilePath.has_value() ? phongMat.opacityFilePath.value() : defaultOpacityFilePath;
+			std::string normalLook = phongMat.normalFilePath.has_value() ? phongMat.normalFilePath.value() : defaultNormalFilePath;
 
 			// Create material for this submesh to use
 			Material mat;
@@ -253,7 +238,103 @@ namespace Gino
 					.opacity = m_loadedTextures.find(opacityLook)->second.get(),
 					.normal = m_loadedTextures.find(normalLook)->second.get()
 				});
-			
+
+			materialsAndMeshes.push_back({ mesh, mat });
+		}
+
+		auto model = std::make_unique<Model>();
+		model->Initialize(vb, ib, materialsAndMeshes);
+		return model;
+	}
+
+	std::unique_ptr<Model> Engine::LoadPBRModel(const AssimpLoader& loader)
+	{
+		static std::string defaultDiffuseFilePath = "../assets/Textures/Default/defaultdiffuse.jpg";
+		static std::string defaultSpecularFilePath = "../assets/Textures/Default/defaultspecular.jpg";
+		static std::string defaultOpacityFilePath = "../assets/Textures/Default/defaultopacity.jpg";
+		static std::string defaultNormalFilePath = "../assets/Textures/Default/defaultnormal.jpg";
+
+		auto verts = loader.GetVertices();
+		auto indices = loader.GetIndices();
+		auto subsets = loader.GetSubsets();
+		auto mats = loader.GetMaterialsPBR();
+
+		//const std::string directory = filePath.parent_path().string() + "/";
+
+		// Load textures
+		for (auto& mat : mats)
+		{
+			Texture* albedo = nullptr;
+			Texture* normal = nullptr;
+			Texture* metallicAndRoughness = nullptr;
+			Texture* ao = nullptr;
+
+			if (mat.albedo.has_value())					albedo = LoadTexture(mat.albedo.value());
+			else										albedo = LoadTexture(defaultDiffuseFilePath);				// Should be changed
+
+			if (mat.normal.has_value())					normal = LoadTexture(mat.normal.value());
+			else										normal = LoadTexture(defaultNormalFilePath);
+
+			if (mat.metallicAndRoughness.has_value())	metallicAndRoughness = LoadTexture(mat.metallicAndRoughness.value());
+			else										metallicAndRoughness = LoadTexture(defaultSpecularFilePath);			// full black, rough/metal = (0, 0)
+
+			if (mat.ao.has_value())						ao = LoadTexture(mat.ao.value());
+			else										ao = LoadTexture(defaultSpecularFilePath);
+		}
+
+		// Transform verts data into our specified input layout
+		std::vector<Vertex_POS_UV_NORMAL> vertsIn;
+		vertsIn.reserve(verts.size());
+		for (const auto& vert : verts)
+		{
+			Vertex_POS_UV_NORMAL vertex;
+			vertex.pos.x = vert.position.x;
+			vertex.pos.y = vert.position.y;
+			vertex.pos.z = vert.position.z;
+
+			vertex.uv.x = vert.uv.x;
+			vertex.uv.y = vert.uv.y;
+
+			vertex.normal.x = vert.normal.x;
+			vertex.normal.y = vert.normal.y;
+			vertex.normal.z = vert.normal.z;
+			vertsIn.push_back(vertex);
+		}
+
+		Buffer vb;
+		Buffer ib;
+		vb.Initialize(m_dxDev->GetDevice(), VertexBufferDesc<Vertex_POS_UV_NORMAL>{.data = vertsIn });
+		ib.Initialize(m_dxDev->GetDevice(), IndexBufferDesc{ .data = indices });
+
+		// Setup meshes
+		std::vector<std::pair<Mesh, Material>> materialsAndMeshes;
+		materialsAndMeshes.reserve(subsets.size());
+		for (const auto& subset : subsets)
+		{
+			Mesh mesh
+			{
+				.numIndices = subset.indexCount,
+				.indicesFirstIndex = subset.indexStart,
+				.vertexOffset = subset.vertexStart
+			};
+
+			auto pbrMat = std::get<1>(subset.mats);
+
+			std::string albedoLook = pbrMat.albedo.has_value() ? pbrMat.albedo.value() : defaultDiffuseFilePath;
+			std::string normalLook = pbrMat.normal.has_value() ? pbrMat.normal.value() : defaultNormalFilePath;
+			std::string metallicAndRoughnessLook = pbrMat.metallicAndRoughness.has_value() ? pbrMat.metallicAndRoughness.value() : defaultSpecularFilePath;
+			std::string aoLook = pbrMat.ao.has_value() ? pbrMat.ao.value() : defaultSpecularFilePath;
+
+			// Create material for this submesh to use
+			Material mat;
+			mat.Initialize(PBRMaterialData
+				{
+					.albedo = m_loadedTextures.find(albedoLook)->second.get(),
+					.normal = m_loadedTextures.find(normalLook)->second.get(),
+					.metallicAndRoughness = m_loadedTextures.find(metallicAndRoughnessLook)->second.get(),
+					.ao = m_loadedTextures.find(aoLook)->second.get()
+				});
+
 			materialsAndMeshes.push_back({ mesh, mat });
 		}
 

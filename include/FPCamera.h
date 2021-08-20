@@ -60,7 +60,7 @@ namespace Gino
 		DirectX::SimpleMath::Vector3 m_localForward;
 
 		DirectX::SimpleMath::Vector3 m_moveDirectionThisFrame;
-		DirectX::SimpleMath::Vector3 m_worldPosition;
+		DirectX::SimpleMath::Vector4 m_worldPosition;
 
 		float m_camPitch;
 		float m_camYaw;

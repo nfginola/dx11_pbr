@@ -8,7 +8,7 @@ namespace Gino
 		m_localRight(s_worldRight),
 		m_localForward(s_worldForward),
 		m_moveDirectionThisFrame(0.f, 0.f, 0.f),
-		m_worldPosition(0.f, 2.f, 0.f),
+		m_worldPosition(0.f, 2.f, 0.f, 1.f),
 
 		m_camPitch(90.f),	// We want to be looking parallell to the XZ plane at first!
 		m_camYaw(0.f),
@@ -54,7 +54,9 @@ namespace Gino
 
 	void FPCamera::SetPosition(const DirectX::SimpleMath::Vector3& pos)
 	{
-		m_worldPosition = pos;
+		m_worldPosition.x = pos.x;
+		m_worldPosition.y = pos.y;
+		m_worldPosition.z = pos.z;
 	}
 
 	void FPCamera::SetMoveSpeed(float moveSpeed)
@@ -80,7 +82,7 @@ namespace Gino
 
 	const DirectX::SimpleMath::Vector4& FPCamera::GetPosition() const
 	{
-		return DirectX::SimpleMath::Vector4(m_worldPosition.x, m_worldPosition.y, m_worldPosition.z, 1.f);
+		return m_worldPosition;
 	}
 
 	void FPCamera::RotateCamera(const std::pair<int, int>& mouseDt)
@@ -144,7 +146,7 @@ namespace Gino
 		if (m_moveDirectionThisFrame.Length() >= DirectX::g_XMEpsilon[0])
 		{
 			m_moveDirectionThisFrame.Normalize();
-			m_worldPosition += m_moveDirectionThisFrame * m_moveSpeed * dt;
+			m_worldPosition += DirectX::SimpleMath::Vector4(m_moveDirectionThisFrame) * m_moveSpeed * dt;
 
 		}
 
@@ -152,12 +154,14 @@ namespace Gino
 		m_moveDirectionThisFrame = { 0.f, 0.f, 0.f };
 
 
+		m_worldPosition.w = 1.f;
+
 		// Debug print
 	/*	std::cout << "Yaw: " << m_camYaw << std::endl;
 		std::cout << "Local forward || X: " << m_localForward.x << ", Y: " << m_localForward.y << ", Z: " << m_localForward.z << std::endl;
 		std::cout << "Local right || X: " << m_localRight.x << ", Y: " << m_localRight.y << ", Z: " << m_localRight.z << std::endl << std::endl;*/
 		//std::cout << "Move direction || X: " << m_moveDirectionThisFrame.x << ", Y: " << m_moveDirectionThisFrame.y << ", Z: " << m_moveDirectionThisFrame.z << std::endl;
-
+		
 	}
 }
 

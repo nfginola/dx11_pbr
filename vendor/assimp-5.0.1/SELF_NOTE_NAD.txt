@@ -1,0 +1,1 @@
+If you want to build assimp again. Just download the latest release and build with CMake

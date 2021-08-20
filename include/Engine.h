@@ -43,7 +43,7 @@ namespace Gino
 		std::function<void(HWND, UINT, WPARAM, LPARAM)> GetImGuiHook() const;
 
 		// Creational functions
-		Model* CreateModel(const std::string& id, const std::filesystem::path& filePath);
+		Model* CreateModel(const std::string& id, const std::filesystem::path& filePath, bool PBR = false);
 		Model* GetModel(const std::string& id);
 
 
@@ -70,7 +70,10 @@ namespace Gino
 		*/
 
 		Texture* LoadTexture(const std::string& filePath);
-		std::unique_ptr<Model> LoadModel(const std::filesystem::path& filePath);
+		std::unique_ptr<Model> LoadModel(const std::filesystem::path& filePath, bool PBR);
+
+		std::unique_ptr<Model> LoadPhongModel(const AssimpLoader& loader);
+		std::unique_ptr<Model> LoadPBRModel(const AssimpLoader& loader);
 
 	private:
 		std::unique_ptr<DXDevice> m_dxDev;

@@ -4,8 +4,9 @@
 
 namespace Gino
 {
-	AssimpLoader::AssimpLoader(const std::filesystem::path& filePath) :
-		m_filePath(filePath)
+	AssimpLoader::AssimpLoader(const std::filesystem::path& filePath, bool PBR) :
+		m_filePath(filePath),
+		m_PBR(PBR)
 	{
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(
@@ -44,33 +45,88 @@ namespace Gino
 		m_subsets.reserve(scene->mNumMeshes);
 
 		// Grab materials
-		m_materials.reserve(scene->mNumMaterials);
-		for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
+
+		if (!PBR)
 		{
-			auto mtl = scene->mMaterials[i];
-			aiString diffPath, norPath, opacityPath, specularPath, bruh;
-			mtl->GetTexture(aiTextureType_DIFFUSE, 0, &diffPath);
+			m_materials.reserve(scene->mNumMaterials);
+			for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
+			{
+				auto mtl = scene->mMaterials[i];
+				aiString diffPath, norPath, opacityPath, specularPath, bruh;
+				mtl->GetTexture(aiTextureType_DIFFUSE, 0, &diffPath);
 
-			aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
-			if (norRet != aiReturn_SUCCESS)
-				mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
+				aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
+				if (norRet != aiReturn_SUCCESS)
+					mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
 
-			mtl->GetTexture(aiTextureType_OPACITY, 0, &opacityPath);
-			mtl->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
-			mtl->GetTexture(aiTextureType_UNKNOWN, 0, &bruh);
+				mtl->GetTexture(aiTextureType_OPACITY, 0, &opacityPath);
+				mtl->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
+				mtl->GetTexture(aiTextureType_UNKNOWN, 0, &bruh);
 
-			AssimpMaterialPaths matPaths;
-			matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
-			matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
-			matPaths.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
-			matPaths.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
-			m_materials.push_back(matPaths);
+
+				AssimpMaterialPaths matPaths;
+				matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
+				matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+				matPaths.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
+				matPaths.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
+				m_materials.push_back(matPaths);
+			}
 		}
+		else
+		{
+			// PBR
+			m_materialsPBR.reserve(scene->mNumMaterials);
+			for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
+			{
+				auto mtl = scene->mMaterials[i];
+				aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath;
+
+				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &albedoPath);
+
+				aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
+				if (norRet != aiReturn_SUCCESS)
+					mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
+
+				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
+				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
+				mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+
+
+
+				aiString paths[aiTextureType_UNKNOWN];
+				for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
+				{
+					mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
+				}
+
+
+				AssimpMaterialPathsPBR matPaths;
+				matPaths.albedo = (albedoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + albedoPath.C_Str()));
+				matPaths.normal = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+				matPaths.metallicAndRoughness = (metallicPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicPath.C_Str()));
+				matPaths.ao = (aoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + aoPath.C_Str()));
+				
+				mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 0, matPaths.baseColorFactor.x);
+				mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 1, matPaths.baseColorFactor.y);
+				mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 2, matPaths.baseColorFactor.z);
+
+				mtl->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, matPaths.metallicAndRoughnessFactor.x);
+				mtl->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, matPaths.metallicAndRoughnessFactor.y);
+
+				m_materialsPBR.push_back(matPaths);
+			}
+		}
+
+
+
+		// Grab PBR materials
+		
+
 
 
 		// Start processing
 		ProcessNode(scene->mRootNode, scene);
-	}
+ 	}
 
 	const std::vector<AssimpVertex>& AssimpLoader::GetVertices() const
 	{
@@ -87,9 +143,14 @@ namespace Gino
 		return m_subsets;
 	}
 
-	const std::vector<AssimpMaterialPaths> AssimpLoader::GetMaterials() const
+	const std::vector<AssimpMaterialPaths>& AssimpLoader::GetMaterials() const
 	{
 		return m_materials;
+	}
+
+	const std::vector<AssimpMaterialPathsPBR>& AssimpLoader::GetMaterialsPBR() const
+	{
+		return m_materialsPBR;
 	}
 
 	void AssimpLoader::ProcessMesh(aiMesh* mesh, const aiScene* scene)
@@ -134,35 +195,83 @@ namespace Gino
 
 		}
 
-
-		const std::string directory = m_filePath.parent_path().string() + "/";
-
-		// Get material
-		auto mtl = scene->mMaterials[mesh->mMaterialIndex];
-		aiString diffPath, norPath, opacityPath, specularPath;
-		mtl->GetTexture(aiTextureType_DIFFUSE, 0, &diffPath);
-
-		aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
-		if (norRet != aiReturn_SUCCESS)
-			mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
-
-		mtl->GetTexture(aiTextureType_OPACITY, 0, &opacityPath);
-		mtl->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
-
-		// Subset data
-		AssimpMeshSubset subsetData = { };
-		subsetData.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
-		subsetData.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
-		subsetData.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
-		subsetData.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
-
-
+		// Init subset (verts first
+		AssimpMeshSubset subsetData{};
 		subsetData.vertexStart = m_meshVertexCount;
 		m_meshVertexCount += mesh->mNumVertices;
 
 		subsetData.indexCount = indicesThisMesh;
 		subsetData.indexStart = m_meshIndexCount;
 		m_meshIndexCount += indicesThisMesh;
+
+
+		const std::string directory = m_filePath.parent_path().string() + "/";
+
+		// Get Phong Material
+		if (!m_PBR)
+		{
+			auto mtl = scene->mMaterials[mesh->mMaterialIndex];
+			aiString diffPath, norPath, opacityPath, specularPath;
+			mtl->GetTexture(aiTextureType_DIFFUSE, 0, &diffPath);
+
+			aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
+			if (norRet != aiReturn_SUCCESS)
+				mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
+
+			mtl->GetTexture(aiTextureType_OPACITY, 0, &opacityPath);
+			mtl->GetTexture(aiTextureType_SPECULAR, 0, &specularPath);
+
+			// Subset data
+			AssimpMeshSubset subsetData = { };
+			AssimpMaterialPaths matPaths;
+			matPaths.diffuseFilePath = (diffPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + diffPath.C_Str()));
+			matPaths.normalFilePath = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+			matPaths.opacityFilePath = (opacityPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + opacityPath.C_Str()));
+			matPaths.specularFilePath = (specularPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + specularPath.C_Str()));
+
+			subsetData.mats = matPaths;
+		}
+		// Get PBR material
+		else
+		{
+			auto mtl = scene->mMaterials[mesh->mMaterialIndex];
+			aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath;
+
+			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &albedoPath);
+
+			aiReturn norRet = mtl->GetTexture(aiTextureType_NORMALS, 0, &norPath);
+			if (norRet != aiReturn_SUCCESS)
+				mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
+
+			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
+			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
+			mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+
+
+			aiString paths[aiTextureType_UNKNOWN];
+			for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
+			{
+				mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
+			}
+
+
+			AssimpMaterialPathsPBR matPaths;
+			matPaths.albedo = (albedoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + albedoPath.C_Str()));
+			matPaths.normal = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
+			matPaths.metallicAndRoughness = (metallicPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicPath.C_Str()));
+			matPaths.ao = (aoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + aoPath.C_Str()));
+
+			mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 0, matPaths.baseColorFactor.x);
+			mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 1, matPaths.baseColorFactor.y);
+			mtl->Get("$mat.gltf.pbrMetallicRoughness.baseColorFactor", 0, 2, matPaths.baseColorFactor.z);
+
+			mtl->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLIC_FACTOR, matPaths.metallicAndRoughnessFactor.x);
+			mtl->Get(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_ROUGHNESS_FACTOR, matPaths.metallicAndRoughnessFactor.y);
+
+			subsetData.mats = matPaths;
+		}
+
+
 
 		m_subsets.push_back(subsetData);
 	}

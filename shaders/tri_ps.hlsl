@@ -13,10 +13,10 @@ struct SB_PointLight
 };
 
 
-Texture2D diffuseTex : register(t0);
-Texture2D specularTex : register(t1);
+Texture2D albedoTex : register(t0);
+Texture2D metallicAndRoughnessTex : register(t1);
 Texture2D normalTex : register(t2);
-Texture2D opacityTex : register(t3);
+Texture2D aoTex : register(t3);
 
 StructuredBuffer<SB_PointLight> pointLightList : register(t7);
 
@@ -56,11 +56,15 @@ float3 fresnelSchlick(float cosTheta, float3 F0);
 
 float4 PSMain(PS_IN input) : SV_TARGET
 {
-    float3 albedoInput = g_color;
-    float metallicInput = g_metallic;
-    float roughnessInput = g_roughness;
-    float aoInput = g_ao;
+    //float3 albedoInput = g_color;
+    //float metallicInput = g_metallic;
+    //float roughnessInput = g_roughness;
+    //float aoInput = g_ao;
     
+    float3 albedoInput = albedoTex.Sample(mainSampler, input.uv).xyz;
+    float metallicInput = metallicAndRoughnessTex.Sample(mainSampler, input.uv).b;
+    float roughnessInput = metallicAndRoughnessTex.Sample(mainSampler, input.uv).g;
+    float aoInput = aoTex.Sample(mainSampler, input.uv).r;
     
     //return float4(albedo, 1.f);
     
@@ -84,7 +88,7 @@ float4 PSMain(PS_IN input) : SV_TARGET
 	           
     // reflectance equation
     float3 Lo = float3(0.f, 0.f, 0.f);
-    for (int i = 0; i < 1; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         // calculate per-light radiance
         float3 L = normalize(pointLightList[i].position.xyz - worldPos);
