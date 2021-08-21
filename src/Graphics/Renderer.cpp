@@ -30,7 +30,7 @@ namespace Gino
 		// setup instancing buffer
 		D3D11_BUFFER_DESC instanceDesc
 		{
-			.ByteWidth = sizeof(DirectX::SimpleMath::Matrix) * MAX_INSTANCES,		// Support 1k instances in one go
+			.ByteWidth = sizeof(DirectX::SimpleMath::Matrix) * MAX_INSTANCES,		// Support MAX_INSTANCES in one go
 			.Usage = D3D11_USAGE_DYNAMIC,
 			.BindFlags = D3D11_BIND_VERTEX_BUFFER,
 			.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE
@@ -68,7 +68,8 @@ namespace Gino
 		// make sampler
 		D3D11_SAMPLER_DESC samplerDesc
 		{
-			.Filter = D3D11_FILTER_ANISOTROPIC,
+			//.Filter = D3D11_FILTER_ANISOTROPIC,
+			.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
 			.AddressU = D3D11_TEXTURE_ADDRESS_WRAP,
 			.AddressV = D3D11_TEXTURE_ADDRESS_WRAP,
 			.AddressW = D3D11_TEXTURE_ADDRESS_WRAP,
@@ -152,8 +153,7 @@ namespace Gino
 		HRCHECK(dev->CreateSamplerState(&pointSSDesc, m_pointSampler.GetAddressOf()));
 
 		// setup point light structued buffer
-		StructuredBufferDesc<SB_PointLight> sbDesc{ .elementCount = 6, .dynamic = true, .cpuWrite = true };
-		m_sbPointLights.Initialize(dev, sbDesc);
+		m_sbPointLights.Initialize(dev, StructuredBufferDesc<SB_PointLight>{.elementCount = 6, .dynamic = true, .cpuWrite = true});
 	}
 
 	Renderer::~Renderer()
@@ -170,31 +170,22 @@ namespace Gino
 		m_opaqueModels = models;
 	}
 	
-	float metallic = 0.f;
-	float roughness = 0.f;
-	float color[3] = { 1.f, 0.f, 0.f };
+	static bool norMapOn = true;
 	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
 		m_imGui->BeginFrame();
 
-
-		ImGui::Begin("PBR");
-		ImGui::SliderFloat3("Color", color, 0.f, 1.f);
-		ImGui::SliderFloat("Metallic", &metallic, 0.f, 1.f);
-		ImGui::SliderFloat("Roughness", &roughness, 0.f, 1.f);
-
+		ImGui::Begin("Normal Map");
+		ImGui::Checkbox("On", &norMapOn);
 		ImGui::End();
 
 
 		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
 		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
-		m_cbPerFrame.data.g_color = { color[0], color[1], color[2], 1.f };
-		m_cbPerFrame.data.g_ao = 0.f;
-		m_cbPerFrame.data.g_metallic = metallic;
-		m_cbPerFrame.data.g_roughness = roughness;
+		m_cbPerFrame.data.normalMapOn = norMapOn;
 		m_cbPerFrame.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
 		ctx->PSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
@@ -225,12 +216,11 @@ namespace Gino
 		light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 0.f, 1200.f, 1200.f, 1.f } };
 		light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 0.f, 0.f, 1.f } };
 		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
-
 		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
 
 
-		ID3D11SamplerState* samplers[] = { m_mainSampler.Get() };
-		ctx->PSSetSamplers(0, 1, samplers);
+		ID3D11SamplerState* samplers[] = { m_mainSampler.Get(), m_pointSampler.Get() };
+		ctx->PSSetSamplers(0, _countof(samplers), samplers);
 
 		// Render to texture
 		m_renderFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
@@ -294,7 +284,7 @@ namespace Gino
 						materials[i].GetProperties<PBRMaterialData>().emission->GetSRV()
 					};
 
-					ctx->PSSetShaderResources(0, 5, srvs);
+					ctx->PSSetShaderResources(0, _countof(srvs), srvs);
 				}
 				else if (matType == MaterialType::Phong)
 				{
@@ -306,7 +296,7 @@ namespace Gino
 						materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
 					};
 
-					ctx->PSSetShaderResources(0, 4, srvs);
+					ctx->PSSetShaderResources(0, _countof(srvs), srvs);
 				}
 
 

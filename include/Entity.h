@@ -8,11 +8,11 @@ namespace Gino
 	static constexpr int MAX_COMPONENTS = 16;
 
 	// Map component type to real types with some metadata for Entity usage
-	template <ComponentType>
+	template <ComponentType T>
 	struct ComponentMapper;
 
 	template <>
-	struct ComponentMapper<ComponentType::TransformType> 
+	struct ComponentMapper<ComponentType::TransformType>
 	{ 
 		using type = Transform; 
 		static constexpr uint32_t bit = ComponentType::TransformType;
@@ -20,12 +20,14 @@ namespace Gino
 	};
 
 	template <>
-	struct ComponentMapper<ComponentType::ModelType> 
+	struct ComponentMapper<ComponentType::ModelType>
 	{ 
 		using type = Model; 
 		static constexpr uint32_t bit = ComponentType::ModelType;
 		static constexpr int index = bit - 1;
 	};
+
+
 
 	class Entity
 	{

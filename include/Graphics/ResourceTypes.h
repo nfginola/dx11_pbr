@@ -14,6 +14,8 @@ namespace Gino
 		DirectX::SimpleMath::Vector3 pos;
 		DirectX::SimpleMath::Vector2 uv;
 		DirectX::SimpleMath::Vector3 normal;
+		DirectX::SimpleMath::Vector3 tangent;
+		DirectX::SimpleMath::Vector3 bitangent;
 
 		static std::vector<D3D11_INPUT_ELEMENT_DESC> GetElementDescriptors();
 	};

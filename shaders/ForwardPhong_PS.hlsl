@@ -4,6 +4,9 @@ struct PS_IN
 	float2 uv : TEXCOORD;
 	float3 normal : NORMAL;
     float3 worldPos : WORLDPOS;
+    
+    float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 };
 
 struct SB_PointLight

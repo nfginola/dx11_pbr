@@ -4,6 +4,9 @@ struct PS_IN
 	float2 uv : TEXCOORD;
 	float3 normal : NORMAL;
     float3 worldPos : WORLDPOS;
+    
+    float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 };
 
 struct SB_PointLight
@@ -22,6 +25,7 @@ Texture2D emissionTex : register(t4);
 StructuredBuffer<SB_PointLight> pointLightList : register(t7);
 
 SamplerState mainSampler : register(s0);
+SamplerState pointSampler : register(s1);
 
 cbuffer CB_PerFrame : register(b0)      // To retrive the camera position
 {
@@ -30,30 +34,18 @@ cbuffer CB_PerFrame : register(b0)      // To retrive the camera position
     float4 cameraPosition;
     
     // Temp
-    float3 g_color;
-    float g_metallic;
-    float g_roughness;
-    float g_ao;
+    bool normalMapOn;
 }
 
-
-// Hardcoded PBR stuff below
 const static float PI = 3.1415f;
-//const static float3 albedoInput = float3(1.f, 0.f, 0.f);
-//const static float metallicInput = 0.5f;
-//const static float roughnessInput = 0.5f;
-//const static float aoInput = 0.f;
 
+float3 GetFinalNormal(float3 tangent, float3 bitangent, float3 inputNormal, float2 uv);
 
+// PBR Functions
 float DistributionGGX(float3 N, float3 H, float roughness);
 float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness);
 float3 fresnelSchlick(float cosTheta, float3 F0);
-
-
-
-
-
 
 float4 PSMain(PS_IN input) : SV_TARGET
 {
@@ -70,15 +62,13 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //return float4(albedo, 1.f);
     
     // Grab relevant data
-    float3 normal = normalize(input.normal);        // We should fix normal mapping
+    //float3 normal = normalize(input.normal);        // We should fix normal mapping
+    float3 normal = normalize(GetFinalNormal(normalize(input.tangent), normalize(input.bitangent), normalize(input.normal), input.uv));
     float3 worldPos = input.worldPos;
-    //float3 camPos = -view._14_24_34_44.xyz;
     float3 camPos = cameraPosition.xyz;
-    
     
     //return float4(normal, 1.f);
     
-    //return float4(camPos, 1.f);
     
   
     float3 N = normalize(normal);
@@ -161,27 +151,29 @@ float4 PSMain(PS_IN input) : SV_TARGET
     return float4(color, 1.0);
 }
 
-
-
-
-// Old PS
-//float4 PSMain(PS_IN input) : SV_TARGET
-//{
-//    //float3 color = mainTex.Sample(mainSampler, input.uv).xyz;
-//    //float3 color = diffuseTex.SampleLevel(mainSampler, input.uv, mipLevel).xyz; // Note that the sampler must an unlocked maxLOD
-//    //float3 color = normalize(input.normal);
-//    float3 color = diffuseTex.Sample(mainSampler, input.uv).xyz;
+float3 GetFinalNormal(float3 tangent, float3 bitangent, float3 inputNormal, float2 uv)
+{
+    float3 tanSpaceNor = normalTex.Sample(mainSampler, uv).xyz;
     
+    // If no normal map --> Use default input normal
+    if (length(tanSpaceNor) <= 0.005f)  // epsilon: 0.005f
+        return inputNormal;
     
- 
+    float3x3 tbn = float3x3(tangent, bitangent, inputNormal);       // matrix to orient our tangent space normal with
+    tbn = transpose(tbn);
     
+    // Normal map is in [0, 1] space so we need to transform it to [-1, 1] space
+    float3 mappedSpaceNor = normalize(tanSpaceNor * 2.f - 1.f);
     
+    // Orient the tangent space correctly in world space
+    float3 mapNorWorld = normalize(mul(tbn, mappedSpaceNor));
     
-    
-//    return float4(color, 1.f);
-//}
-
-
+    // Toggle normal map use
+    if (normalMapOn)
+        return mapNorWorld;
+    else
+        return inputNormal;
+}
 
 
 float DistributionGGX(float3 N, float3 H, float roughness)
@@ -208,6 +200,7 @@ float GeometrySchlickGGX(float NdotV, float roughness)
 	
     return num / denom;
 }
+
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);

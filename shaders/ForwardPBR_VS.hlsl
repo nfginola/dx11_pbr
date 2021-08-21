@@ -3,6 +3,8 @@ struct VS_INPUT
 	float3 pos : POSITION;
 	float2 uv : TEXCOORD;
 	float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 	
     float4 wm_row0 : INSTANCE_WM_ROW0;
     float4 wm_row1 : INSTANCE_WM_ROW1;
@@ -17,6 +19,9 @@ struct VS_OUT
 	float2 uv : TEXCOORD;
 	float3 normal : NORMAL;
     float3 worldPos : WORLDPOS;
+    
+    float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
 };
 
 cbuffer CB_PerFrame : register(b0)
@@ -24,6 +29,7 @@ cbuffer CB_PerFrame : register(b0)
     matrix view;
     matrix projection;
     float3 cameraPosition;
+    
 }
 
 cbuffer CB_PerObject : register(b1)
@@ -46,8 +52,12 @@ VS_OUT VSMain(VS_INPUT input)
     output.pos = mul(projection, mul(view, float4(output.worldPos, 1.f)));
     //output.pos = mul(projection, mul(view, mul(float4(input.pos, 1.f), worldMat)));
     //output.normal = input.normal;
-    output.normal = mul(worldMat, float4(input.normal, 0.f)).xyz;
+    output.normal = normalize(mul(worldMat, float4(input.normal, 0.f)).xyz);
+    output.tangent = normalize(mul(worldMat, float4(input.tangent, 0.f)).xyz);
+    output.bitangent = normalize(mul(worldMat, float4(input.bitangent, 0.f)).xyz);
     output.uv = input.uv;
+    
+    
 	
 	return output;
 }

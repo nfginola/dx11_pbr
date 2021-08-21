@@ -69,7 +69,7 @@ namespace Gino
 		
 		*/
 
-		Texture* LoadTexture(const std::string& filePath);
+		Texture* LoadTexture(const std::string& filePath, bool srgb = true);
 		std::unique_ptr<Model> LoadModel(const std::filesystem::path& filePath, bool PBR);
 
 		std::unique_ptr<Model> LoadPhongModel(const AssimpLoader& loader);

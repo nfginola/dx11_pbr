@@ -3,6 +3,7 @@
 #include <SimpleMath.h>
 #include <array>
 
+
 namespace Gino
 {
 	// Enum starts at 1! This affecs indexing and others

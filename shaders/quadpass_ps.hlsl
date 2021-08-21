@@ -80,6 +80,8 @@ float4 PSMain(PS_IN input) : SV_TARGET
     float3 hdrColor = renderTexture.Sample(mainSampler, input.uv).xyz;
     float3 ldrColor;
     
+    //return float4(hdrColor, 1.f);
+    
     // Reinhard tonemapping (HDR to LDR mapping)
     //ldrColor = hdrColor / (hdrColor + float3(1.f, 1.f, 1.f));
     

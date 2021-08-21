@@ -124,12 +124,12 @@ namespace Gino
 	}
 
 
-	Texture* Engine::LoadTexture(const std::string& filePath)
+	Texture* Engine::LoadTexture(const std::string& filePath, bool srgb)
 	{
 		if (m_loadedTextures.find(filePath) == m_loadedTextures.end())
 		{
 			auto text = std::make_unique<Texture>();
-			text->InitializeFromFile(m_dxDev->GetDevice(), m_dxDev->GetContext(), filePath);
+			text->InitializeFromFile(m_dxDev->GetDevice(), m_dxDev->GetContext(), filePath, srgb);
 			auto pair = m_loadedTextures.insert({ filePath, std::move(text) });
 			
 			return pair.first->second.get();
@@ -179,7 +179,7 @@ namespace Gino
 				diffuse = LoadTexture(defaultDiffuseFilePath);
 
 			if (mat.normalFilePath.has_value())		
-				normal = LoadTexture(mat.normalFilePath.value());
+				normal = LoadTexture(mat.normalFilePath.value(), false);
 			else									
 				normal = LoadTexture(defaultNormalFilePath);
 
@@ -210,6 +210,15 @@ namespace Gino
 			vertex.normal.x = vert.normal.x;
 			vertex.normal.y = vert.normal.y;
 			vertex.normal.z = vert.normal.z;
+
+			vertex.tangent.x = vert.tangent.x;
+			vertex.tangent.y = vert.tangent.y;
+			vertex.tangent.z = vert.tangent.z;
+
+			vertex.bitangent.x = vert.bitangent.x;
+			vertex.bitangent.y = vert.bitangent.y;
+			vertex.bitangent.z = vert.bitangent.z;
+
 			vertsIn.push_back(vertex);
 		}
 
@@ -281,7 +290,7 @@ namespace Gino
 			if (mat.albedo.has_value())					albedo = LoadTexture(mat.albedo.value());
 			else										albedo = LoadTexture(defaultDiffuseFilePath);				// Should be changed
 
-			if (mat.normal.has_value())					normal = LoadTexture(mat.normal.value());
+			if (mat.normal.has_value())					normal = LoadTexture(mat.normal.value(), false);
 			else										normal = LoadTexture(defaultNormalFilePath);
 
 			if (mat.metallicAndRoughness.has_value())	metallicAndRoughness = LoadTexture(mat.metallicAndRoughness.value());
@@ -310,6 +319,15 @@ namespace Gino
 			vertex.normal.x = vert.normal.x;
 			vertex.normal.y = vert.normal.y;
 			vertex.normal.z = vert.normal.z;
+
+			vertex.tangent.x = vert.tangent.x;
+			vertex.tangent.y = vert.tangent.y;
+			vertex.tangent.z = vert.tangent.z;
+
+			vertex.bitangent.x = vert.bitangent.x;
+			vertex.bitangent.y = vert.bitangent.y;
+			vertex.bitangent.z = vert.bitangent.z;
+
 			vertsIn.push_back(vertex);
 		}
 
