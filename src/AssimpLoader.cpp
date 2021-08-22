@@ -89,7 +89,8 @@ namespace Gino
 
 				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
 				mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
-				mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+				//mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+				mtl->GetTexture(aiTextureType_LIGHTMAP, 0, &aoPath);
 				mtl->GetTexture(aiTextureType_EMISSIVE, 0, &emissionPath);
 
 
@@ -241,7 +242,8 @@ namespace Gino
 				mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
 
 			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicAndRoughnessPath);
-			mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+		//	mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
+			mtl->GetTexture(aiTextureType_LIGHTMAP, 0, &aoPath);
 			mtl->GetTexture(aiTextureType_EMISSIVE, 0, &emissionPath);
 
 			// Test

@@ -60,7 +60,8 @@ namespace Gino
 			DirectX::SimpleMath::Matrix view;
 			DirectX::SimpleMath::Matrix projection;
 			DirectX::SimpleMath::Vector4 cameraPosition;
-			bool normalMapOn = true;
+			float normalMapOn = 1.f;
+			float aoTexOn = 1.f;
 
 		};
 

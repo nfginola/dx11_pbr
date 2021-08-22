@@ -302,7 +302,7 @@ namespace Gino
 			if (mat.metallicAndRoughness.has_value())	metallicAndRoughness = LoadTexture(mat.metallicAndRoughness.value());
 			else										metallicAndRoughness = LoadTexture(defaultSpecularFilePath);			// full black, rough/metal = (0, 0)
 
-			if (mat.ao.has_value())						ao = LoadTexture(mat.ao.value());
+			if (mat.ao.has_value())						ao = LoadTexture(mat.ao.value(), false);
 			else										ao = LoadTexture(defaultSpecularFilePath);
 
 			if (mat.emission.has_value())				emission = LoadTexture(mat.emission.value());

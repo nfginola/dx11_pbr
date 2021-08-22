@@ -177,6 +177,7 @@ namespace Gino
 	}
 
 	static bool norMapOn = true;
+	static bool aoTexOn = true;
 	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
@@ -185,13 +186,15 @@ namespace Gino
 
 		ImGui::Begin("Settings");
 		ImGui::Checkbox("Normal Mapping", &norMapOn);
+		ImGui::Checkbox("AO Texture", &aoTexOn);
 		ImGui::End();
 
 
 		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
 		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
 		m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
-		m_cbPerFrame.data.normalMapOn = norMapOn;
+		m_cbPerFrame.data.normalMapOn = norMapOn ? 1.f : 0.f;
+		m_cbPerFrame.data.aoTexOn = aoTexOn ? 1.f : 0.f;
 		m_cbPerFrame.Upload(ctx);
 		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
 		ctx->PSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());

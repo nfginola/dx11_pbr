@@ -34,7 +34,8 @@ cbuffer CB_PerFrame : register(b0)      // To retrive the camera position
     float4 cameraPosition;
     
     // Temp
-    bool normalMapOn;
+    float normalMapOn;
+    float aoTexOn;
 }
 
 const static float PI = 3.1415f;
@@ -60,6 +61,7 @@ float4 PSMain(PS_IN input) : SV_TARGET
     float aoInput = aoTex.Sample(mainSampler, input.uv).r;
     
     //return float4(albedo, 1.f);
+    //return float4(aoInput.xxx, 1.f);
     
     // Grab relevant data
     //float3 normal = normalize(input.normal);        // We should fix normal mapping
@@ -138,8 +140,10 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //}
     
     
-    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedoInput * aoInput;
+    float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedoInput * aoInput * aoTexOn;
     float3 color = ambient + Lo;
+    
+    //return float4(ambient, 1.f);
 	
     color += emissionTex.Sample(mainSampler, input.uv).xyz;
     
@@ -168,10 +172,10 @@ float3 GetFinalNormal(float3 tangent, float3 bitangent, float3 inputNormal, floa
     float3 mapNorWorld = normalize(mul(tbn, mappedSpaceNor));
     
     // Toggle normal map use
-    if (normalMapOn)
-        return mapNorWorld;
-    else
+    if (normalMapOn <= 0.01f)
         return inputNormal;
+    else
+        return mapNorWorld;     // Normal map on
 }
 
 float DistributionGGX(float3 N, float3 H, float roughness)
