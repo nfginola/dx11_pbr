@@ -61,7 +61,7 @@ float4 PSMain(PS_IN input) : SV_TARGET
     float aoInput = aoTex.Sample(mainSampler, input.uv).r;
     
     //return float4(albedo, 1.f);
-    //return float4(aoInput.xxx, 1.f);
+    //return float4(roughnessInput.xxx, 1.f);
     
     // Grab relevant data
     //float3 normal = normalize(input.normal);        // We should fix normal mapping
@@ -151,6 +151,10 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //color = color / (color + vec3(1.0));
     //color = pow(color, float3(1.0 / 2.2));
    
+    // testing brightness (luma function) 
+    //float brightness = dot(color, float3(0.2126, 0.7152, 0.0722));
+    //return float4(brightness.xxx, 1.f);
+    
     return float4(color, 1.0);
 }
 
@@ -172,10 +176,12 @@ float3 GetFinalNormal(float3 tangent, float3 bitangent, float3 inputNormal, floa
     float3 mapNorWorld = normalize(mul(tbn, mappedSpaceNor));
     
     // Toggle normal map use
-    if (normalMapOn <= 0.01f)
-        return inputNormal;
-    else
-        return mapNorWorld;     // Normal map on
+    return mapNorWorld * normalMapOn + inputNormal * (1.f - normalMapOn);
+    
+    //if (normalMapOn <= 0.01f)
+    //    return inputNormal;
+    //else
+    //    return mapNorWorld;     // Normal map on
 }
 
 float DistributionGGX(float3 N, float3 H, float roughness)

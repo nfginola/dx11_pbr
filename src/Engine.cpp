@@ -294,12 +294,12 @@ namespace Gino
 			Texture* emission = nullptr;
 
 			if (mat.albedo.has_value())					albedo = LoadTexture(mat.albedo.value());
-			else										albedo = LoadTexture(defaultDiffuseFilePath);				// Should be changed
+			else										albedo = LoadTexture(defaultDiffuseFilePath);	
 
 			if (mat.normal.has_value())					normal = LoadTexture(mat.normal.value(), false);
 			else										normal = LoadTexture(defaultNormalFilePath);
 
-			if (mat.metallicAndRoughness.has_value())	metallicAndRoughness = LoadTexture(mat.metallicAndRoughness.value());
+			if (mat.metallicAndRoughness.has_value())	metallicAndRoughness = LoadTexture(mat.metallicAndRoughness.value(), false);
 			else										metallicAndRoughness = LoadTexture(defaultSpecularFilePath);			// full black, rough/metal = (0, 0)
 
 			if (mat.ao.has_value())						ao = LoadTexture(mat.ao.value(), false);

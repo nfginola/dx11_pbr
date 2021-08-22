@@ -219,6 +219,15 @@ namespace Gino
 		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
 		auto light = (SB_PointLight*)plMapped.pData;
 		light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+
+		// whites
+		//light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+		//light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+		//light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+		//light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+		//light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+
+		// non whites
 		light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 1200.f, 0.f, 1.f } };
 		light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 1200.f, 1.f } };
 		light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 0.f, 1200.f, 1.f } };

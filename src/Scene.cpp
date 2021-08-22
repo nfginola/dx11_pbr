@@ -29,7 +29,7 @@ namespace Gino
 
 		auto e3 = CreateEntity("Entity3");
 		e3->AddComponent<ModelType>(m_engine->GetModel("helmet"));
-		e3->GetComponent<TransformType>()->m_position = { 0.f, 10.f, 0.f };
+		e3->GetComponent<TransformType>()->m_position = { 50.f, 50.f, 0.f };
 		e3->GetComponent<TransformType>()->m_scaling = { 4.f, 4.f, 4.f };
 		e3->GetComponent<TransformType>()->m_rotation = { -90.f, 0.f, 0.f };
 
