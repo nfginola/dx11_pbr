@@ -1,2 +1,3 @@
 # GinoEngine
-Renderer using Win32 and Direct3D11
+  
+A toy renderer in DirectX 11 for exploring graphics techniques

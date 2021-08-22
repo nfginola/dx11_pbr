@@ -13,6 +13,7 @@
 
 #include "Scene.h"
 
+#include "Timer.h"
 
 namespace Gino
 {
@@ -60,9 +61,15 @@ namespace Gino
 		// Finalize camera changes for this frame
 		m_fpCam->Update(dt);
 
-		m_scene->Update(dt);
+		m_renderer->BeginFrame();
 
+		ImGui::Begin("Frame Statistics");
+		ImGui::Text("Total Engine CPU %s ms", std::to_string(dt).c_str());
+		ImGui::End();
+
+		m_scene->Update(dt);
 		m_renderer->Render();
+		m_renderer->EndFrame();
 
 		/*
 		
@@ -122,7 +129,6 @@ namespace Gino
 
 		return (*it).second.get();
 	}
-
 
 	Texture* Engine::LoadTexture(const std::string& filePath, bool srgb)
 	{

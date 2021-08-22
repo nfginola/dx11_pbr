@@ -34,6 +34,9 @@ namespace Gino
 
 		*/
 
+		void BeginFrame();
+		void EndFrame();
+
 		void Render();				// Temporary model argument for testing purposes
 
 		/*

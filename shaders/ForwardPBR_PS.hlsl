@@ -77,10 +77,11 @@ float4 PSMain(PS_IN input) : SV_TARGET
     float3 F0 = float3(0.04f, 0.04f, 0.04f);
     F0 = lerp(F0, albedoInput, metallicInput);
 	           
-    // reflectance equation
     uint maxLightCount;
     uint stride;
     pointLightList.GetDimensions(maxLightCount, stride);
+    
+    // reflectance equation
     float3 Lo = float3(0.f, 0.f, 0.f);
     for (int i = 0; i < maxLightCount; ++i)
     {
@@ -96,6 +97,7 @@ float4 PSMain(PS_IN input) : SV_TARGET
         float G = GeometrySmith(N, V, L, roughnessInput);
         float3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
         
+        // energy conservation (diff/spec)
         float3 kS = F;
         float3 kD = float3(1.f, 1.f, 1.f) - kS;
         kD *= 1.0 - metallicInput;
@@ -107,8 +109,6 @@ float4 PSMain(PS_IN input) : SV_TARGET
         // add to outgoing radiance Lo
         float NdotL = max(dot(N, L), 0.0);
         Lo += (kD * albedoInput / PI + specular) * radiance * NdotL;
-        
-        //return float4(Lo, 1.f);
         
     }
     
@@ -138,13 +138,12 @@ float4 PSMain(PS_IN input) : SV_TARGET
     //}
     
     
-  
     float3 ambient = float3(0.03f, 0.03f, 0.03f) * albedoInput * aoInput;
     float3 color = ambient + Lo;
 	
     color += emissionTex.Sample(mainSampler, input.uv).xyz;
     
-    // No need for tonemapping and gamma correction, we do that on the subsequent fullscreen quad pass
+    // No need for tonemapping and gamma correction here, we do that on the subsequent fullscreen quad pass
     //color = color / (color + vec3(1.0));
     //color = pow(color, float3(1.0 / 2.2));
    
@@ -174,7 +173,6 @@ float3 GetFinalNormal(float3 tangent, float3 bitangent, float3 inputNormal, floa
     else
         return inputNormal;
 }
-
 
 float DistributionGGX(float3 N, float3 H, float roughness)
 {

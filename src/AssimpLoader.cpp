@@ -232,7 +232,7 @@ namespace Gino
 		else
 		{
 			auto mtl = scene->mMaterials[mesh->mMaterialIndex];
-			aiString albedoPath, norPath, metallicPath, roughnessPath, aoPath, emissionPath;
+			aiString albedoPath, norPath, metallicAndRoughnessPath, aoPath, emissionPath;
 
 			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE, &albedoPath);
 
@@ -240,22 +240,21 @@ namespace Gino
 			if (norRet != aiReturn_SUCCESS)
 				mtl->GetTexture(aiTextureType_HEIGHT, 0, &norPath);
 
-			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicPath);
-			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &roughnessPath);
+			mtl->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallicAndRoughnessPath);
 			mtl->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &aoPath);
 			mtl->GetTexture(aiTextureType_EMISSIVE, 0, &emissionPath);
 
-			aiString paths[aiTextureType_UNKNOWN];
-			for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
-			{
-				mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
-			}
-
+			// Test
+			//aiString paths[aiTextureType_UNKNOWN];
+			//for (int x = 0; x < aiTextureType_UNKNOWN; ++x)
+			//{
+			//	mtl->GetTexture((aiTextureType)(x + 1), 0, &paths[x]);
+			//}
 
 			AssimpMaterialPathsPBR matPaths;
 			matPaths.albedo = (albedoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + albedoPath.C_Str()));
 			matPaths.normal = (norPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + norPath.C_Str()));
-			matPaths.metallicAndRoughness = (metallicPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicPath.C_Str()));
+			matPaths.metallicAndRoughness = (metallicAndRoughnessPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + metallicAndRoughnessPath.C_Str()));
 			matPaths.ao = (aoPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + aoPath.C_Str()));
 			matPaths.emission = (emissionPath.length == 0) ? std::nullopt : std::optional<std::string>(std::string(directory + emissionPath.C_Str()));
 

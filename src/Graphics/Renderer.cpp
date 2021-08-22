@@ -170,15 +170,21 @@ namespace Gino
 		m_opaqueModels = models;
 	}
 	
+
+	void Renderer::BeginFrame()
+	{
+		m_imGui->BeginFrame();
+	}
+
 	static bool norMapOn = true;
 	void Renderer::Render()
 	{
 		assert(m_mainCamera != nullptr);	// A render camera is required!
 		auto ctx = m_dxDev->GetContext();
-		m_imGui->BeginFrame();
 
-		ImGui::Begin("Normal Map");
-		ImGui::Checkbox("On", &norMapOn);
+
+		ImGui::Begin("Settings");
+		ImGui::Checkbox("Normal Mapping", &norMapOn);
 		ImGui::End();
 
 
@@ -313,10 +319,8 @@ namespace Gino
 				//}
 			}
 		}
-		auto opaqueTime = opaquePassTimer.TimeElapsed();
-
 		ImGui::Begin("Frame Statistics");
-		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaqueTime * 1000.f).c_str());
+		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaquePassTimer.TimeElapsed() * 1000.f).c_str());
 		ImGui::End();
 
 
@@ -325,6 +329,7 @@ namespace Gino
 
 		// Render fullscreen quad pass
 		// Input --> Render texture to read from and framebuffer to render to
+		Timer quadPassTimer;
 		{
 			m_fullscreenQuadShaders.Bind(ctx);
 			m_finalFramebuffer.Clear(ctx);
@@ -345,6 +350,16 @@ namespace Gino
 			ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
 			ctx->PSSetShaderResources(0, 1, nullSRVs);
 		}
+		ImGui::Begin("Frame Statistics");
+		ImGui::Text("Quad Pass CPU %s ms", std::to_string(quadPassTimer.TimeElapsed() * 1000.f).c_str());
+		ImGui::End();
+
+
+	}
+
+	void Renderer::EndFrame()
+	{
+		auto ctx = m_dxDev->GetContext();
 
 		// Draw UI directly on swapchain (no post-process or anything applied on it)
 		m_imGui->EndFrame(ctx, m_finalFramebuffer);
