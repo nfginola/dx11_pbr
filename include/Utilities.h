@@ -16,6 +16,9 @@ namespace Gino::Utils
 		uint32_t imageSize;
 		unsigned char* pixels;
 
+		void Release();
+		
+		ImageData() = default;
 		ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight);
 		~ImageData();
 	};

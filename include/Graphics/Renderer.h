@@ -3,15 +3,15 @@
 #include "ShaderGroup.h"
 #include "ResourceTypes.h"
 
-// Sub-renderers
-#include "ImGuiRenderer.h"
-
 #include "Component.h"		// Needs to know Transform Component
 
 namespace Gino
 {
 	class FPCamera;
 	class Model;
+	
+	class ImGuiRenderer;
+	class SkyboxRenderer;
 
 	class Renderer
 	{
@@ -93,6 +93,7 @@ namespace Gino
 	// Render resources
 	private:
 		std::unique_ptr<ImGuiRenderer> m_imGui;
+		std::unique_ptr<SkyboxRenderer> m_skybox;
 
 		bool m_vsync;
 		DXDevice* m_dxDev;

@@ -8,6 +8,7 @@
 #include "FPCamera.h"
 
 #include "Graphics/Model.h"
+#include "Graphics/ImGuiRenderer.h"
 
 #include "Entity.h"
 

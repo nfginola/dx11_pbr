@@ -32,7 +32,7 @@ cbuffer CB_PerFrame : register(b0)      // To retrive the camera position
     float4 cameraPosition;
 }
 
-float4 PSMain(PS_IN input) : SV_TARGET
+float4 main(PS_IN input) : SV_TARGET
 {
     //float3 color = mainTex.Sample(mainSampler, input.uv).xyz;
     //float3 color = diffuseTex.SampleLevel(mainSampler, input.uv, mipLevel).xyz; // Note that the sampler must an unlocked maxLOD

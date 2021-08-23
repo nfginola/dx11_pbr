@@ -59,6 +59,14 @@ namespace Gino::Utils
 		return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	}
 
+	void ImageData::Release()
+	{
+		if (pixels)
+		{
+			stbi_image_free(pixels);
+		}
+	}
+
 	ImageData::ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight) :
 		pixels(pixels),
 		imageSize(imageSize),
@@ -70,10 +78,6 @@ namespace Gino::Utils
 
 	ImageData::~ImageData()
 	{
-		if (pixels)
-		{
-			stbi_image_free(pixels);
-		}
 	}
 
 }

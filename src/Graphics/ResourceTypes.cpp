@@ -220,20 +220,41 @@ namespace Gino
         return m_texture.Get();
     }
 
-    void Texture::Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, Utils::ImageData* imageData)
+    void Texture::Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas)
     {
-        // Immutable not allowed for Textures
+        // Immutable not allowed for Textures (we skip using staging to then move to immutable)
         // We want to make use of auto mipmap generation which requires GPU RW access
         assert( (desc.Usage & D3D11_USAGE_IMMUTABLE) == 0);     
 
-        if (imageData)
+        D3D11_TEXTURE2D_DESC newDesc = desc;
+        if (!imageDatas.empty())
         {
             HRCHECK(dev->CreateTexture2D(&desc, nullptr, m_texture.GetAddressOf()));
+    
+            m_texture->GetDesc(&newDesc);           // newly populated description (https://www.gamedev.net/forums/topic/690718-d3d11-cubemap-generatemips-only-update-one-face/5349523/)
+                                                    // used to get populated mip levels for now
 
             // Fill in data
-            assert((desc.Usage & D3D11_USAGE_DEFAULT) == D3D11_USAGE_DEFAULT);
-            unsigned int rowPitch = imageData->texWidth * sizeof(uint32_t);
-            ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageData->pixels, rowPitch, 0);
+            if (imageDatas.size() == 1)
+            {
+                // Single Texture2D
+                assert((newDesc.Usage & D3D11_USAGE_DEFAULT) == D3D11_USAGE_DEFAULT);
+                unsigned int rowPitch = imageDatas[0]->texWidth * sizeof(uint32_t);
+                ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageDatas[0]->pixels, rowPitch, 0);
+            }
+            else if (imageDatas.size() == 6 && (newDesc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE) == D3D11_RESOURCE_MISC_TEXTURECUBE)
+            {
+                // Texture2D array cube
+                assert((newDesc.Usage & D3D11_USAGE_DEFAULT) == D3D11_USAGE_DEFAULT);
+                for (int i = 0; i < 6; ++i)
+                {
+                    unsigned int rowPitch = imageDatas[i]->texWidth * sizeof(uint32_t);
+                    UINT subres = D3D11CalcSubresource(0, i, newDesc.MipLevels);
+                    ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->pixels, rowPitch, 0);        // is miplevels correct here?? idk
+                }
+
+
+            }
 
             /*
             So, why do we force USAGE_DEFAULT and fill in data this way instead of using pInitialData?
@@ -257,9 +278,10 @@ namespace Gino
         else
         {
             HRCHECK(dev->CreateTexture2D(&desc, nullptr, m_texture.GetAddressOf()));
+            m_texture->GetDesc(&newDesc);
         }
 
-        CreateViews(dev, ctx, desc);
+        CreateViews(dev, ctx, newDesc);
     }
 
     ID3D11ShaderResourceView* Texture::GetSRV() const
@@ -341,7 +363,9 @@ namespace Gino
             .MiscFlags = miscFlags
         };
 
-        this->Initialize(dev, ctx, texDesc, &imageData);
+        this->Initialize(dev, ctx, texDesc, { &imageData });
+
+        imageData.Release();
 
         // Examples:
 
@@ -357,23 +381,23 @@ namespace Gino
         //	.Usage = D3D11_USAGE_DEFAULT,					// allow gpu rw
         //	.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,		
         //	.CPUAccessFlags = 0,
-        //	.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS	// tell em that we will use GenerateMips function
-        //};
+		//	.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS	// tell em that we will use GenerateMips function
+		//};
 
-        //// No mipmap generation
-        //D3D11_TEXTURE2D_DESC texDesc
-        //{
-        //    .Width = imageDat.texWidth,
-        //    .Height = imageDat.texHeight,
-        //    .MipLevels = 1,
-        //    .ArraySize = 1,
-        //    .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-        //    .SampleDesc = {.Count = 1, .Quality = 0 },
-        //    .Usage = D3D11_USAGE_DEFAULT,
-        //    .BindFlags = D3D11_BIND_SHADER_RESOURCE,
-        //    .CPUAccessFlags = 0,
-        //    .MiscFlags = 0
-        //};
+		//// No mipmap generation
+		//D3D11_TEXTURE2D_DESC texDesc
+		//{
+		//    .Width = imageDat.texWidth,
+		//    .Height = imageDat.texHeight,
+		//    .MipLevels = 1,
+		//    .ArraySize = 1,
+		//    .Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		//    .SampleDesc = {.Count = 1, .Quality = 0 },
+		//    .Usage = D3D11_USAGE_DEFAULT,
+		//    .BindFlags = D3D11_BIND_SHADER_RESOURCE,
+		//    .CPUAccessFlags = 0,
+		//    .MiscFlags = 0
+		//};
     }
 
     void Texture::InitializeFromExisting(const Tex2DPtr& tex, const RtvPtr& rtv, const SrvPtr& srv, const DsvPtr& dsv, const UavPtr& uav)
@@ -385,6 +409,51 @@ namespace Gino
         if (srv) m_srv = srv;
         if (dsv) m_dsv = dsv;
         if (uav) m_uav = uav;
+    }
+
+    void Texture::InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb, bool genMipMaps)
+    {
+        constexpr static int cubeDim = 6;
+
+        std::vector<Utils::ImageData> cubeData;
+        std::vector<Utils::ImageData*> cubeDataToSend;
+        cubeData.resize(cubeDim);
+        cubeDataToSend.resize(cubeDim);
+
+        for (int i = 0; i < cubeDim; ++i)
+        {
+            cubeData[i] = Utils::ReadImageFile(filepaths[i]);
+            cubeDataToSend[i] = &cubeData[i];
+        }
+
+        DXGI_FORMAT format = srgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+        UINT miscFlags = genMipMaps ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0;
+        UINT mipLevels = genMipMaps ? 0 : 1;
+        UINT bindFlags = genMipMaps ? D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET : D3D11_BIND_SHADER_RESOURCE;
+
+        miscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+        D3D11_TEXTURE2D_DESC texDesc
+        {
+            .Width = cubeData[0].texWidth,     // Assuming that they are all the same dimensions
+            .Height = cubeData[0].texHeight,
+            .MipLevels = mipLevels,
+            .ArraySize = cubeDim,
+            .Format = format,
+            .SampleDesc = {.Count = 1, .Quality = 0 },      // Hardcoded multisample settings for now
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = bindFlags,
+            .CPUAccessFlags = 0,
+            .MiscFlags = miscFlags
+        };
+
+        this->Initialize(dev, ctx, texDesc, cubeDataToSend);
+
+        for (int i = 0; i < cubeDim; ++i)
+        {
+            cubeData[i].Release();
+        }
+
     }
 
     void Texture::CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc)
@@ -416,6 +485,18 @@ namespace Gino
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
                 srvDesc.Texture2D = tex2DSrvDesc;
             }
+            else if (desc.ArraySize == 6 && (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE) == D3D11_RESOURCE_MISC_TEXTURECUBE)
+            {
+                // Texture cube
+                D3D11_TEXCUBE_SRV texCubeDesc
+                {
+                    .MostDetailedMip = 0,
+                    .MipLevels = desc.MipLevels
+                };
+
+                srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+                srvDesc.TextureCube = texCubeDesc;
+            }
         }
 
         if ((desc.BindFlags & D3D11_BIND_DEPTH_STENCIL) == D3D11_BIND_DEPTH_STENCIL)
@@ -432,10 +513,11 @@ namespace Gino
             dsvDesc.Texture2D = tex2DDsvDesc;
         }
 
+        // Some textures that are meant to be immutable will have Render Target Views created for them. Side effect since we requrie Bind Render Target for GenerateMips
         if ((desc.BindFlags & D3D11_BIND_RENDER_TARGET) == D3D11_BIND_RENDER_TARGET)
         {
             shouldCreateRTV = true;
-            assert(desc.ArraySize == 1);
+            //assert(desc.ArraySize == 1);
 
             D3D11_TEX2D_RTV tex2DRtvDesc
             {
@@ -448,7 +530,9 @@ namespace Gino
         if (shouldCreateSRV)
         {
             HRCHECK(dev->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_srv.GetAddressOf()));
-            if (desc.MipLevels == 0 && (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS) == D3D11_RESOURCE_MISC_GENERATE_MIPS)
+
+            // NOTE: MipLevels is non zero because we have refilled the description AFTER CreateTexture2D which populates a new description with updated miplevels member
+            if (desc.MipLevels != 0 && (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS) == D3D11_RESOURCE_MISC_GENERATE_MIPS)
             {
                 ctx->GenerateMips(m_srv.Get());     // Automatically generate mips if more mip levels specified
             }

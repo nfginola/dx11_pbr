@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Graphics\SkyboxRenderer.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\Entity.cpp" />
@@ -240,6 +241,7 @@
     <ClInclude Include="include\Graphics\ShaderGroup.h" />
     <ClInclude Include="include\Timer.h" />
     <ClInclude Include="include\Scene.h" />
+    <ClInclude Include="include\Graphics\SkyboxRenderer.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_dx11.h" />
     <ClInclude Include="vendor\imgui-master\backends\imgui_impl_win32.h" />
     <ClInclude Include="vendor\imgui-master\imconfig.h" />
@@ -260,16 +262,16 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PSMain</EntryPointName>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
     </FxCompile>
     <FxCompile Include="shaders\ForwardPhong_VS.hlsl">
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
@@ -282,8 +284,8 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PSMain</EntryPointName>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
     </FxCompile>
     <FxCompile Include="shaders\quadpass_vs.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
@@ -294,17 +296,17 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
     </FxCompile>
     <FxCompile Include="shaders\ForwardPBR_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
@@ -316,10 +318,30 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PSMain</EntryPointName>
-      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PSMain</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">main</EntryPointName>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">main</EntryPointName>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
       <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="shaders\Skybox_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <FxCompile Include="shaders\Skybox_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)compiled_shaders\%(Filename).cso</ObjectFileOutput>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

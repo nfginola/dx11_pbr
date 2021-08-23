@@ -75,7 +75,7 @@ float3 reinhard_jodie(float3 v)
 }
 
 
-float4 PSMain(PS_IN input) : SV_TARGET
+float4 main(PS_IN input) : SV_TARGET
 {
     float3 hdrColor = renderTexture.Sample(mainSampler, input.uv).xyz;
     float3 ldrColor;

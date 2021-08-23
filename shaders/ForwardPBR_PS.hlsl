@@ -48,7 +48,7 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness);
 float3 fresnelSchlick(float cosTheta, float3 F0);
 
-float4 PSMain(PS_IN input) : SV_TARGET
+float4 main(PS_IN input) : SV_TARGET
 {
     //float3 albedoInput = g_color;
     //float metallicInput = g_metallic;

@@ -36,7 +36,7 @@ cbuffer CB_PerObject : register(b1)
     matrix model;
 }
 
-VS_OUT VSMain(VS_INPUT input)
+VS_OUT main(VS_INPUT input)
 {
 	VS_OUT output = (VS_OUT)0;
 	

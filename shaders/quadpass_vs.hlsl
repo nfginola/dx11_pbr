@@ -32,7 +32,7 @@ static const float2 uvs[] =
 };
 
 
-VS_OUT VSMain(uint vID : SV_VertexID)
+VS_OUT main(uint vID : SV_VertexID)
 {
     VS_OUT output = (VS_OUT) 0;
     

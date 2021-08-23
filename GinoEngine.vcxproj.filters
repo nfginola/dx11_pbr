@@ -96,6 +96,9 @@
     <ClCompile Include="src\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\SkyboxRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Window.h">
@@ -182,6 +185,9 @@
     <ClInclude Include="include\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Graphics\SkyboxRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GinoEngine.rc">
@@ -195,5 +201,7 @@
     <FxCompile Include="shaders\quadpass_ps.hlsl" />
     <FxCompile Include="shaders\ForwardPhong_VS.hlsl" />
     <FxCompile Include="shaders\ForwardPhong_PS.hlsl" />
+    <FxCompile Include="shaders\Skybox_VS.hlsl" />
+    <FxCompile Include="shaders\Skybox_PS.hlsl" />
   </ItemGroup>
 </Project>

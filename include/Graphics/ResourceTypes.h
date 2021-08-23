@@ -282,7 +282,7 @@ namespace Gino
 	public:
 		ID3D11Texture2D* GetTexture() const;		// We will use getter in case of future changes (adding 1D/3D textures)
 
-		void Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, Utils::ImageData* imageData = nullptr);
+		void Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas = {});
 		ID3D11ShaderResourceView* GetSRV() const;
 		ID3D11RenderTargetView* GetRTV() const;
 		ID3D11DepthStencilView* GetDSV() const;
@@ -290,6 +290,9 @@ namespace Gino
 
 		void InitializeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::filesystem::path& filePath, bool srgb = true, bool genMipMaps = true);
 		void InitializeFromExisting(const Tex2DPtr& tex, const RtvPtr& rtv = nullptr, const SrvPtr& srv = nullptr, const DsvPtr& dsv = nullptr, const UavPtr& uav = nullptr);
+
+		// Expects in order: +x, -x, +y, -y, +z, -z
+		void InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb = true, bool genMipMaps = true);
 
 	private:
 		void CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc);
