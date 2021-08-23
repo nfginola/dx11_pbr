@@ -46,6 +46,9 @@ namespace Gino
 			}
 		);
 
+		//m_skyboxHDR.InitializeFromFile(dev, ctx, "../assets/textures/skyboxes/HDR/Mono_Lake_C/Mono_Lake_C_Ref.hdr", false);
+		m_skyboxHDR.InitializeFromFile(dev, ctx, "../assets/textures/skyboxes/HDR/Hamarikyu_Bridge_B/14-Hamarikyu_Bridge_B_3k.hdr", false);
+
 		// rasterizer state so we can see cube from inside
 		D3D11_RASTERIZER_DESC1 rssDesc
 		{
@@ -88,7 +91,7 @@ namespace Gino
 		ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		m_autoCubeShader.Bind(ctx);
-		ID3D11ShaderResourceView* srvs[] = { m_skyboxTex.GetSRV() };
+		ID3D11ShaderResourceView* srvs[] = { m_skyboxTex.GetSRV(), m_skyboxHDR.GetSRV() };
 		ctx->PSSetShaderResources(0, _countof(srvs), srvs);
 		ctx->PSSetSamplers(0, 1, m_skyboxSampler.GetAddressOf());
 

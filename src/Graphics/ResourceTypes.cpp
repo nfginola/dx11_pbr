@@ -220,7 +220,7 @@ namespace Gino
         return m_texture.Get();
     }
 
-    void Texture::Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas)
+    void Texture::Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas, bool hdr)
     {
         // Immutable not allowed for Textures (we skip using staging to then move to immutable)
         // We want to make use of auto mipmap generation which requires GPU RW access
@@ -240,7 +240,13 @@ namespace Gino
                 // Single Texture2D
                 assert((newDesc.Usage & D3D11_USAGE_DEFAULT) == D3D11_USAGE_DEFAULT);
                 unsigned int rowPitch = imageDatas[0]->texWidth * sizeof(uint32_t);
-                ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageDatas[0]->pixels, rowPitch, 0);
+                rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * 4 : rowPitch;    // override if hdr
+
+                if (!hdr)
+                    ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageDatas[0]->pixels, rowPitch, 0);
+                else
+                    ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageDatas[0]->hdrFpPixels, rowPitch, 0);
+
             }
             else if (imageDatas.size() == 6 && (newDesc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE) == D3D11_RESOURCE_MISC_TEXTURECUBE)
             {
@@ -249,8 +255,14 @@ namespace Gino
                 for (int i = 0; i < 6; ++i)
                 {
                     unsigned int rowPitch = imageDatas[i]->texWidth * sizeof(uint32_t);
+                    rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * 4 : rowPitch;    // override if hdr
                     UINT subres = D3D11CalcSubresource(0, i, newDesc.MipLevels);
-                    ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->pixels, rowPitch, 0);        // is miplevels correct here?? idk
+
+                    if (!hdr)
+                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->pixels, rowPitch, 0);        // is miplevels correct here?? idk
+                    else
+                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->hdrFpPixels, rowPitch, 0);        // is miplevels correct here?? idk
+
                 }
 
 
@@ -343,9 +355,14 @@ namespace Gino
 
     void Texture::InitializeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::filesystem::path& filePath, bool srgb, bool genMipMaps)
     {
-        auto imageData = Utils::ReadImageFile(filePath);
+        bool hdr = filePath.extension() == ".hdr" ? true : false;
+        genMipMaps = hdr ? false : genMipMaps;
+
+        auto imageData = Utils::ReadImageFile(filePath, hdr);
         
         DXGI_FORMAT format = srgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+        format = hdr ? DXGI_FORMAT_R32G32B32A32_FLOAT : format;
+
         UINT miscFlags = genMipMaps ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0;
         UINT mipLevels = genMipMaps ? 0 : 1;
         UINT bindFlags = genMipMaps ? D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET : D3D11_BIND_SHADER_RESOURCE;
@@ -364,7 +381,7 @@ namespace Gino
             .MiscFlags = miscFlags
         };
 
-        this->Initialize(dev, ctx, texDesc, { &imageData });
+        this->Initialize(dev, ctx, texDesc, { &imageData }, hdr);
 
         imageData.Release();
 
@@ -462,7 +479,7 @@ namespace Gino
             .MiscFlags = miscFlags
         };
 
-        this->Initialize(dev, ctx, texDesc, cubeDataToSend);
+        this->Initialize(dev, ctx, texDesc, cubeDataToSend, hdr);
 
         for (int i = 0; i < cubeDim; ++i)
         {

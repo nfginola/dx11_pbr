@@ -282,7 +282,7 @@ namespace Gino
 	public:
 		ID3D11Texture2D* GetTexture() const;		// We will use getter in case of future changes (adding 1D/3D textures)
 
-		void Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas = {});
+		void Initialize(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc, const std::vector<Utils::ImageData*>& imageDatas = {}, bool hdr = false);
 		ID3D11ShaderResourceView* GetSRV() const;
 		ID3D11RenderTargetView* GetRTV() const;
 		ID3D11DepthStencilView* GetDSV() const;

@@ -32,6 +32,7 @@ namespace Gino
 		RasterizerState1Ptr m_rss;
 		DepthStencilStatePtr m_dss;
 		Texture m_skyboxTex;
+		Texture m_skyboxHDR;
 	};
 }
 

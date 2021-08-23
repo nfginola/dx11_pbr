@@ -59,57 +59,30 @@ namespace Gino
 		//	}
 		//}
 
-		//////m_engine->CreateModel("sponza", "../assets/Models/Sponza_new/sponza.fbx");
-		////auto e2 = CreateEntity("Entity2");
-
-		////e2->AddComponent<ModelType>(m_engine->GetModel("sponza"));
-		////e2->GetComponent<TransformType>()->m_scaling = { 0.07f, 0.07f, 0.07f };
-		////e2->GetComponent<TransformType>()->m_position = { 0.f, 0.f, 250.f };
-
-
-		//auto sphere = CreateEntity("pbrSphere");
-		//m_engine->CreateModel("pbrSphere", "../assets/Models/sphere/Sphere.obj");
-		//sphere->AddComponent<ModelType>(m_engine->GetModel("pbrSphere"));
-		//sphere->GetComponent<TransformType>()->m_position = { -4.f, -4.f, 5.f };
-		//sphere->GetComponent<TransformType>()->m_scaling = { 0.05f, 0.05f, 0.05f };
-
-
-
-
-		// Currently no support for adding entities on update and hooking it up to renderer
-		// We Finalize Scene to hook the existing entities to the renderers
-		// We could make it dynamic by looping through all entities every frame and then sending the new hook to Engine
-		//FinalizeScene();
 	}
 
 	static float timeElapsed = 0.f;
 	static int counter = 0;
 	void Scene::Update(float dt)
 	{
-		Timer clearTime;
-		m_modelInstances.clear();
-		ImGui::Begin("Frame Statistics");
-		ImGui::Text("Scene Render Data Clear %s ms", std::to_string(clearTime.TimeElapsed() * 1000.f).c_str());
-		ImGui::End();
+		timeElapsed += dt;
 
-		//assert(m_finalized);
+		{
+			Timer clearTime;
+			m_modelInstances.clear();
+			ImGui::Begin("Frame Statistics");
+			ImGui::Text("Scene Render Data Clear %s ms", std::to_string(clearTime.TimeElapsed() * 1000.f).c_str());
+			ImGui::End();
+		}
 
 		/* Simulate models */
-		timeElapsed += dt;
-	
-		//GetEntity("Entity2")->GetComponent<TransformType>()->m_rotation.y += 45.f * dt;
-		//GetEntity("Entity2")->GetComponent<TransformType>()->m_position.y = cosf(timeElapsed) * 40.f;
-
-		//auto newE = CreateEntity("ent" + std::to_string((counter++)));
-		//newE->AddComponent<ModelType>(m_engine->GetModel("nanosuit"));
-		//newE->GetComponent<TransformType>()->m_position = { (float)counter * 8.f, 0.f, (float)counter * 3.f + 5.f };
 		
 		ImGui::Begin("Frame Statistics");
 		ImGui::Text("Entity Count %i", m_entities.size());
 		ImGui::End();
 
 		Timer grabTime;
-		// Grab relevant data from entities
+		// Grab relevant data from entities (this is slow, but will do for now)
 		for (const auto& e : m_entities)
 		{
 			// Grab models and transforms

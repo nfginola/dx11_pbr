@@ -14,16 +14,18 @@ namespace Gino::Utils
 	{
 		uint32_t texWidth, texHeight;
 		uint32_t imageSize;
-		unsigned char* pixels;
+		unsigned char* pixels = nullptr;
+		float* hdrFpPixels = nullptr;
 
 		void Release();
 		
 		ImageData() = default;
 		ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight);
+		ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight);
 		~ImageData();
 	};
 
-	ImageData ReadImageFile(const std::filesystem::path& filePath);
+	ImageData ReadImageFile(const std::filesystem::path& filePath, bool hdr = false);
 
 
 }

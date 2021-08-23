@@ -42,21 +42,37 @@ namespace Gino::Utils
 		return buffer;
 	}
 
-	ImageData ReadImageFile(const std::filesystem::path& filePath)
+	ImageData ReadImageFile(const std::filesystem::path& filePath, bool hdr)
 	{
 		int texWidth, texHeight, texChannels;
 		texWidth = texHeight = texChannels = 0;
 
-		stbi_uc* pixels = stbi_load(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-		if (!pixels)
+		if (!hdr)
 		{
-			assert(false);		// failed to load image
+			stbi_uc* pixels = stbi_load(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+			if (!pixels)
+			{
+				assert(false);		// failed to load image
+			}
+
+			size_t imageSize = texWidth * texHeight * sizeof(uint32_t);
+			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 		}
-		size_t imageSize = texWidth * texHeight * sizeof(uint32_t);
+		else
+		{
+			float* pixels = stbi_loadf(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, 4);
+			if (!pixels)
+			{
+				assert(false);		// failed to load image
+			}
+
+			size_t imageSize = texWidth * texHeight * sizeof(uint32_t) * 4;		// each texel is 3 floats
+			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+		}
+
 
 		// We ignore giving amount of channels as output since we are forcing RGBA (4 channel, 32 bit always)
 		// Pixels will be auto cleaned up on ImageData destructor 
-		return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	}
 
 	void ImageData::Release()
@@ -64,6 +80,10 @@ namespace Gino::Utils
 		if (pixels)
 		{
 			stbi_image_free(pixels);
+		}
+		if (hdrFpPixels)
+		{
+			stbi_image_free(hdrFpPixels);
 		}
 	}
 
@@ -74,6 +94,14 @@ namespace Gino::Utils
 		texHeight(texHeight)
 	{
 
+	}
+
+	ImageData::ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight) :
+		hdrFpPixels(pixels),
+		imageSize(imageSize),
+		texWidth(texWidth),
+		texHeight(texHeight)
+	{
 	}
 
 	ImageData::~ImageData()
