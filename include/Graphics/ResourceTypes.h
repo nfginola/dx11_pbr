@@ -292,7 +292,7 @@ namespace Gino
 		void InitializeFromExisting(const Tex2DPtr& tex, const RtvPtr& rtv = nullptr, const SrvPtr& srv = nullptr, const DsvPtr& dsv = nullptr, const UavPtr& uav = nullptr);
 
 		// Expects in order: +x, -x, +y, -y, +z, -z
-		void InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb = true, bool genMipMaps = true);
+		void InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb = true, bool genMipMaps = true, bool hdr = false);
 
 	private:
 		void CreateViews(const DevicePtr& dev, const DeviceContextPtr& ctx, const D3D11_TEXTURE2D_DESC& desc);

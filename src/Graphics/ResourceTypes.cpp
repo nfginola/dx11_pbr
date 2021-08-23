@@ -281,7 +281,8 @@ namespace Gino
             m_texture->GetDesc(&newDesc);
         }
 
-        CreateViews(dev, ctx, newDesc);
+        // not using newDesc
+        CreateViews(dev, ctx, desc);
     }
 
     ID3D11ShaderResourceView* Texture::GetSRV() const
@@ -411,9 +412,23 @@ namespace Gino
         if (uav) m_uav = uav;
     }
 
-    void Texture::InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb, bool genMipMaps)
+    void Texture::InitializeCubeFromFile(const DevicePtr& dev, const DeviceContextPtr& ctx, const std::vector<std::filesystem::path>& filepaths, bool srgb, bool genMipMaps, bool hdr)
     {
         constexpr static int cubeDim = 6;
+
+        /*
+        
+        if hdr (process from equirect to cubemap
+            load hdr texture
+            make texturecube without data
+            make render target for each array slice (+x. -x. etc.)
+            draw 6 times to each render target on respective slices
+            generate mips after mip 0s have been filled
+            return final TextureCube
+        
+        here we assume cubemaps that are hdr
+
+        */
 
         std::vector<Utils::ImageData> cubeData;
         std::vector<Utils::ImageData*> cubeDataToSend;
@@ -487,11 +502,14 @@ namespace Gino
             }
             else if (desc.ArraySize == 6 && (desc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE) == D3D11_RESOURCE_MISC_TEXTURECUBE)
             {
+                D3D11_TEXTURE2D_DESC newDesc = desc;
+                m_texture->GetDesc(&newDesc);
+
                 // Texture cube
                 D3D11_TEXCUBE_SRV texCubeDesc
                 {
                     .MostDetailedMip = 0,
-                    .MipLevels = desc.MipLevels
+                    .MipLevels = newDesc.MipLevels      // miplevels has been populated after createtexture2d (due to desc.MipLevels = 0 for creation which specifies to generate full subset of mips)
                 };
 
                 srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
@@ -532,7 +550,7 @@ namespace Gino
             HRCHECK(dev->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_srv.GetAddressOf()));
 
             // NOTE: MipLevels is non zero because we have refilled the description AFTER CreateTexture2D which populates a new description with updated miplevels member
-            if (desc.MipLevels != 0 && (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS) == D3D11_RESOURCE_MISC_GENERATE_MIPS)
+            if (desc.MipLevels == 0 && (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS) == D3D11_RESOURCE_MISC_GENERATE_MIPS)
             {
                 ctx->GenerateMips(m_srv.Get());     // Automatically generate mips if more mip levels specified
             }

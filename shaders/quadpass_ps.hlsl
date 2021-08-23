@@ -110,6 +110,7 @@ float4 main(PS_IN input) : SV_TARGET
     // Gamma correction
     //ldrColor = pow(ldrColor, float3(1.f / GAMMA, 1.f / GAMMA, 1.f / GAMMA));
     ldrColor = pow(ldrColor, (1.f / GAMMA).xxx);
+
     
     return float4(ldrColor, 1.f);
 }

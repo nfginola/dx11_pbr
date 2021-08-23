@@ -17,6 +17,7 @@ namespace Gino
 		m_engine->CreateModel("pbrSpheres", "../assets/Models/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf", true);
 		m_engine->CreateModel("helmet", "../assets/Models/DamagedHelmet/glTF/DamagedHelmet.gltf", true);
 		m_engine->CreateModel("ball", "../assets/Models/material_ball/scene.gltf", true);
+		m_engine->CreateModel("cerberus", "../assets/Models/cerberus/scene.gltf", true);
 
 		auto e = CreateEntity("Entity1");
 		e->AddComponent<ModelType>(m_engine->GetModel("sponza"));
@@ -38,6 +39,12 @@ namespace Gino
 		e4->GetComponent<TransformType>()->m_position = { 50.f, 7.f, 0.f };
 		e4->GetComponent<TransformType>()->m_scaling = { 1.f, 1.f, 1.f };
 		e4->GetComponent<TransformType>()->m_rotation = { 90.f, 90.f, 0.f };
+
+		auto e5 = CreateEntity("Entity5");
+		e5->AddComponent<ModelType>(m_engine->GetModel("cerberus"));
+		e5->GetComponent<TransformType>()->m_position = { 35.f, 50.f, 0.f };
+		e5->GetComponent<TransformType>()->m_scaling = { 0.1f, 0.1f, 0.1f };
+		e5->GetComponent<TransformType>()->m_rotation = { 90.f, 90.f, 0.f };
 
 		// Non PBR nanosuit models
 		//m_engine->CreateModel("nanosuit", "../assets/Models/nanosuit/nanosuit.obj");

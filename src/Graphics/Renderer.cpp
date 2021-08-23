@@ -180,7 +180,6 @@ namespace Gino
 		m_opaqueModels = models;
 	}
 	
-
 	void Renderer::BeginFrame()
 	{
 		m_imGui->BeginFrame();
@@ -201,7 +200,7 @@ namespace Gino
 	static bool aoTexOn = true;
 	void Renderer::Render()
 	{
-		assert(m_mainCamera != nullptr);	// A render camera is required!
+		assert(m_mainCamera != nullptr);
 		auto ctx = m_dxDev->GetContext();
 
 		ImGui::Begin("PBR Renderer Settings");
@@ -209,35 +208,36 @@ namespace Gino
 		ImGui::Checkbox("AO Texture", &aoTexOn);
 		ImGui::End();
 
+		// Update frame data for GPU
+		{
+			// Update per frame cb
+			m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
+			m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
+			m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
+			m_cbPerFrame.data.normalMapOn = norMapOn ? 1.f : 0.f;
+			m_cbPerFrame.data.aoTexOn = aoTexOn ? 1.f : 0.f;
+			m_cbPerFrame.Upload(ctx);
 
-		// Update per frame cb
-		m_cbPerFrame.data.view = m_mainCamera->GetViewMatrix();
-		m_cbPerFrame.data.projection = m_mainCamera->GetProjectionMatrix();
-		m_cbPerFrame.data.cameraPosition = m_mainCamera->GetPosition();
-		m_cbPerFrame.data.normalMapOn = norMapOn ? 1.f : 0.f;
-		m_cbPerFrame.data.aoTexOn = aoTexOn ? 1.f : 0.f;
-		m_cbPerFrame.Upload(ctx);
+			// Update light list
+			D3D11_MAPPED_SUBRESOURCE plMapped;
+			ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
+			auto light = (SB_PointLight*)plMapped.pData;
+			light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
 
-		// Update and bind light list
-		D3D11_MAPPED_SUBRESOURCE plMapped;
-		ctx->Map(m_sbPointLights.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &plMapped);
-		auto light = (SB_PointLight*)plMapped.pData;
-		light[0] = { .position = {30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-
-		// whites
-		//light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-		//light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-		//light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-		//light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-		//light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
-
-		// non whites
-		light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 1200.f, 0.f, 1.f } };
-		light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 1200.f, 1.f } };
-		light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 0.f, 1200.f, 1.f } };
-		light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 0.f, 1200.f, 1200.f, 1.f } };
-		light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 0.f, 0.f, 1.f } };
-		ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
+			// whites
+			//light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+			//light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+			//light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+			//light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+			//light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 1200.f, 1200.f, 1.f } };
+			// non whites
+			light[1] = { .position = {30.f, 50.f, -30.f, 1.f }, .color = { 0.f, 1200.f, 0.f, 1.f } };
+			light[2] = { .position = {-30.f, 50.f, 30.f, 1.f }, .color = { 0.f, 0.f, 1200.f, 1.f } };
+			light[3] = { .position = {-30.f, 50.f, -30.f, 1.f }, .color = { 1200.f, 0.f, 1200.f, 1.f } };
+			light[4] = { .position = {80.f, 50.f, 0.f, 1.f }, .color = { 0.f, 1200.f, 1200.f, 1.f } };
+			light[5] = { .position = {-80.f, 50.f, 0.f, 1.f }, .color = { 1200.f, 0.f, 0.f, 1.f } };
+			ctx->Unmap(m_sbPointLights.buffer.Get(), 0);
+		}
 
 		// Clear main render texture target
 		m_renderFramebuffer.Clear(ctx, { { 0.529f, 0.808f, 0.922f, 1.f } });
@@ -245,121 +245,120 @@ namespace Gino
 		// Render skybox
 		m_skybox->Render(m_renderFramebuffer, m_dxDev->GetBackbufferViewport());
 
-		// Set state for render to texture (models)
-		ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
-		ctx->PSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
-		// set rasterizer state
-		D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
-		ctx->RSSetViewports(_countof(viewports), viewports);
-		ctx->RSSetState(m_rs.Get());
-
-		ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
-
-		ID3D11SamplerState* samplers[] = { m_mainSampler.Get(), m_pointSampler.Get() };
-		ctx->PSSetSamplers(0, _countof(samplers), samplers);
-
-		// Render to texture
-		m_renderFramebuffer.Bind(ctx);
-		ctx->OMSetDepthStencilState(m_dss.Get(), 0);
-
 		// Render models
 		Timer opaquePassTimer;
-		for (const auto& modelInstance : *m_opaqueModels)
 		{
-			const auto& model = modelInstance.first;
-			const auto& instances = modelInstance.second;
+			// Set state for render to texture (models)
+			ctx->VSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
+			ctx->PSSetConstantBuffers(0, 1, m_cbPerFrame.buffer.GetAddressOf());
+			// set rasterizer state
+			D3D11_VIEWPORT viewports[] = { m_dxDev->GetBackbufferViewport() };
+			ctx->RSSetViewports(_countof(viewports), viewports);
+			ctx->RSSetState(m_rs.Get());
 
-			// We guarantee that the material type for a whole model is identical
-			auto matType = model->GetMaterials()[0].GetType();
-			if (matType == MaterialType::PBR)
+			ctx->PSSetShaderResources(7, 1, m_sbPointLights.srv.GetAddressOf());
+
+			ID3D11SamplerState* samplers[] = { m_mainSampler.Get(), m_pointSampler.Get() };
+			ctx->PSSetSamplers(0, _countof(samplers), samplers);
+
+			// Render to texture
+			m_renderFramebuffer.Bind(ctx);
+			ctx->OMSetDepthStencilState(m_dss.Get(), 0);
+
+			// Render models
+			for (const auto& modelInstance : *m_opaqueModels)
 			{
-				m_forwardOpaquePBRShaders.Bind(ctx);
-			}
-			else if (matType == MaterialType::Phong )
-			{
-				m_forwardOpaquePhongShaders.Bind(ctx);
-			}
+				const auto& model = modelInstance.first;
+				const auto& instances = modelInstance.second;
 
-
-			assert(instances.size() <= MAX_INSTANCES);
-
-			// Fill instance data
-			D3D11_MAPPED_SUBRESOURCE mappedInstSubres;
-			ctx->Map(m_instanceBuffer.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedInstSubres);
-			auto seat = (DirectX::SimpleMath::Matrix*)mappedInstSubres.pData;
-			for (int i = 0; i < instances.size(); ++i)
-			{
-				seat[i] = instances[i]->GetWorldMatrix();
-			}
-			ctx->Unmap(m_instanceBuffer.buffer.Get(), 0);
-
-			ID3D11Buffer* vbs[] = { model->GetVB(), m_instanceBuffer.buffer.Get() };
-			UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL), sizeof(DirectX::SimpleMath::Matrix) };
-			UINT vbOffsets[] = { 0, 0 };
-			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
-			ctx->IASetIndexBuffer(model->GetIB(), DXGI_FORMAT_R32_UINT, 0);
-			ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			const auto& meshes = model->GetMeshes();
-			const auto& materials = model->GetMaterials();
-			assert(meshes.size() == materials.size());
-
-			// Draw submeshes
-			for (uint32_t i = 0; i < meshes.size(); ++i)
-			{
-				// Bind material (PBR)
+				// We guarantee that the material type for a whole model is identical
+				auto matType = model->GetMaterials()[0].GetType();
 				if (matType == MaterialType::PBR)
 				{
-					ID3D11ShaderResourceView* srvs[] =
-					{
-						materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
-						materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
-						materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
-						materials[i].GetProperties<PBRMaterialData>().ao->GetSRV(),
-						materials[i].GetProperties<PBRMaterialData>().emission->GetSRV()
-					};
-
-					ctx->PSSetShaderResources(0, _countof(srvs), srvs);
+					m_forwardOpaquePBRShaders.Bind(ctx);
 				}
 				else if (matType == MaterialType::Phong)
 				{
-					ID3D11ShaderResourceView* srvs[] =
-					{
-						materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV(),
-						materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
-						materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
-						materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
-					};
-
-					ctx->PSSetShaderResources(0, _countof(srvs), srvs);
+					m_forwardOpaquePhongShaders.Bind(ctx);
 				}
 
-				ctx->DrawIndexedInstanced(meshes[i].numIndices, (uint32_t)instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
 
-				//// no instancing
-				//for (int instanceID = 0; instanceID < modelInstance.second.size(); ++instanceID)
-				//{
-				//	m_cbPerObject.data.model = modelInstance.second[instanceID]->GetWorldMatrix();
-				//	m_cbPerObject.Upload(ctx);
-				//	ctx->VSSetConstantBuffers(1, 1, m_cbPerObject.buffer.GetAddressOf());
+				assert(instances.size() <= MAX_INSTANCES);
 
-				//	ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
-				//}
+				// Fill instance data
+				D3D11_MAPPED_SUBRESOURCE mappedInstSubres;
+				ctx->Map(m_instanceBuffer.buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedInstSubres);
+				auto seat = (DirectX::SimpleMath::Matrix*)mappedInstSubres.pData;
+				for (int i = 0; i < instances.size(); ++i)
+				{
+					seat[i] = instances[i]->GetWorldMatrix();
+				}
+				ctx->Unmap(m_instanceBuffer.buffer.Get(), 0);
+
+				ID3D11Buffer* vbs[] = { model->GetVB(), m_instanceBuffer.buffer.Get() };
+				UINT vbStrides[] = { sizeof(Vertex_POS_UV_NORMAL), sizeof(DirectX::SimpleMath::Matrix) };
+				UINT vbOffsets[] = { 0, 0 };
+				ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				ctx->IASetVertexBuffers(0, _countof(vbs), vbs, vbStrides, vbOffsets);
+				ctx->IASetIndexBuffer(model->GetIB(), DXGI_FORMAT_R32_UINT, 0);
+				ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+				const auto& meshes = model->GetMeshes();
+				const auto& materials = model->GetMaterials();
+				assert(meshes.size() == materials.size());
+
+				// Draw submeshes
+				for (uint32_t i = 0; i < meshes.size(); ++i)
+				{
+					// Bind material (PBR)
+					if (matType == MaterialType::PBR)
+					{
+						ID3D11ShaderResourceView* srvs[] =
+						{
+							materials[i].GetProperties<PBRMaterialData>().albedo->GetSRV() ,
+							materials[i].GetProperties<PBRMaterialData>().metallicAndRoughness->GetSRV(),
+							materials[i].GetProperties<PBRMaterialData>().normal->GetSRV(),
+							materials[i].GetProperties<PBRMaterialData>().ao->GetSRV(),
+							materials[i].GetProperties<PBRMaterialData>().emission->GetSRV()
+						};
+
+						ctx->PSSetShaderResources(0, _countof(srvs), srvs);
+					}
+					else if (matType == MaterialType::Phong)
+					{
+						ID3D11ShaderResourceView* srvs[] =
+						{
+							materials[i].GetProperties<PhongMaterialData>().diffuse->GetSRV(),
+							materials[i].GetProperties<PhongMaterialData>().specular->GetSRV(),
+							materials[i].GetProperties<PhongMaterialData>().normal->GetSRV(),
+							materials[i].GetProperties<PhongMaterialData>().opacity->GetSRV()
+						};
+
+						ctx->PSSetShaderResources(0, _countof(srvs), srvs);
+					}
+
+					ctx->DrawIndexedInstanced(meshes[i].numIndices, (uint32_t)instances.size(), meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
+
+					//// no instancing
+					//for (int instanceID = 0; instanceID < modelInstance.second.size(); ++instanceID)
+					//{
+					//	m_cbPerObject.data.model = modelInstance.second[instanceID]->GetWorldMatrix();
+					//	m_cbPerObject.Upload(ctx);
+					//	ctx->VSSetConstantBuffers(1, 1, m_cbPerObject.buffer.GetAddressOf());
+
+					//	ctx->DrawIndexedInstanced(meshes[i].numIndices, 1, meshes[i].indicesFirstIndex, meshes[i].vertexOffset, 0);
+					//}
+				}
 			}
+
+			// Unbind framebuffer so that we can read textures associated with it
+			m_renderFramebuffer.Unbind(ctx);
 		}
-
-		// Unbind framebuffer so that we can read textures associated with it
-		m_renderFramebuffer.Unbind(ctx);
-
 		ImGui::Begin("Frame Statistics");
 		ImGui::Text("Opaque Draw Pass CPU %s ms", std::to_string(opaquePassTimer.TimeElapsed() * 1000.f).c_str());
 		ImGui::End();
 
-
-
 		// Render fullscreen quad pass
-		// Input --> Render texture to read from and framebuffer to render to
 		Timer quadPassTimer;
 		{
 			m_fullscreenQuadShaders.Bind(ctx);
@@ -380,11 +379,11 @@ namespace Gino
 			// Unbind renderTexture from read-bind so that it can be reused for writing in the next frame
 			ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
 			ctx->PSSetShaderResources(0, 1, nullSRVs);
+
 		}
 		ImGui::Begin("Frame Statistics");
 		ImGui::Text("Quad Pass CPU %s ms", std::to_string(quadPassTimer.TimeElapsed() * 1000.f).c_str());
 		ImGui::End();
-
 
 	}
 

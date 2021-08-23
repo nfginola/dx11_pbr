@@ -34,7 +34,7 @@ namespace Gino
 			.Build(dev);
 
 
-		// skybox test temp
+		// skybox test
 		m_skyboxTex.InitializeCubeFromFile(dev, ctx,
 			{
 				"../assets/textures/skyboxes/yokohama/posx.jpg",
@@ -51,7 +51,7 @@ namespace Gino
 		{
 			.FillMode = D3D11_FILL_SOLID,
 			.CullMode = D3D11_CULL_BACK,
-			.FrontCounterClockwise = true,	// look from inside,
+			.FrontCounterClockwise = true,	// look from inside (d3d11 default is front clockwise = true)
 			.DepthBias = 0,
 			.DepthBiasClamp = 0.f,
 			.SlopeScaledDepthBias = 0.f,
