@@ -24,5 +24,5 @@ Tone-mapping
 ![Alt text](screenshots/Tonemapping.png?raw=true "Tonemapping")
   
 Skybox
-![Alt text](sceenshots/HDRSkybox.png?raw=true "Skybox")
+![Alt text](screenshots/HDRSkybox.png?raw=true "Skybox")
 
