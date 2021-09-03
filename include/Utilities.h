@@ -12,7 +12,7 @@ namespace Gino::Utils
 	
 	struct ImageData
 	{
-		uint32_t texWidth, texHeight;
+		uint32_t texWidth, texHeight, texChannels;
 		uint32_t imageSize;
 		unsigned char* pixels = nullptr;
 		float* hdrFpPixels = nullptr;
@@ -20,8 +20,8 @@ namespace Gino::Utils
 		void Release();
 		
 		ImageData() = default;
-		ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight);
-		ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight);
+		ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight, uint32_t texChannels);
+		ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight, uint32_t texChannels);
 		~ImageData();
 	};
 

@@ -56,18 +56,21 @@ namespace Gino::Utils
 			}
 
 			size_t imageSize = texWidth * texHeight * sizeof(uint32_t);
-			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), static_cast<uint32_t>(texChannels));
 		}
 		else
 		{
-			float* pixels = stbi_loadf(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, 4);
+			uint32_t reqTexChannel = 4;		// force RGBA because DXGI RGB format does not support sampling
+			// https://www.gamedev.net/forums/topic/699346-r32g32b32-texture-format-cannot-be-sampled-in-pixel-shader/
+
+			float* pixels = stbi_loadf(filePath.string().c_str(), &texWidth, &texHeight, &texChannels, reqTexChannel);
 			if (!pixels)
 			{
 				assert(false);		// failed to load image
 			}
 
-			size_t imageSize = texWidth * texHeight * sizeof(uint32_t) * 4;		// each texel is 3 floats
-			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+			size_t imageSize = texWidth * texHeight * sizeof(uint32_t) * reqTexChannel;		// each texel is 4 floats
+			return ImageData(pixels, static_cast<uint32_t>(imageSize), static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), reqTexChannel);
 		}
 
 
@@ -87,20 +90,22 @@ namespace Gino::Utils
 		}
 	}
 
-	ImageData::ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight) :
+	ImageData::ImageData(unsigned char* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight, uint32_t texChannels) :
 		pixels(pixels),
 		imageSize(imageSize),
 		texWidth(texWidth),
-		texHeight(texHeight)
+		texHeight(texHeight),
+		texChannels(texChannels)
 	{
 
 	}
 
-	ImageData::ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight) :
+	ImageData::ImageData(float* pixels, uint32_t imageSize, uint32_t texWidth, uint32_t texHeight, uint32_t texChannels) :
 		hdrFpPixels(pixels),
 		imageSize(imageSize),
 		texWidth(texWidth),
-		texHeight(texHeight)
+		texHeight(texHeight),
+		texChannels(texChannels)
 	{
 	}
 

@@ -62,6 +62,7 @@ float4 main(PS_IN input) : SV_TARGET
     
     //return float4(albedo, 1.f);
     //return float4(roughnessInput.xxx, 1.f);
+    //return float4(metallicInput.xxx, 1.f);
     
     // Grab relevant data
     //float3 normal = normalize(input.normal);        // We should fix normal mapping

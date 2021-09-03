@@ -86,12 +86,12 @@ float4 main(PS_IN input) : SV_TARGET
     //ldrColor = hdrColor / (hdrColor + float3(1.f, 1.f, 1.f));
     
     // Compare tonemapped (right) vs non-tonemapped (left)
-    //if (input.uv.y >= 0.75f)
-    //    ldrColor = aces_fitted(hdrColor);
-    //else if (input.uv.y >= 0.50f)
-    //    ldrColor = reinhard_jodie(hdrColor);
-    //else if (input.uv.y >= 0.25f)
+    //if (input.uv.x >= 0.75f)
     //    ldrColor = reinhard(hdrColor);
+    //else if (input.uv.x >= 0.50f)
+    //    ldrColor = aces_fitted(hdrColor);
+    //else if (input.uv.x >= 0.25f)
+    //    ldrColor = reinhard_jodie(hdrColor);
     //else
     //    ldrColor = hdrColor;
     

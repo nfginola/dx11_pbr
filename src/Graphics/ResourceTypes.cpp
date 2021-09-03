@@ -240,7 +240,7 @@ namespace Gino
                 // Single Texture2D
                 assert((newDesc.Usage & D3D11_USAGE_DEFAULT) == D3D11_USAGE_DEFAULT);
                 unsigned int rowPitch = imageDatas[0]->texWidth * sizeof(uint32_t);
-                rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * 4 : rowPitch;    // override if hdr
+                rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * imageDatas[0]->texChannels : rowPitch;    // override if hdr
 
                 if (!hdr)
                     ctx->UpdateSubresource(m_texture.Get(), 0, nullptr, imageDatas[0]->pixels, rowPitch, 0);
@@ -255,14 +255,13 @@ namespace Gino
                 for (int i = 0; i < 6; ++i)
                 {
                     unsigned int rowPitch = imageDatas[i]->texWidth * sizeof(uint32_t);
-                    rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * 4 : rowPitch;    // override if hdr
+                    rowPitch = hdr ? imageDatas[0]->texWidth * sizeof(uint32_t) * imageDatas[0]->texChannels : rowPitch;    // override if hdr, else use RGBA 8 bit per ch. (LDR)
                     UINT subres = D3D11CalcSubresource(0, i, newDesc.MipLevels);
 
                     if (!hdr)
-                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->pixels, rowPitch, 0);        // is miplevels correct here?? idk
+                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->pixels, rowPitch, 0); 
                     else
-                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->hdrFpPixels, rowPitch, 0);        // is miplevels correct here?? idk
-
+                        ctx->UpdateSubresource(m_texture.Get(), subres, nullptr, imageDatas[i]->hdrFpPixels, rowPitch, 0); 
                 }
 
 

@@ -58,7 +58,6 @@ namespace Gino
 		//		newE->GetComponent<TransformType>()->m_position = { (float)x * 8.f, 0.f, (float)z * 3.f + 5.f };
 		//	}
 		//}
-
 	}
 
 	static float timeElapsed = 0.f;
