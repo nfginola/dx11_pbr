@@ -23,6 +23,6 @@ Roughness map
 Tone-mapping
 ![Alt text](screenshots/Tonemapping.png?raw=true "Tonemapping")
   
-Skybox
+HDR Skybox
 ![Alt text](screenshots/HDRSkybox.png?raw=true "Skybox")
 
