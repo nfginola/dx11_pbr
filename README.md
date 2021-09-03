@@ -7,12 +7,14 @@ A work-in-progress toy renderer in DirectX 11 for exploring more graphics techni
 - Emissive textures
 - HDR Skybox
 - Point lights
+- Assimp model loading (glTF for PBR models)
 - Instanced object rendering
 - ImGUI hook
 
 PBR Models
 ![Alt text](screenshots/PBR1.png?raw=true "PBR Spheres")
 ![Alt text](screenshots/PBR2.png?raw=true "PBR Cerberus and Helmet")
+![Alt text](screenshots/PBR3.png?raw=true "PBR Ball")
 
 Metallic map
 ![Alt text](screenshots/metallicMap.png?raw=true "Metallic map")
