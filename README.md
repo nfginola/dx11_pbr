@@ -1,5 +1,5 @@
 # GinoEngine
-A work-in-progress toy renderer in DirectX 11 for exploring more graphics techniques
+A smaller project where I explore PBR (unfinished) and HDR while also trying out other ways to structure rendering code
   
 - Physically Based Shading (Metallic/Roughness workflow, no IBL for now)
 - Tone-mapping (rendering HDR and mapping to LDR)
