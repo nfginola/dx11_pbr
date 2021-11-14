@@ -1,4 +1,4 @@
-# GinoEngine
+# dx11_pbr
 A smaller project where I explore PBR (unfinished) and HDR while also trying out other ways to structure rendering code
   
 - Physically Based Shading (Metallic/Roughness workflow, no IBL for now)
